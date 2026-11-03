@@ -1,0 +1,59 @@
+# Render Blueprint — docs/OPS.md §5. Secrets marked sync:false are entered in the Render dashboard.
+services:
+  - type: web
+    name: niwa-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter @niwa/backend...
+    startCommand: pnpm --filter @niwa/backend start
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/**
+        - packages/**
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - package.json
+        - render.yaml
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: niwa_prod
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: niwa-cache
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_TTL_SECONDS
+        value: '600'
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: '14'
+      - key: REGISTRATION_MODE
+        value: first_user_only
+      - key: CORS_ORIGINS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: niwa/prod
+
+  - type: keyvalue
+    name: niwa-cache
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []

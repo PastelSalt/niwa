@@ -1,0 +1,10 @@
+packages:
+  - backend
+  - frontend
+  - desktop
+  - packages/*
+
+# Install scripts are blocked by default. mongodb-memory-server downloads its
+# MongoDB binary lazily on first test run instead, so its postinstall stays off.
+allowBuilds:
+  mongodb-memory-server: false

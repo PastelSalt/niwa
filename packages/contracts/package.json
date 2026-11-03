@@ -1,0 +1,24 @@
+{
+  "name": "@niwa/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "NIWA API contract: Zod schemas (source of truth) and generated OpenAPI document",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "node scripts/generate-openapi.ts",
+    "check": "node scripts/generate-openapi.ts --check",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "vitest": "~5.0.5",
+    "yaml": "^2.9.1"
+  }
+}

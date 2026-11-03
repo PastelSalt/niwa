@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "niwa-memory",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:memory"],
+      "port": 5173
+    }
+  ]
+}

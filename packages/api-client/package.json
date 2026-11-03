@@ -1,0 +1,20 @@
+{
+  "name": "@niwa/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed NIWA API client for web and desktop (types from @niwa/contracts)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@niwa/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "~5.0.5"
+  }
+}
