@@ -56,13 +56,13 @@ pnpm dev:memory     # same, but the API uses a throwaway in-memory MongoDB — n
 | Command | What it does |
 |---|---|
 | `pnpm test` | Unit/integration tests in every package |
-| `pnpm e2e` | Playwright smoke (starts in-memory API on 4100 + Vite on 5174). First time: `pnpm --filter @niwa/frontend exec playwright install chromium` |
-| `pnpm build` | Production build of the web client (`frontend/dist`) |
+| `pnpm e2e` | Playwright smoke (starts in-memory API on 4100 + Vite on 5174). First time: `pnpm --filter @niwa/web exec playwright install chromium` |
+| `pnpm build` | Production build of the web client (`web_app/dist`) |
 | `pnpm lint` · `pnpm typecheck` · `pnpm format:check` · `pnpm openapi:check` | What CI runs |
 
 - **MongoDB:** point `MONGODB_URI` at an Atlas `niwa_dev` database (simplest on Windows), or a local `mongod` / Docker container.
 - **Redis:** optional locally. If `REDIS_URL` is unset in `local`, the backend falls back to an in-memory store for rate limits and sessions (never in production — startup fails if missing there).
-- **Vite proxy:** `frontend/vite.config.ts` proxies `/api` → `http://localhost:4000`, mirroring the Vercel rewrite so cookies behave the same locally.
+- **Vite proxy:** `web_app/vite.config.ts` proxies `/api` → `http://localhost:4000`, mirroring the Vercel rewrite so cookies behave the same locally.
 - **Tests** use `mongodb-memory-server` — no external DB needed.
 
 ---
@@ -98,12 +98,11 @@ Each app ships a committed `.env.example`; real `.env` files are git-ignored.
 
 All validated by Zod at startup (`backend/src/config/env.ts`); missing/invalid → process exits.
 
-### 4.2 Frontend (`frontend/.env`, Vercel env vars)
+### 4.2 Frontend (`web_app/.env`, Vercel env vars)
 
 | Var | Note |
 |---|---|
 | `VITE_API_BASE` | `/api/v1` (relative — goes through rewrite/proxy) |
-| `VITE_CLOUDINARY_CLOUD_NAME` | Public, used for delivery URLs |
 | `VITE_APP_ENV` | `local` / `preview` / `production` |
 
 Rule: **nothing secret ever gets a `VITE_` prefix** — those are bundled into public JS.
@@ -135,13 +134,13 @@ Rule: **nothing secret ever gets a `VITE_` prefix** — those are bundled into p
 | Setting | Value |
 |---|---|
 | Framework preset | Vite |
-| Root directory | `frontend` (with "include files outside root" enabled for `packages/*`) |
+| Root directory | `web_app` (with "include files outside root" enabled for `packages/*`) |
 | Install command | `pnpm install --frozen-lockfile` |
 | Build command | `pnpm build` |
 | Output directory | `dist` |
-| Ignored build step | skip if no changes in `frontend/`, `packages/`, `pnpm-lock.yaml` |
+| Ignored build step | skip if no changes in `web_app/`, `packages/`, `pnpm-lock.yaml` |
 
-`frontend/vercel.json` (planned):
+`web_app/vercel.json` (planned):
 
 ```json
 {
@@ -181,24 +180,47 @@ Set-Cookie: niwa_rt=…; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth
 
 - Signed uploads only; `CLOUDINARY_API_SECRET` lives only in Render env.
 - Folder per env + workspace: `niwa/<env>/<workspaceId>/`.
-- Upload preset: signed, images only, max 10 MB, tag `niwa-pending` until confirmed (`DATA_MODEL.md` §8).
-- Delivery via `secure_url` with `f_auto,q_auto`.
+- No upload preset needed: the server signs `folder`, `public_id`, `tags=niwa-pending` and `allowed_formats` per upload (`POST /uploads/sign`); the browser posts the file straight to Cloudinary, then `POST /attachments` verifies it (folder, format, ≤ 10 MB) and removes the pending tag (`DATA_MODEL.md` §8).
+- Delivery via `secure_url` with `f_auto,q_auto` (added client-side).
+- Without the three `CLOUDINARY_*` credentials the API answers `503 NOT_CONFIGURED` and the editor disables image insertion with a tooltip.
+- Housekeeping runs in the API process every 6 h (`maintenance.service.ts`): orphans > 7 days and unconfirmed uploads > 24 h are destroyed; Trash > 30 days is purged.
 
 ---
 
-## 9. Backups (flagged gap — must be solved before MVP ships)
+## 9. Backups
 
-Atlas **M0 has no automated backups**. Proposed layered approach:
+Atlas **M0 has no automated backups**, so NIWA ships its own (M7.P4). Layers:
 
-| Layer | What | When |
-|---|---|---|
-| 1. Scheduled dump | GitHub Actions cron → `mongodump` of `niwa_prod` → encrypted (`age`) archive → stored off-Atlas (see open question) | Nightly |
-| 2. Atlas backups | Move prod to M10+ with continuous cloud backup | When data becomes important / before daily use |
-| 3. User export | In-app full export (JSON + Markdown), M11 | On demand |
-| Images | Cloudinary retains originals; export includes `public_id`s | — |
+| Layer | What | When | Status |
+|---|---|---|---|
+| 1. Portable dump | `.github/workflows/backup.yml`: `pnpm --filter @niwa/backend backup` → `age`-encrypted archive → workflow artifact (14 days) | Nightly 03:17 UTC + manual | ✅ M7 |
+| 2. Atlas backups | Move prod to M10+ with continuous cloud backup | When data becomes important | Later |
+| 3. User export | In-app full export (JSON + Markdown) | On demand | M11 |
+| Images | Cloudinary keeps the originals; the dump includes every `attachments` record (public id + URL) | — | ✅ |
 
-- **Restore drill:** restore the latest dump into `niwa_staging` monthly; log the result in `LOGS.md`.
-- Retention: 14 daily + 8 weekly.
+**Format.** One gzip'd NDJSON file: a header line (`format`, `version`, `createdAt`, `database`, per-collection counts), then one Extended JSON line per document (`{"c": collection, "d": doc}`). ObjectIds, dates and binary round-trip exactly; no `mongodump` binary or matching server version is needed. Indexes are not stored — restore rebuilds them from the models.
+
+**Local / manual use** (reads `MONGODB_URI` and `MONGODB_DB` from `backend/.env` or the environment):
+
+```bash
+pnpm --filter @niwa/backend backup                       # → backend/backups/niwa-<db>-<time>.ndjson.gz
+pnpm --filter @niwa/backend restore <file>               # dry run: prints what's inside
+pnpm --filter @niwa/backend restore <file> --yes         # into an empty database
+pnpm --filter @niwa/backend restore <file> --yes --drop  # replace existing data
+```
+
+Restore refuses to write into non-empty collections without `--drop`, and fails if any collection's restored count differs from the header. `backups/` and `*.ndjson.gz(.age)` are git-ignored — dumps contain personal data.
+
+**Nightly workflow setup** (one-time, by the owner):
+1. `age-keygen -o niwa-backup.key` on your machine; keep the key file offline (password manager / USB). The printed `age1…` line is the public recipient.
+2. In Atlas, create a **read-only** database user for `niwa_prod`; allow GitHub runners in Network Access (Atlas M0 needs `0.0.0.0/0` — the user is read-only and the password long).
+3. GitHub → Settings → Secrets → Actions: `BACKUP_MONGODB_URI`, `BACKUP_MONGODB_DB` (`niwa_prod`), `BACKUP_AGE_RECIPIENT`.
+4. Run the workflow once by hand (Actions → Backup → Run workflow) and check the artifact appears.
+
+**Decrypt + restore:** download the artifact, `age -d -i niwa-backup.key -o niwa.ndjson.gz <file>.age`, then `restore` as above.
+
+- **Restore drill:** monthly, restore the latest archive into `niwa_staging` (`MONGODB_DB=niwa_staging … --yes --drop`), sign in on staging, spot-check a note with an image and the calendar; log the result in `LOGS.md`.
+- **Retention:** 14 daily artifacts (GitHub limit on free plans is 90 days; raise `retention-days` if wanted). Weekly long-term copies: download one artifact a week to your own storage until a bucket is chosen (open question below).
 
 ---
 
@@ -225,6 +247,6 @@ Branching: `main` = production. Work on feature branches → PR → merge. Verce
 
 ## Open questions for owner
 
-- [ ] Where should nightly backup archives live (private GitHub release assets, a cloud bucket, or rely on Atlas M10)?
+- [ ] Long-term backup copies: nightly archives live 14 days as encrypted workflow artifacts — add a bucket (e.g. Cloudflare R2 / B2) for weekly copies, or move to Atlas M10?
 - [ ] Production domain: stay on `*.vercel.app` or use a custom domain? (A custom domain lets the API be `api.<domain>` on Render as a same-site alternative to the rewrite.)
 - [ ] Render region (pick the one closest to you and to the Atlas cluster region).

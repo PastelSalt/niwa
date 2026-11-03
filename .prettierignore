@@ -4,3 +4,5 @@ coverage
 pnpm-lock.yaml
 packages/contracts/openapi.yaml
 *.md
+flutter_app/.dart_tool
+flutter_app/build

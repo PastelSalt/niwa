@@ -223,3 +223,77 @@
 ### 2026-11-03 — Commit + push M3–M6
 - **Actions:** Committed and pushed M3 (item tree + Actionable), M4 (knowledge base), M5 (scheduler) and M6 (inbox + search) to `origin/main` at owner's request.
 - **Verified:** staged set checked — no `.env`, `node_modules`, build output, test results or traces.
+
+### 2026-11-04 — M7 Cloudinary images + polish
+- **Plan ref:** M7.P1–P4 (performance pass on large trees still open)
+- **Actions:**
+  - **Images (P1):**
+    - Contract: `UploadConfigResponse`, `allowedFormats` on the signature, `NOT_CONFIGURED` (503), `GET /uploads/config`.
+    - Backend: `lib/cloudinary.ts` (signing, resource lookup, destroy, tag removal; fetch injectable for tests); `attachments` model; `attachment.service.ts`:
+      - sign: per-workspace folder, UUID public id, `niwa-pending` tag, allowed formats.
+      - confirm: checks folder ownership, resource exists, format and ≤ 10 MB; deletes rejected uploads.
+      - Orphan sync on every content save; purge with the item.
+    - `maintenance.service.ts`: runs every 6 h — Trash > 30 days, orphans > 7 days, unconfirmed uploads > 24 h.
+    - Frontend: `NiwaImage` node (`attachmentId`); paste, drop and toolbar insertion; uploading status; alt-text dialog; insertion disabled with a tooltip when Cloudinary isn't configured. Delivery adds `f_auto,q_auto`.
+  - **UX (P2):**
+    - Secondary routes and the editor are lazy-loaded: initial JS ≈ 280 KB gzip, down from ≈ 458 KB.
+    - `RouteError` boundaries; a stale chunk after a deploy offers a reload.
+    - Suspense progress bar and editor skeleton.
+  - **Accessibility (P3):** new `e2e/a11y.spec.ts` (axe, WCAG 2.1 A/AA) audits 13 screens plus the capture dialog in light and dark. Fixed:
+    - Light tokens darkened: primary `#59765C`, warning, success `#527D55`, info/task `#4F7389`, note `#7D6E52`, idea. `contrast.test.ts` locks these in.
+    - Block and chip text colour is chosen per fill (`readableOn`).
+    - Status chips use a coloured dot with body-colour text.
+    - Nav rail: active item contrast; names match visible labels.
+    - Editor is a named multiline textbox; heading buttons say "H1 heading" and so on.
+    - Calendar grids get `row` wrappers (`display: contents`), visually hidden dates and no mismatched labels. Out-of-month day numbers use `text.secondary`.
+    - Link lists wrap each link in an `<li>` (search, backlinks, children).
+  - **Backups (P4):**
+    - `lib/backup.ts`: portable gzip'd EJSON NDJSON with a header of counts.
+    - `scripts/backup.ts` and `scripts/restore.ts`: restore defaults to a dry run, needs `--drop` to overwrite, verifies counts, then rebuilds indexes.
+    - `.github/workflows/backup.yml`: nightly, `age`-encrypted, 14-day artifact.
+    - OPS §9 rewritten with setup, decrypt and restore-drill steps. `backups/` is git-ignored.
+- **Files:**
+  - contracts: `attachment.ts`, `common.ts`, `openapi.ts`, `openapi.yaml`.
+  - backend: `lib/{cloudinary,backup}.ts`, `models/attachment.model.ts`, `services/{attachment,maintenance,item}.service.ts`, `controllers/upload.controller.ts`, routes, `app.ts`, `server.ts`, `errors.ts`, `scripts/{backup,restore}.ts`, tests `uploads.test.ts`, `backup.test.ts`, `helpers.ts`.
+  - api-client: `uploads.*`.
+  - tokens: `index.ts`, `contrast.test.ts`.
+  - frontend:
+    - `knowledge/editor/{extensions.ts,uploadImage.ts,useImageUploads.tsx,NoteEditor.tsx,EditorToolbar.tsx}`
+    - `components/RouteError.tsx`, `app/router.tsx`, `layout/{AppShell,NavRail}.tsx`
+    - `items/{ItemView,itemMeta}.tsx`
+    - `scheduler/{MonthView,TimeGridView,entryDisplay}`
+    - `search/SearchPage.tsx`, `knowledge/LinksPanel.tsx`, `lib/a11y.ts`
+    - e2e: `a11y.spec.ts`, `scheduler.spec.ts`, `inbox-search.spec.ts`
+  - Removed the unused `VITE_CLOUDINARY_CLOUD_NAME`.
+  - docs: OPS §8/§9, DATA_MODEL §5/§8, CODEMAP, plan.
+- **Decisions:**
+  - No Cloudinary upload preset; the server signs every parameter per upload, so the browser can't widen them.
+  - Housekeeping runs inside the API process (unref'd 6 h timer) rather than as a separate cron service. Render free instances sleep, so a sweep simply runs on the next wake.
+  - Backups use our own portable format instead of `mongodump`, so no binaries are needed in CI and any Mongo version can restore. Encryption happens before anything leaves the runner.
+  - Calendar entry names now follow their visible text ("9:00 AM Dentist", "Deep work 10:00 AM – 11:30 AM") so voice-control users can say what they see (WCAG 2.5.3).
+- **Verified:**
+  - lint, format, typecheck, openapi:check, build pass.
+  - Unit/integration: tokens 8, contracts 8, api-client 6, frontend 31, backend 84 — all pass.
+  - E2E: full suite ×2 (desktop + phone). Every desktop test passed. The two phone failures came from a test locator (phone bottom-bar entries are buttons); after fixing it, inbox and smoke pass ×2 on both projects. The a11y audit passes in light and dark.
+  - Backup CLI smoke run against a real mongod: dump → dry run → refuses without `--drop` → restore with indexes rebuilt.
+  - In-app browser: month grid has 6 rows × 7 cells; chip names read time then title; week blocks are readable in both themes.
+- **Known gaps:**
+  - No performance pass on large trees yet (M7.P3).
+  - Cloudinary not yet tried against a live account (needs credentials, like the M1 hosting accounts).
+  - The nightly backup needs the three `BACKUP_*` secrets.
+  - Trash auto-purge has no Settings switch.
+  - Week-grid creation is pointer-only; the keyboard path is the New button.
+- **Next:** M7 large-tree performance pass, then post-MVP milestones (M8 AI / M9 desktop / M11 graph), or hosting setup (Atlas, Render, Vercel, Cloudinary).
+
+### 2026-11-04 — Gaps file, folder rename, mobile plan
+- **Plan ref:** A-01 housekeeping; new `NIWA-PLAN-A-02.md`
+- **Actions:**
+  - `GAPS.md`: open items from M7 (large-tree perf pass, live Cloudinary check, backup secrets, Trash purge switch, keyboard creation in the week grid), earlier carried gaps, and the deferred AI milestone.
+  - Renamed `frontend/` → `web_app/` with `git mv`. The package is now `@niwa/web`. Updated the pnpm workspace, root scripts, CI, ESLint globs, `.gitignore`, `.prettierignore`, launch config, OPS, specs, plan and CODEMAP. LOGS history is left as written.
+  - New `flutter_app/` (README with setup; the Flutter SDK isn't installed yet, so no `flutter create`) and `desktop_app/` (placeholder). Workspace entry `desktop` → `desktop_app`.
+  - `NIWA-PLAN-A-02.md`: mobile plan MA0–MA11 (toolchain, scaffold/theme/models, auth, shell, items, offline cache + capture queue, flutter_quill editor with ProseMirror ⇄ Delta converter, scheduler + reminders, inbox/search, settings/images, quality, release), parity checklist, needed contract changes, open questions.
+  - A-01: M8 deferred, M9 after mobile, M10 superseded by A-02.
+- **Decisions (owner):** mobile first, then desktop; AI skipped for now. Folder names `web_app`, `flutter_app`, `desktop_app`.
+- **Verified:** lint, format, typecheck, unit/integration tests (tokens 8, contracts 8, api-client 6, web 31, backend 84), build and smoke e2e all pass from `web_app/`.
+- **Owner action needed:** when the Vercel project is created, set its root directory to `web_app`. Install the Flutter SDK + Android Studio (A-02 MA0).
+- **Next:** A-02 MA0 → MA1 scaffold.

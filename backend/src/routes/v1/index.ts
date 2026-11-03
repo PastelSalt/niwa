@@ -3,6 +3,7 @@ import type { AppConfig } from '../../config/env.ts';
 import { createAuthController } from '../../controllers/auth.controller.ts';
 import { itemController } from '../../controllers/item.controller.ts';
 import { scheduleController } from '../../controllers/schedule.controller.ts';
+import { uploadController } from '../../controllers/upload.controller.ts';
 import { createSystemController } from '../../controllers/system.controller.ts';
 import { requireAuth } from '../../middleware/auth.ts';
 import type { AuthService } from '../../services/auth.service.ts';
@@ -64,6 +65,12 @@ export function createV1Router({ config, tokens, auth, authLimiter }: V1Deps): R
   router.post('/inbox', protect, itemController.capture);
   router.post('/items/:id/file', protect, itemController.file);
   router.get('/search', protect, itemController.search);
+
+  // Uploads (M7)
+  router.get('/uploads/config', protect, uploadController.config);
+  router.post('/uploads/sign', protect, uploadController.sign);
+  router.post('/attachments', protect, uploadController.confirm);
+  router.delete('/attachments/:id', protect, uploadController.remove);
 
   // Scheduler (M5)
   router.get('/schedule', protect, scheduleController.range);

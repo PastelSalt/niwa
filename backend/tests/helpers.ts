@@ -33,9 +33,9 @@ export async function resetDb(): Promise<void> {
   await Promise.all(collections.map((c) => c.deleteMany({})));
 }
 
-export function buildApp(overrides: Record<string, string> = {}) {
+export function buildApp(overrides: Record<string, string> = {}, fetchImpl?: typeof fetch) {
   const config = testConfig(overrides);
-  return createApp({ config, logger: createLogger(config), redis: null });
+  return createApp({ config, logger: createLogger(config), redis: null, fetch: fetchImpl });
 }
 
 /** Pull the refresh cookie value out of a Set-Cookie header. */

@@ -117,11 +117,11 @@ Always preserved: `id`, children, `content`, `links`, `tags`, `inboxedAt`, `revi
 - If the original parent is alive → back under it (at end of siblings). If not → into **Inbox** (`inboxedAt = now`, `parentId = null`) with a notice.
 
 **Delete permanently** (Trash only):
-- Hard-deletes the batch **and every item still under it** (including descendants soft-deleted earlier in another batch — they have nowhere to be restored to), plus their `links` (both directions), `schedule_entries`, and attachments (Cloudinary destroy, then records). Links/schedule/attachment cleanup is wired as those collections land (M4/M5/M7).
+- Hard-deletes the batch **and every item still under it** (including descendants soft-deleted earlier in another batch — they have nowhere to be restored to), plus their `links` (both directions), `schedule_entries`, and attachments (Cloudinary destroy, then records). ✅ implemented (links M4, schedule M5, attachments M7).
 - Purging any member of a batch purges the whole batch from its root.
 - Requires an explicit confirm in UI.
 
-**Trash retention:** items in Trash > 30 days are purged by a scheduled job (proposed; can be disabled in Settings).
+**Trash retention:** ✅ implemented (M7) — items in Trash > 30 days are purged by the API's maintenance job (every 6 h). A Settings switch to disable it is not built yet.
 
 **Archive** is separate: sets `archivedAt` on that item only (no cascade); children are hidden with it because their ancestor is hidden, and come back on unarchive.
 
@@ -155,6 +155,8 @@ One shared namespace across all bases.
 
 ## 8. Attachments & orphan cleanup
 
+✅ implemented (M7): `attachment.service.ts`, `maintenance.service.ts`, editor `NiwaImage` node (`attachmentId` attr).
+
 Upload flow (Cloudinary, signed):
 
 ```text
@@ -166,8 +168,8 @@ Upload flow (Cloudinary, signed):
 
 Cleanup rules:
 - On each content save: attachments of that item **not referenced** by any image node get `orphanedAt = now`; referenced ones get `orphanedAt = null` (handles undo/paste-back).
-- Daily job: `orphanedAt` older than **7 days** → Cloudinary destroy + delete record.
-- Uploads signed but never confirmed (step 3 skipped): Cloudinary assets are uploaded with tag `niwa-pending`; daily job removes `niwa-pending` assets older than 24 h that have no record.
+- Maintenance job (every 6 h): `orphanedAt` older than **7 days** → Cloudinary destroy + delete record.
+- Uploads signed but never confirmed (step 3 skipped): Cloudinary assets are uploaded with tag `niwa-pending`; the same job removes `niwa-pending` assets older than 24 h that have no record.
 - Permanent item delete → destroy all its attachments immediately.
 - Limits: images only (`image/png`, `image/jpeg`, `image/webp`, `image/gif`), ≤ 10 MB each, enforced in the signature params and re-checked at step 3.
 - Cloudinary folder: `niwa/<env>/<workspaceId>/`.

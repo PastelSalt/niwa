@@ -29,6 +29,10 @@ import {
   type ScheduleEntry,
   type UpdateScheduleEntryInput,
   type UpdateItemInput,
+  type Attachment,
+  type ConfirmAttachmentInput,
+  type UploadConfigResponse,
+  type UploadSignatureResponse,
   type Workspace,
 } from '@niwa/contracts';
 
@@ -287,6 +291,15 @@ export function createApiClient(options: ApiClientOptions) {
         }),
       remove: (id: string, scope: EditScope = 'instance') =>
         request<void>(`/schedule/${id}`, { method: 'DELETE', query: { scope } }),
+    },
+
+    uploads: {
+      config: () => request<UploadConfigResponse>('/uploads/config'),
+      sign: (itemId: string) =>
+        request<UploadSignatureResponse>('/uploads/sign', { method: 'POST', body: { itemId } }),
+      confirm: (input: ConfirmAttachmentInput) =>
+        request<{ attachment: Attachment }>('/attachments', { method: 'POST', body: input }),
+      remove: (id: string) => request<void>(`/attachments/${id}`, { method: 'DELETE' }),
     },
 
     links: {

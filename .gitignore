@@ -35,13 +35,18 @@ test-results/
 .DS_Store
 Thumbs.db
 
-# Flutter (mobile/, later)
-mobile/.dart_tool/
-mobile/build/
+# Flutter (flutter_app/)
+flutter_app/.dart_tool/
+flutter_app/build/
 
-# Electron (desktop/, later)
-desktop/out/
+# Electron (desktop_app/, later)
+desktop_app/out/
 
 # Backups
 *.archive
 *.age
+
+# Local database backups (may contain personal data)
+backups/
+*.ndjson.gz
+*.ndjson.gz.age

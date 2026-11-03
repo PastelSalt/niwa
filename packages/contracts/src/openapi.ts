@@ -309,6 +309,11 @@ export function buildRegistry(): OpenAPIRegistry {
   });
 
   // ---- Uploads (Cloudinary) ----
+  add('get', '/uploads/config', {
+    tag: 'Uploads',
+    summary: 'Whether image uploads are configured, and their limits',
+    response: att.UploadConfigResponse,
+  });
   add('post', '/uploads/sign', {
     tag: 'Uploads',
     summary: 'Get a signed Cloudinary upload',

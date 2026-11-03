@@ -1,0 +1,52 @@
+name: Backup
+
+# Nightly portable backup of production (OPS.md §9). The archive is encrypted with `age` before it
+# leaves the runner, so the artifact is safe to keep in GitHub; only the owner's private key opens it.
+#
+# Secrets: BACKUP_MONGODB_URI (read-only Atlas user), BACKUP_MONGODB_DB (e.g. niwa_prod),
+#          BACKUP_AGE_RECIPIENT (public key from `age-keygen`).
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile --filter @niwa/backend...
+      - run: sudo apt-get update && sudo apt-get install -y age
+
+      - name: Dump
+        env:
+          MONGODB_URI: ${{ secrets.BACKUP_MONGODB_URI }}
+          MONGODB_DB: ${{ secrets.BACKUP_MONGODB_DB }}
+        run: pnpm --filter @niwa/backend backup --out "$RUNNER_TEMP/niwa.ndjson.gz"
+
+      - name: Encrypt
+        env:
+          RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          mkdir -p out
+          age -r "$RECIPIENT" -o "out/niwa-$(date -u +%Y%m%dT%H%M%SZ).ndjson.gz.age" "$RUNNER_TEMP/niwa.ndjson.gz"
+          shred -u "$RUNNER_TEMP/niwa.ndjson.gz"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: niwa-backup-${{ github.run_number }}
+          path: out/
+          retention-days: 14
+          if-no-files-found: error

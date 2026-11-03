@@ -6,6 +6,12 @@ import { Id, IsoDateTime } from './common.ts';
 export const ALLOWED_IMAGE_MIME = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'] as const;
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
+/** Whether image uploads are available on this server (Cloudinary credentials present). */
+export const UploadConfigResponse = z
+  .object({ enabled: z.boolean(), maxBytes: z.number().int(), allowedMime: z.array(z.string()) })
+  .meta({ id: 'UploadConfigResponse' });
+export type UploadConfigResponse = z.infer<typeof UploadConfigResponse>;
+
 export const UploadSignatureRequest = z.object({ itemId: Id }).meta({ id: 'UploadSignatureRequest' });
 
 export const UploadSignatureResponse = z
@@ -17,13 +23,16 @@ export const UploadSignatureResponse = z
     folder: z.string(),
     publicId: z.string(),
     tags: z.string(),
+    allowedFormats: z.string().meta({ description: 'Signed — send exactly as given' }),
     uploadUrl: z.url(),
   })
   .meta({ id: 'UploadSignatureResponse' });
+export type UploadSignatureResponse = z.infer<typeof UploadSignatureResponse>;
 
 export const ConfirmAttachmentInput = z
   .object({ itemId: Id, publicId: z.string().min(1).max(255) })
   .meta({ id: 'ConfirmAttachmentInput' });
+export type ConfirmAttachmentInput = z.infer<typeof ConfirmAttachmentInput>;
 
 export const Attachment = z
   .object({

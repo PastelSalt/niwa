@@ -21,6 +21,7 @@ import { keyBetween, keysAfter, ORDER_KEY_REBALANCE_LENGTH } from '../lib/orderK
 import type { ItemDoc } from '../models/item.model.ts';
 import { itemRepo, toObjectId } from '../repositories/item.repo.ts';
 import { linkRepo } from '../repositories/link.repo.ts';
+import { attachmentService } from './attachment.service.ts';
 import { linkService } from './link.service.ts';
 import { scheduleService } from './schedule.service.ts';
 import { toItem, toItemSummary } from './serializers.ts';
@@ -86,7 +87,10 @@ export const itemService = {
       orderKey,
       completedAt: status === 'completed' ? new Date() : null,
     });
-    if (input.content) await linkService.syncFromContent(wid, doc, extractContentLinks(input.content));
+    if (input.content) {
+      await linkService.syncFromContent(wid, doc, extractContentLinks(input.content));
+      await attachmentService.syncFromContent(wid, doc._id, input.content);
+    }
     return toItem(doc);
   },
 
@@ -112,6 +116,7 @@ export const itemService = {
     // Content links mirror niwaLink nodes in the body (CONCEPT.md §5.2).
     if (fields.content !== undefined) {
       await linkService.syncFromContent(wid, updated, extractContentLinks(fields.content));
+      await attachmentService.syncFromContent(wid, updated._id, fields.content);
     }
     return toItem(updated);
   },
@@ -287,8 +292,8 @@ export const itemService = {
     }
     const root = target.deleteRoot ? target : await findBatchRoot(wid, target);
     const ids = [root._id, ...(await itemRepo.descendantIds(wid, root._id, false))];
-    // M7: also remove Cloudinary attachments for `ids`.
     await scheduleService.purgeForItems(wid, ids);
+    await attachmentService.purgeForItems(wid, ids);
     await linkRepo.deleteForItems(wid, ids);
     const affected = await itemRepo.hardDelete(wid, ids);
     return { ok: true, affected };

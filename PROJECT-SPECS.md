@@ -18,7 +18,7 @@
 | `CODEMAP.md` | Where everything lives in the codebase |
 | `LOGS.md` | Chronological log of actions taken |
 
-> **Repo layout note:** `backend/` (NIWA API → Render) and `frontend/` (web client → Vercel), with `packages/`, `desktop/`, `mobile/`, and `docs/` alongside. The `apps/*` names in §11.6 map onto these folders (see §11.6 note and `CODEMAP.md`). Hosting is in §11.8.
+> **Repo layout note:** `backend/` (NIWA API → Render) and `web_app/` (web client → Vercel), with `packages/`, `desktop_app/`, `flutter_app/`, and `docs/` alongside. The `apps/*` names in §11.6 map onto these folders (see §11.6 note and `CODEMAP.md`). Hosting is in §11.8.
 >
 > **Detail docs (`docs/`):** `CONCEPT.md` (UX & flows), `DATA_MODEL.md` (schema rules), `OPS.md` (environments, hosting, backups).
 
@@ -403,7 +403,9 @@ packages/tokens     → design tokens → MUI theme + Dart theme
 packages/contracts  → OpenAPI → TS client + Dart models (generated in CI)
 ```
 
-> **Local mapping (decided 2026-11-03):** `apps/api` → `backend/`; `apps/web` → `frontend/`; `apps/desktop` → `desktop/`; `apps/mobile` → `mobile/`; `packages/*` → `packages/*` at repo root. One pnpm workspace at the root covers `backend`, `frontend`, `desktop`, and `packages/*` (Flutter `mobile/` sits outside pnpm). See `CODEMAP.md`.
+> **Local mapping (decided 2026-11-03):** `apps/api` → `backend/`; `apps/web` → `web_app/`; `apps/desktop` → `desktop_app/`; `apps/mobile` → `flutter_app/`; `packages/*` → `packages/*` at repo root. One pnpm workspace at the root covers `backend`, `web_app`, `desktop_app`, and `packages/*` (Flutter `flutter_app/` sits outside pnpm). See `CODEMAP.md`.
+>
+> **Renamed 2026-11-04:** `frontend/` → `web_app/` (package `@niwa/web`), `mobile/` → `flutter_app/`, `desktop/` → `desktop_app/`. Mobile is built before desktop and AI — see `NIWA-PLAN-A-02.md`.
 
 ### 11.7 Pure MUI rule (frontend)
 
@@ -423,7 +425,7 @@ All React UI is built with **MUI only**:
 |---|---|---|
 | Source control | **GitHub** — `https://github.com/PastelSalt/niwa-site.git` | Single monorepo |
 | Backend API | **Render** (Web Service, Node) | Root dir `backend/`; health check `/api/v1/health` |
-| Frontend (web) | **Vercel** | Root dir `frontend/`; Vite static build |
+| Frontend (web) | **Vercel** | Root dir `web_app/`; Vite static build |
 | Database | **MongoDB Atlas** (cloud) | Backend-only access; IP allowlist / Render egress |
 | Images | **Cloudinary** | Signed uploads (server signs) |
 | Cache / sessions / rate limits | **Render Key Value** (Redis-compatible) | Confirms §11.2 Redis choice |

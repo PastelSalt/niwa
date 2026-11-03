@@ -23,7 +23,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm openapi:check
       - run: pnpm test
-      - run: pnpm --filter @niwa/frontend build
+      - run: pnpm --filter @niwa/web build
 
   e2e:
     runs-on: ubuntu-latest
@@ -35,5 +35,5 @@ jobs:
           node-version-file: .nvmrc
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @niwa/frontend exec playwright install --with-deps chromium
-      - run: pnpm --filter @niwa/frontend e2e
+      - run: pnpm --filter @niwa/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @niwa/web e2e

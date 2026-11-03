@@ -7,7 +7,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "pnpm --parallel --filter @niwa/backend --filter @niwa/frontend dev",
+    "dev": "pnpm --parallel --filter @niwa/backend --filter @niwa/web dev",
     "start": "pnpm --filter @niwa/backend start",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
@@ -16,9 +16,9 @@
     "format:check": "prettier --check .",
     "openapi": "pnpm --filter @niwa/contracts generate",
     "openapi:check": "pnpm --filter @niwa/contracts check",
-    "dev:memory": "pnpm --parallel --filter @niwa/backend --filter @niwa/frontend dev:memory",
-    "build": "pnpm --filter @niwa/frontend build",
-    "e2e": "pnpm --filter @niwa/frontend e2e"
+    "dev:memory": "pnpm --parallel --filter @niwa/backend --filter @niwa/web dev:memory",
+    "build": "pnpm --filter @niwa/web build",
+    "e2e": "pnpm --filter @niwa/web e2e"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

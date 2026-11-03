@@ -12,16 +12,18 @@
 ```text
 niwa-site/
 ├─ PROJECT-SPECS.md          ✅ concept source of truth
-├─ NIWA-PLAN-A-01.md         ✅ milestones → phases → tasks
+├─ NIWA-PLAN-A-01.md         ✅ milestones → phases → tasks (backend, web, desktop)
+├─ NIWA-PLAN-A-02.md         ✅ mobile (Flutter) plan MA0–MA11 — current priority
+├─ GAPS.md                   ✅ deferred / unverified items (add when skipping, tick when closed)
 ├─ CODEMAP.md                ✅ this file
 ├─ LOGS.md                   ✅ action log
 ├─ docs/
 │  ├─ CONCEPT.md             ✅ draft — nav shell, lens visibility, capture/file, promotion, section links
 │  ├─ DATA_MODEL.md          ✅ draft — field additions, limits, type matrix, ordering, delete/restore, tags, attachments, search
-│  ├─ OPS.md                 ✅ draft — services, envs, env vars, Render/Vercel/Atlas/Cloudinary, backups, CI
+│  ├─ OPS.md                 ✅ services, envs, env vars, Render/Vercel/Atlas/Cloudinary, backups + restore drill, CI
 │  └─ SCHEDULER.md · AI.md · GRAPH.md   🔜 M5 / M8 / M11
 ├─ package.json              ✅ root scripts: dev, dev:memory (no Atlas), build, test, e2e, lint, typecheck, format, openapi; pnpm@12.15.0
-├─ pnpm-workspace.yaml       ✅ backend, frontend, desktop, packages/* · allowBuilds policy
+├─ pnpm-workspace.yaml       ✅ backend, web_app, desktop_app, packages/* · allowBuilds policy
 ├─ pnpm-lock.yaml            ✅
 ├─ tsconfig.base.json        ✅ strict, NodeNext, erasableSyntaxOnly, allowImportingTsExtensions, noEmit
 ├─ eslint.config.js          ✅ flat config + typescript-eslint
@@ -29,7 +31,8 @@ niwa-site/
 ├─ .nvmrc                    ✅ 24
 ├─ .gitignore / .gitattributes / .editorconfig   ✅
 ├─ render.yaml               ✅ Render Blueprint: web `niwa-api` + Key Value `niwa-cache`
-├─ .github/workflows/ci.yml  ✅ check: lint → format → typecheck → openapi:check → test → build · e2e job · 🔜 M7 backup.yml
+├─ .github/workflows/ci.yml  ✅ check: lint → format → typecheck → openapi:check → test → build · e2e job
+├─ .github/workflows/backup.yml ✅ nightly portable dump → `age`-encrypted artifact (14 days); needs BACKUP_* secrets (OPS §9)
 ├─ .claude/launch.json       ✅ preview config (pnpm dev:memory on 5173)
 ├─ packages/
 │  ├─ contracts/             ✅ Zod schemas + generated openapi.yaml
@@ -37,9 +40,9 @@ niwa-site/
 │  ├─ api-client/            ✅ typed client (web + desktop)
 │  └─ ui/                    🔜 M9 shared MUI components
 ├─ backend/                  ✅ NIWA API → Render
-├─ frontend/                 ✅ web client → Vercel
-├─ desktop/                  🔜 M9 Electron Forge
-└─ mobile/                   🔜 M10 Flutter (outside pnpm)
+├─ web_app/                  ✅ web client → Vercel
+├─ desktop_app/              🔜 M9 Electron Forge (README placeholder; after mobile)
+└─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); README only until MA1 scaffold
 ```
 
 Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa-site.git` (pushed).
@@ -53,9 +56,9 @@ Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa-site.g
 | Spec (§11.6) | Folder | Hosting | Status |
 |---|---|---|---|
 | `apps/api` | `backend/` | Render | ✅ M1 |
-| `apps/web` | `frontend/` | Vercel | ✅ M2 |
-| `apps/desktop` | `desktop/` | — | 🔜 M9 |
-| `apps/mobile` | `mobile/` | — | 🔜 M10 |
+| `apps/web` | `web_app/` | Vercel | ✅ M2 |
+| `apps/desktop` | `desktop_app/` | — | 🔜 M9 |
+| `apps/mobile` | `flutter_app/` | — | 🔜 M10 |
 | `packages/contracts` | `packages/contracts/` | — | ✅ |
 | `packages/api-client` | `packages/api-client/` | — | ✅ |
 | `packages/tokens` | `packages/tokens/` | — | ✅ |
@@ -92,6 +95,7 @@ Rule: **a new endpoint is added here first** (schema + `add(...)` in `openapi.ts
 
 ```text
 packages/tokens/src/index.ts ✅ palettes (light/dark), typeColors, typography, shape, spacingUnit
+packages/tokens/src/contrast.test.ts ✅ WCAG contrast guarantees for both themes (text, buttons, status, block fills)
 ```
 
 ---
@@ -104,6 +108,8 @@ backend/
 ├─ .env.example              ✅
 ├─ vitest.config.ts          ✅
 ├─ scripts/dev-memory.ts     ✅ in-memory MongoDB + real server (local dev without Atlas, e2e)
+├─ scripts/backup.ts         ✅ `pnpm --filter @niwa/backend backup [--out f]` → gzip'd EJSON NDJSON
+├─ scripts/restore.ts        ✅ `… restore <file> --yes [--drop]` (dry run without --yes) + syncIndexes
 ├─ src/
 │  ├─ server.ts              ✅ process entry: config → db → redis → app.listen, graceful shutdown
 │  ├─ app.ts                 ✅ createApp(): trust proxy, pino-http, helmet, CORS, json, cookies, rate limit, /api/v1, errors
@@ -119,6 +125,8 @@ backend/
 │  │  ├─ tz.ts               ✅ IANA wall-clock ↔ UTC via Intl (DST-safe)
 │  │  ├─ recurrence.ts       ✅ occurrenceStart(anchor, rule, n, tz, allDay)
 │  │  ├─ contentDoc.ts       ✅ niwaLink extraction, heading titles, section find/replace (promotion)
+│  │  ├─ cloudinary.ts       ✅ signed-params, upload URL, resource lookup, destroy, tag removal (fetch-based, injectable)
+│  │  ├─ backup.ts           ✅ exportDatabase / restoreDatabase / readHeader (portable format, count-verified)
 │  │  └─ crypto.ts           🔜 M8 AES-256-GCM for AI key
 │  ├─ middleware/
 │  │  ├─ auth.ts             ✅ requireAuth(tokens) → res.locals.auth; authOf()
@@ -131,7 +139,7 @@ backend/
 │  │  ├─ refreshSession.model.ts ✅ hashed tokens, familyId, TTL index
 │  │  ├─ link.model.ts       ✅ source → target (+ anchor), origin content|manual, unique per pair
 │  │  ├─ schedule.model.ts   ✅ ScheduleEntry (events/blocks/occurrences) + ScheduleSeries (recurring rule)
-│  │  └─ attachment          🔜 M7
+│  │  └─ attachment.model.ts ✅ Cloudinary public id (unique), url, mime, size, orphanedAt
 │  ├─ repositories/
 │  │  ├─ item.repo.ts        ✅ tree/list/siblings, versioned update, ancestors, descendants, soft delete/restore/hard delete, trash, focus queries, tag counts/rename
 │  │  ├─ schedule.repo.ts    ✅ entries (overlap, upcoming per item), series (open, materialized, end-before), purge by item
@@ -144,16 +152,21 @@ backend/
 │  │  ├─ schedule.service.ts ✅ range + materialization, create/update/delete with scopes, all-day normalisation, item blocks
 │  │  ├─ search.service.ts   ✅ text index + substring fallback, snippets, matchedIn
 │  │  ├─ link.service.ts     ✅ links + backlinks with section names, manual links, content sync
+│  │  ├─ attachment.service.ts ✅ upload config/sign/confirm (folder, format, size checks), remove, syncFromContent (orphanedAt), purgeForItems, sweep
+│  │  ├─ maintenance.service.ts ✅ every 6 h: Trash > 30 days purge + attachment sweep (orphans 7 d, unconfirmed 24 h)
 │  │  ├─ workspace.service.ts ✅
 │  │  └─ serializers.ts      ✅ DB doc → contract DTO (strips secrets; derives nature)
 │  ├─ controllers/
 │  │  ├─ auth.controller.ts  ✅ cookie vs native-client token transport, CSRF header check
 │  │  ├─ schedule.controller.ts ✅ /schedule, /items/:id/schedule
 │  │  ├─ item.controller.ts  ✅ items, tree, trash, focus, tags, review, promote-section, links, inbox, file, search
+│  │  ├─ upload.controller.ts ✅ /uploads/config, /uploads/sign, /attachments
 │  │  └─ system.controller.ts ✅ health, workspace
 │  └─ routes/v1/index.ts     ✅ mounts every implemented path
 └─ tests/
-   ├─ helpers.ts             ✅ in-memory Mongo, buildApp(), refreshCookie()
+   ├─ helpers.ts             ✅ in-memory Mongo, buildApp(overrides, fetch?), refreshCookie()
+   ├─ uploads.test.ts        ✅ sign/confirm/reject, orphan sync, sweep, purge (fake Cloudinary)
+   ├─ backup.test.ts         ✅ export → restore round trip, drop guard, format check
    ├─ auth.test.ts           ✅ incl. rate limits
    ├─ items.test.ts          ✅ tree, ordering, moves, versions, delete/restore/purge, focus, tags
    ├─ schedule.test.ts       ✅ events, recurrence, scopes, blocks
@@ -163,7 +176,7 @@ backend/
    └─ system.test.ts         ✅ health, error envelope, env validation
 ```
 
-Implemented endpoints: health · auth (register, login, refresh, logout, me) · workspace · `GET /tree` · items (list, create, get, patch, delete, ancestors, move, archive, unarchive, restore, permanent) · trash · focus · tags (list, rename) · review · promote-section · links (item links, create, delete) · schedule (range, create, update, delete, item blocks). inbox (list, capture, file) · search. Not yet: uploads, ai.
+Implemented endpoints: health · auth (register, login, refresh, logout, me) · workspace · `GET /tree` · items (list, create, get, patch, delete, ancestors, move, archive, unarchive, restore, permanent) · trash · focus · tags (list, rename) · review · promote-section · links (item links, create, delete) · schedule (range, create, update, delete, item blocks). inbox (list, capture, file) · search · uploads (config, sign) · attachments (confirm, delete). Not yet: ai.
 
 ---
 
@@ -171,16 +184,16 @@ Implemented endpoints: health · auth (register, login, refresh, logout, me) · 
 
 ```text
 packages/api-client/src/
-├─ index.ts                  ✅ createApiClient(): request(), session (memory), restoreSession(), single-flight refresh, ApiError, auth.*, workspace.*, items.* (incl. links, review, promoteSection), links.*, schedule.*, inbox.*, search(), tags.*
+├─ index.ts                  ✅ createApiClient(): request(), session (memory), restoreSession(), single-flight refresh, ApiError, auth.*, workspace.*, items.* (incl. links, review, promoteSection), links.*, schedule.*, inbox.*, search(), tags.*, uploads.*
 └─ client.test.ts            ✅
 ```
 
 Add a namespace here (e.g. `items.*`) whenever backend endpoints land. Types come from `@niwa/contracts`.
 
-## 7. `frontend/` — Vite + React 19 + pure MUI v9 → Vercel
+## 7. `web_app/` — Vite + React 19 + pure MUI v9 → Vercel
 
 ```text
-frontend/
+web_app/
 ├─ index.html                ✅
 ├─ public/favicon.svg        ✅
 ├─ vite.config.ts            ✅ dev proxy /api → API_PROXY_TARGET (default localhost:4000) + vitest (jsdom)
@@ -193,12 +206,13 @@ frontend/
 │  ├─ tree.spec.ts           ✅ build/reorder/indent/complete/delete/restore, lens filtering, drag and drop (desktop)
 │  ├─ scheduler.spec.ts      ✅ month create/drag, week create/move/resize, repeat scopes, item block (desktop, Asia/Manila)
 │  ├─ inbox-search.spec.ts   ✅ capture → file → tree; search highlights (desktop + phone)
+│  ├─ a11y.spec.ts           ✅ axe WCAG 2.1 A/AA audit of every main screen + capture dialog, light and dark (desktop)
 │  └─ knowledge.spec.ts      ✅ editor, outline, [[ section links, backlinks, promote, broken section, review (desktop)
 └─ src/
    ├─ main.tsx               ✅ entry
    ├─ app/
    │  ├─ App.tsx             ✅ ThemeProvider + CssBaseline + QueryClient + AuthProvider + RouterProvider
-   │  ├─ router.tsx          ✅ route tree (CONCEPT.md §1.3): guest routes, protected shell routes
+   │  ├─ router.tsx          ✅ route tree (CONCEPT.md §1.3): guest routes, protected shell routes; secondary screens lazy-loaded; RouteError boundaries
    │  └─ theme.ts            ✅ MUI theme from @niwa/tokens (colorSchemes light/dark, CSS vars)
    ├─ api/client.ts          ✅ app-wide `api` instance + messageOf(err)
    ├─ auth/
@@ -223,7 +237,7 @@ frontend/
    │  │  ├─ queries.ts       ✅ TanStack Query hooks: tree, item, focus, trash, tags + mutations; storeItem() keeps item + tree caches in step; latestVersion() for writes
    │  │  ├─ treeModel.ts     ✅ buildTree, ancestors, lensView (visible/dimmed), moveUp/Down, indent/outdent, dropMove
    │  │  ├─ itemMeta.tsx     ✅ labels, type icons/colors, LENS_PATH, todayLocal, formatDay
-   │  │  ├─ ItemView.tsx     ✅ main item view: breadcrumbs, editable title, chips, children
+   │  │  ├─ ItemView.tsx     ✅ main item view: breadcrumbs, editable title, chips, children; editor lazy-loaded
    │  │  ├─ ItemFields.tsx   ✅ editable fields (detail panel / inline on phone)
    │  │  ├─ ItemMenu.tsx     ✅ per-item command menu
    │  │  ├─ ItemDialogs.tsx  ✅ create / move-to / confirm dialogs (context)
@@ -235,7 +249,9 @@ frontend/
    │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance (theme), account, ai (M8), trash
    │  ├─ knowledge/
    │  │  ├─ editor/NoteEditor.tsx   ✅ TipTap body: extensions, outline, toolbar, autosave, deep-link scroll, promote
-   │  │  ├─ editor/extensions.ts    ✅ AnchoredHeading (anchorId), AnchorGuard (unique ids), NiwaLink node
+   │  │  ├─ editor/extensions.ts    ✅ AnchoredHeading (anchorId), AnchorGuard (unique ids), NiwaLink node, NiwaImage (attachmentId)
+   │  │  ├─ editor/uploadImage.ts   ✅ checkImage, signed direct upload → confirm, deliveryUrl (f_auto,q_auto)
+   │  │  ├─ editor/useImageUploads.tsx ✅ paste/drop/pick insertion, uploading count, alt-text dialog
    │  │  ├─ editor/NiwaLinkView.tsx ✅ inline link chip (live title, section name, missing state)
    │  │  ├─ editor/linkSuggestion.ts + LinkPicker.tsx ✅ [[ picker with → for sections
    │  │  ├─ editor/useAutosave.ts   ✅ debounced versioned save, silent field-conflict retry, conflict pause
@@ -258,9 +274,10 @@ frontend/
    │  │  └─ queries.ts          ✅ inbox, capture, file
    │  ├─ search/SearchPage.tsx  ✅ URL-synced search, filters, Highlight
    │  └─ ai (M8) · graph (M11)   🔜
-   ├─ components/            ✅ Wordmark, EmptyState, FullPageLoader, NotFoundPage, Notifier (snackbar + Undo)
+   ├─ components/            ✅ Wordmark, EmptyState, FullPageLoader, NotFoundPage, Notifier (snackbar + Undo), RouteError (stale chunk → reload)
    ├─ lib/dates.ts           ✅ local grid math, all-day UTC date keys, input/format helpers
    ├─ lib/forms.ts           ✅ muiField(): RHF register → TextField inputRef
+   ├─ lib/a11y.ts            ✅ visuallyHidden, contrastRatio, readableOn (text colour for a fill)
    ├─ lib/usePersistentState.ts ✅ localStorage-backed UI state (expanded nodes, toggles)
    └─ test/                  ✅ setup.ts (jest-dom, matchMedia), renderApp.tsx (real routes + mocked fetch)
 ```
@@ -299,7 +316,7 @@ frontend/
 | Auth flow | `backend/src/services/{auth,token}.service.ts`, `backend/src/controllers/auth.controller.ts` |
 | Item model | `backend/src/models/item.model.ts` · contract `packages/contracts/src/item.ts` |
 | API contract | `packages/contracts/openapi.yaml` (generated) |
-| Theme / tokens | `packages/tokens/src/index.ts` · `frontend/src/app/theme.ts` |
-| Deploy config | `render.yaml` · `frontend/vercel.json` |
-| Routes | `frontend/src/app/router.tsx` · destinations in `frontend/src/layout/destinations.tsx` |
-| Session (web) | `frontend/src/auth/AuthProvider.tsx` → `@niwa/api-client` |
+| Theme / tokens | `packages/tokens/src/index.ts` · `web_app/src/app/theme.ts` |
+| Deploy config | `render.yaml` · `web_app/vercel.json` |
+| Routes | `web_app/src/app/router.tsx` · destinations in `web_app/src/layout/destinations.tsx` |
+| Session (web) | `web_app/src/auth/AuthProvider.tsx` → `@niwa/api-client` |

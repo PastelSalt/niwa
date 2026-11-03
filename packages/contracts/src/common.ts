@@ -36,6 +36,7 @@ export const ErrorCode = z
     'AI_KEY_INVALID',
     'AI_DISABLED',
     'UPSTREAM_ERROR',
+    'NOT_CONFIGURED',
     'INTERNAL_ERROR',
   ])
   .meta({ id: 'ErrorCode' });

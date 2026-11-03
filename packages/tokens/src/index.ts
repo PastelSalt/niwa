@@ -1,6 +1,6 @@
 /**
  * NIWA design tokens — the single source for colors and type (specs §1, §10.1).
- * Consumed by the MUI theme (frontend/desktop) and, later, generated into a Dart theme (mobile).
+ * Consumed by the MUI theme (web_app/desktop) and, later, generated into a Dart theme (mobile).
  * Never hardcode these values elsewhere.
  */
 
@@ -30,7 +30,7 @@ export interface Palette {
 
 export const palettes: Record<ColorMode, Palette> = {
   light: {
-    primary: '#6F9473',
+    primary: '#59765C', // sage, deepened for WCAG AA (4.5:1 on cream and with white text)
     primaryContrast: '#FFFFFF',
     secondary: '#E3A1B4',
     secondaryContrast: '#2B2B2B',
@@ -40,9 +40,9 @@ export const palettes: Record<ColorMode, Palette> = {
     textSecondary: '#66756A',
     divider: '#E4DED2',
     error: '#B5524C',
-    warning: '#C08A3E',
-    success: '#5E8C61',
-    info: '#5B7F95',
+    warning: '#B8843C',
+    success: '#527D55',
+    info: '#4F7389',
   },
   dark: {
     primary: '#9DBFA1',
@@ -63,7 +63,8 @@ export const palettes: Record<ColorMode, Palette> = {
 
 /** Item-type accents (tree icons, scheduler blocks). */
 export const typeColors: Record<ColorMode, Record<'project' | 'task' | 'note' | 'idea', string>> = {
-  light: { project: '#6F9473', task: '#5B7F95', note: '#8A7A5C', idea: '#E3A1B4' },
+  // Icon colours need 3:1 against the background (WCAG 1.4.11).
+  light: { project: '#59765C', task: '#4F7389', note: '#7D6E52', idea: '#B17E8C' },
   dark: { project: '#9DBFA1', task: '#8FB3C8', note: '#C9B78E', idea: '#F0B8C8' },
 };
 

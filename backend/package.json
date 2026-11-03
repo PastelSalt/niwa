@@ -9,7 +9,9 @@
     "dev:memory": "node --env-file-if-exists=.env scripts/dev-memory.ts",
     "start": "node src/server.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "backup": "node --env-file-if-exists=.env scripts/backup.ts",
+    "restore": "node --env-file-if-exists=.env scripts/restore.ts"
   },
   "dependencies": {
     "@niwa/contracts": "workspace:*",

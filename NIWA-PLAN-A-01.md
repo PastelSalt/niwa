@@ -24,9 +24,9 @@
 | Spec name | Local folder |
 |---|---|
 | `apps/api` | `backend/` |
-| `apps/web` | `frontend/` |
-| `apps/desktop` | `desktop/` (created in M9) |
-| `apps/mobile` | `mobile/` (created in M10) |
+| `apps/web` | `web_app/` |
+| `apps/desktop` | `desktop_app/` (created in M9) |
+| `apps/mobile` | `flutter_app/` (created in M10) |
 | `packages/*` | `packages/*` at repo root (created in M1) |
 
 ---
@@ -42,10 +42,10 @@
 | M4 | Knowledge base | ✅ Local | M3 |
 | M5 | Scheduler | ✅ Local | M3 |
 | M6 | Inbox + Search | ✅ Local | M3 |
-| M7 | Cloudinary + polish (**MVP complete**) | ⬜ | M4, M5, M6 |
-| M8 | AI (DeepSeek) | ⬜ | M7 |
-| M9 | Desktop (Electron) | ⬜ | M7 |
-| M10 | Mobile (Flutter) | ⬜ | M7 |
+| M7 | Cloudinary + polish (**MVP complete**) | 🟨 Local · large-tree perf pass + live Cloudinary check open | M4, M5, M6 |
+| M8 | AI (DeepSeek) | ⏸ Deferred by owner (2026-11-04) | M7 |
+| M9 | Desktop (Electron) → `desktop_app/` | ⬜ After mobile | M7 |
+| M10 | Mobile (Flutter) → `flutter_app/` | ➡ Moved to `NIWA-PLAN-A-02.md` (next priority) | M7 |
 | M11 | Graph + semantic search + export | ⬜ | M7 |
 | M12 | Release | ⬜ | M7 (+ any post-MVP shipped) |
 
@@ -57,7 +57,7 @@
 **Status:** 🟨 In progress
 
 ### M0.P1 — Root documents
-- [x] Create `backend/` and `frontend/` folders
+- [x] Create `backend/` and `web_app/` folders
 - [x] Write `PROJECT-SPECS.md` (concept source of truth)
 - [x] Write `NIWA-PLAN-A-01.md` (this file)
 - [x] Write `CODEMAP.md`
@@ -72,7 +72,7 @@
 
 ### M0.P3 — Workspace scaffold decisions — ✅
 - [x] Shared packages live in `packages/` at repo root (one pnpm workspace)
-- [x] Future `desktop/` and `mobile/` folders at repo root
+- [x] Future `desktop_app/` and `flutter_app/` folders at repo root
 - [x] Pin Node 24 LTS in `.nvmrc`; pnpm via Corepack (version pinned in root `package.json` `packageManager` in M1)
 - [x] `git init` (branch `main`) + remote `origin` → GitHub + `.gitignore` + `.editorconfig` + `.gitattributes`
 - [x] Record hosting (Render / Vercel / Atlas / Cloudinary / Render Key Value) and pure-MUI rule in `PROJECT-SPECS.md`
@@ -154,18 +154,18 @@
 ### M2.P0 — API client — ✅
 - [x] `packages/api-client`: typed client on `@niwa/contracts` types (no codegen needed for TS); in-memory access token, single-flight refresh on 401, error envelope → `ApiError`, CSRF header on web, `X-Client` + secure-store refresh for native
 
-### M2.P1 — Frontend scaffold (`frontend/`) — ✅
+### M2.P1 — Frontend scaffold (`web_app/`) — ✅
 - [x] Vite 8 + React 19 + TypeScript strict
 - [x] MUI v9 + Emotion; theme built from `@niwa/tokens` (light + dark via CSS variables, `data-light`/`data-dark`)
 - [x] React Router 8, TanStack Query, React Hook Form + Zod (contract schemas as form validators)
 - [x] Enforce **pure MUI**: ESLint `no-restricted-imports` blocking other UI/styling libs and any stylesheet imports (verified it fires)
 - [x] Vite dev proxy `/api` → `http://localhost:4000` (`API_PROXY_TARGET` overridable)
-- [x] `frontend/.env.example`
+- [x] `web_app/.env.example`
 - [x] `pnpm dev:memory` — full stack locally with an in-memory MongoDB (no Atlas needed)
 
 ### M2.P1b — Hosting setup (frontend) — needs owner accounts
-- [ ] Vercel project (root `frontend`, Vite preset, ignored build step)
-- [x] `frontend/vercel.json` with `/api/*` → Render rewrite + SPA fallback (`docs/OPS.md` §6) — update the Render hostname once the service exists
+- [ ] Vercel project (root `web_app`, Vite preset, ignored build step)
+- [x] `web_app/vercel.json` with `/api/*` → Render rewrite + SPA fallback (`docs/OPS.md` §6) — update the Render hostname once the service exists
 - [ ] Verify refresh cookie works end-to-end on the Vercel preview URL
 
 ### M2.P2 — Auth UI — ✅
@@ -341,26 +341,26 @@
 ## M7 — Cloudinary + polish (MVP complete)
 
 **Goal:** images in notes and a production-quality MVP.
-**Status:** ⬜
+**Status:** 🟨 Local — all phases done except the large-tree performance pass; Cloudinary verified against a fake API (live account pending, like M1 hosting).
 
 ### M7.P1 — Cloudinary
-- [ ] Server-side upload signature endpoint (secret never leaves server)
-- [ ] Browser direct upload; `attachments` record
-- [ ] TipTap image insertion
-- [ ] Orphan attachment cleanup (per `DATA_MODEL.md`)
+- [x] Server-side upload signature endpoint (secret never leaves server)
+- [x] Browser direct upload; `attachments` record
+- [x] TipTap image insertion (paste, drop, toolbar; alt-text dialog)
+- [x] Orphan attachment cleanup (per `DATA_MODEL.md`) + Trash 30-day purge
 
 ### M7.P2 — UX states
-- [ ] Empty, loading, and error states on every screen
-- [ ] Keyboard navigation across tree, editor, scheduler
+- [x] Empty, loading, and error states on every screen (route error boundaries, stale-chunk reload, lazy-route progress)
+- [x] Keyboard navigation across tree, editor, scheduler (entries are focusable buttons; create via New)
 
 ### M7.P3 — Accessibility & quality
-- [ ] Accessibility audit (contrast in both themes, focus order, ARIA on tree/calendar)
+- [x] Accessibility audit (contrast in both themes, focus order, ARIA on tree/calendar) — `e2e/a11y.spec.ts` + token contrast tests
 - [ ] Performance pass on large trees
-- [ ] Core test suite green; coverage review
+- [x] Core test suite green (coverage review: every endpoint group has integration tests; UI flows covered by e2e)
 
 ### M7.P4 — Backups (flagged gap)
-- [ ] Finalize backup strategy in `docs/OPS.md`
-- [ ] Local backup script for MongoDB
+- [x] Finalize backup strategy in `docs/OPS.md`
+- [x] Local backup script for MongoDB (`backup` / `restore`, portable format) + nightly encrypted workflow
 
 **Exit criteria:** every §14.1 MVP bullet works locally; backups defined.
 
@@ -369,7 +369,7 @@
 ## M8 — AI (DeepSeek)
 
 **Goal:** explicit, per-item AI help with zero silent changes.
-**Status:** ⬜
+**Status:** ⏸ Deferred by owner (2026-11-04) — mobile first.
 **Pre-req doc:** `docs/AI.md`
 
 ### M8.P1 — AI doc
@@ -432,7 +432,7 @@
 ## M10 — Mobile (Flutter)
 
 **Goal:** mobile client with full data/behavior parity, differentiated UI.
-**Status:** ⬜
+**Status:** ➡ Superseded by **`NIWA-PLAN-A-02.md`** (MA0–MA11). The tasks below are kept for reference only.
 
 ### M10.P1 — Scaffold
 - [ ] Flutter 3.x project; Riverpod 3; go_router; Dio
@@ -510,3 +510,4 @@
 | 2026-11-03 | M4 done locally (editor, outline, promote, links/backlinks, review queue). |
 | 2026-11-03 | M5 done locally (SCHEDULER.md, schedule API with recurrence, month + week/day views, item blocks). |
 | 2026-11-03 | M6 done locally (quick capture, inbox + filing, search). Only M7 remains for the MVP. |
+| 2026-11-04 | M7 done locally except large-tree perf pass (see `GAPS.md`). Folders renamed: `frontend` → `web_app`, plus `flutter_app/`, `desktop_app/`. M8 deferred; mobile moved to `NIWA-PLAN-A-02.md` as next priority. |

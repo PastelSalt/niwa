@@ -1,7 +1,7 @@
 packages:
   - backend
-  - frontend
-  - desktop
+  - web_app
+  - desktop_app
   - packages/*
 
 # Install scripts are blocked by default. mongodb-memory-server downloads its

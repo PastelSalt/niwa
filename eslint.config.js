@@ -35,7 +35,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/playwright-report/**',
       '**/test-results/**',
-      'mobile/**',
+      'flutter_app/**',
     ],
   },
   js.configs.recommended,
@@ -48,8 +48,14 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
+  // Operator CLIs print their results.
+  { files: ['backend/scripts/**/*.ts'], rules: { 'no-console': 'off' } },
   {
-    files: ['frontend/src/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}', 'desktop/src/renderer/**/*.{ts,tsx}'],
+    files: [
+      'web_app/src/**/*.{ts,tsx}',
+      'packages/ui/**/*.{ts,tsx}',
+      'desktop_app/src/renderer/**/*.{ts,tsx}',
+    ],
     languageOptions: { globals: { ...globals.browser } },
     plugins: { 'react-hooks': reactHooks },
     rules: {
