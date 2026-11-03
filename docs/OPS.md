@@ -85,6 +85,8 @@ Each app ships a committed `.env.example`; real `.env` files are git-ignored.
 | `ACCESS_TOKEN_TTL_SECONDS` | `600` (allowed 300–900) |
 | `REFRESH_TOKEN_TTL_DAYS` | `14` (allowed 7–30). Refresh tokens are opaque random values stored as SHA-256 hashes — no signing secret needed |
 | `REGISTRATION_MODE` | `first_user_only` (default) \| `open` \| `closed` — single-user app, so only the first account can register by default |
+| `RATE_LIMIT_AUTH_MAX` | Login/register attempts per 15 min per IP. Default `20`; e2e raises it |
+| `RATE_LIMIT_GENERAL_MAX` | All `/api/v1` requests per minute per IP. Default `600` |
 | `CORS_ORIGINS` | Comma list, e.g. `http://localhost:5173,https://niwa.vercel.app` |
 | `COOKIE_DOMAIN` | Unset (host-only cookie on the Vercel domain via rewrite) |
 | `CLOUDINARY_CLOUD_NAME` | — |

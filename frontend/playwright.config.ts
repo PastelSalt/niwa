@@ -8,6 +8,8 @@ const WEB_PORT = 5174;
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: false,
+  // The tree and knowledge specs are long multi-step journeys; give them room on a busy machine.
+  timeout: 60_000,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: `http://localhost:${WEB_PORT}`, trace: 'retain-on-failure' },
@@ -18,7 +20,12 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm --filter @niwa/backend dev:memory',
-      env: { API_PORT: String(API_PORT), LOG_LEVEL: 'warn' },
+      env: {
+        API_PORT: String(API_PORT),
+        LOG_LEVEL: 'warn',
+        RATE_LIMIT_AUTH_MAX: '1000',
+        RATE_LIMIT_GENERAL_MAX: '100000',
+      },
       url: `http://localhost:${API_PORT}/api/v1/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,

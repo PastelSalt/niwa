@@ -74,6 +74,7 @@ export const Item = z
     reviewAt: DateOnly.nullable(),
     sourceUrl: z.string().nullable(),
     inboxedAt: IsoDateTime.nullable(),
+    suggestedParentId: Id.nullable().meta({ description: 'Inbox only: where capture suggested filing it' }),
     archivedAt: IsoDateTime.nullable(),
     deletedAt: IsoDateTime.nullable(),
     version: z.number().int(),
@@ -156,6 +157,23 @@ export type ListItemsQuery = z.infer<typeof ListItemsQuery>;
 
 export const ItemResponse = z.object({ item: Item }).meta({ id: 'ItemResponse' });
 export const ItemListResponse = z.object({ items: z.array(ItemSummary) }).meta({ id: 'ItemListResponse' });
+
+/**
+ * The whole filed tree in one call (single-user workspace — CONCEPT.md §2). Excludes deleted and
+ * inboxed items; archived ones only with `includeArchived`. Clients build the hierarchy from parentId.
+ */
+export const TreeQuery = z.object({ includeArchived: z.stringbool().optional() });
+
+/** `restoredTo: 'inbox'` when the original parent no longer exists (DATA_MODEL.md §5). */
+export const RestoreResponse = z
+  .object({ item: Item, restoredTo: z.enum(['original', 'inbox']), restoredCount: z.number().int() })
+  .meta({ id: 'RestoreResponse' });
+export type RestoreResponse = z.infer<typeof RestoreResponse>;
+
+export const DeleteResponse = z
+  .object({ ok: z.literal(true), affected: z.number().int() })
+  .meta({ id: 'DeleteResponse', description: 'Number of items (item + descendants) affected' });
+export type DeleteResponse = z.infer<typeof DeleteResponse>;
 
 /** Focus sections for the Actionable base — specs §4.2. */
 export const FocusResponse = z

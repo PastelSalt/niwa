@@ -173,3 +173,29 @@ describe('refresh (native client)', () => {
     expect(r1.body.refreshToken).not.toBe(reg.body.refreshToken);
   });
 });
+
+describe('rate limits', () => {
+  it('does not apply the strict login limiter to refresh (page reloads)', async () => {
+    const app = buildApp();
+    const reg = await request(app).post('/api/v1/auth/register').send(creds).expect(201);
+    let cookie = refreshCookie(reg.headers['set-cookie'])!;
+    for (let i = 0; i < 25; i++) {
+      const res = await request(app).post('/api/v1/auth/refresh').set(csrf).set('Cookie', cookie).expect(200);
+      cookie = refreshCookie(res.headers['set-cookie'])!;
+    }
+  });
+
+  it('limits repeated login attempts', async () => {
+    const app = buildApp();
+    const attempts = [];
+    for (let i = 0; i < 21; i++) {
+      attempts.push(
+        await request(app)
+          .post('/api/v1/auth/login')
+          .send({ ...creds, password: 'wrong password!!' }),
+      );
+    }
+    expect(attempts.at(-1)!.status).toBe(429);
+    expect(attempts.at(-1)!.body.error.code).toBe('RATE_LIMITED');
+  });
+});

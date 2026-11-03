@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { TEST_USER } from './fixtures.ts';
+import { TEST_USER, uniqueEmail } from './fixtures.ts';
 
 // One account per project run (the in-memory API runs with REGISTRATION_MODE=open).
-const userFor = (project: string) => ({ ...TEST_USER, email: TEST_USER.email.replace('@', `+${project}@`) });
+const userFor = (project: string) => ({ ...TEST_USER, email: uniqueEmail(project) });
 
 async function fillAuthForm(page: Page, email: string, password: string, confirm = false) {
   await page.getByLabel('Email').fill(email);
@@ -29,7 +29,8 @@ test('register → shell → reload keeps session → logout → login', async (
   // Access token is memory-only; a reload must restore the session from the HttpOnly cookie.
   await page.reload();
   await expect(page).toHaveURL(/\/knowledge$/);
-  await expect(page.getByText('Your notebook garden')).toBeVisible();
+  // Tree pane on desktop; on phones the tree is the Knowledge home.
+  await expect(page.getByRole('tree')).toBeVisible();
 
   const cookies = await page.context().cookies();
   const rt = cookies.find((c) => c.name === 'niwa_rt');

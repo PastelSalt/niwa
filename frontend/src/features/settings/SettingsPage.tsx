@@ -14,6 +14,7 @@ import { useColorScheme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { useAuth } from '../../auth/AuthProvider.tsx';
+import { TrashSection } from '../items/TrashSection.tsx';
 
 const SECTIONS = [
   { key: 'appearance', label: 'Appearance' },
@@ -124,7 +125,9 @@ export function SettingsPage() {
       />
     ),
     trash: (
-      <ComingSoon title="Trash" milestone="M3" text="Restore deleted items or delete them permanently." />
+      <Section title="Trash">
+        <TrashSection />
+      </Section>
     ),
   };
 

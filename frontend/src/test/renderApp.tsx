@@ -29,16 +29,35 @@ export const apiError = (status: number, code: string, message: string) =>
 
 type Handler = (url: string, init: RequestInit) => Response | Promise<Response>;
 
+const emptyFocus = { inProgress: [], highPriority: [], overdue: [], upcoming: [], recentlyUpdated: [] };
+
+/** Background reads every signed-in screen makes; tests override them as needed. */
+const DEFAULT_HANDLERS: Record<string, Handler> = {
+  'POST /auth/refresh': noSession,
+  'GET /tree': () => json(200, { items: [] }),
+  'GET /focus': () => json(200, emptyFocus),
+  'GET /tags': () => json(200, { tags: [] }),
+  'GET /trash': () => json(200, { items: [] }),
+  'GET /schedule': () => json(200, { entries: [] }),
+  'GET /review': () => json(200, { items: [] }),
+  'GET /inbox': () => json(200, { items: [] }),
+  'GET /search': () => json(200, { hits: [] }),
+};
+
 /**
  * Renders the real route tree with a real api client whose `fetch` is a router-style mock:
- * `{ 'POST /auth/login': () => authOk() }`. Unmatched calls fail the test loudly.
+ * `{ 'POST /auth/login': () => authOk() }`. Unmatched calls reject and are recorded in `unhandled`.
  */
 export function renderApp(path: string, handlers: Record<string, Handler> = {}) {
+  const unhandled: string[] = [];
   const fetch = vi.fn(async (input: string | URL | Request, init: RequestInit = {}) => {
     const url = String(input);
     const key = `${init.method ?? 'GET'} ${url.replace('/api/v1', '').split('?')[0]}`;
-    const handler = handlers[key] ?? (key === 'POST /auth/refresh' ? noSession : undefined);
-    if (!handler) throw new Error(`Unhandled request in test: ${key}`);
+    const handler = handlers[key] ?? DEFAULT_HANDLERS[key];
+    if (!handler) {
+      unhandled.push(key);
+      throw new Error(`Unhandled request in test: ${key}`);
+    }
     return handler(url, init);
   });
 
@@ -56,5 +75,5 @@ export function renderApp(path: string, handlers: Record<string, Handler> = {}) 
       </QueryClientProvider>
     </ThemeProvider>,
   );
-  return { ...utils, router, fetch, api };
+  return { ...utils, router, fetch, api, unhandled };
 }

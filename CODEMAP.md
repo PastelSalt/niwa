@@ -114,7 +114,11 @@ backend/
 │  │  ├─ parse.ts            ✅ parse(schema, data) — ZodError → 400 via error middleware
 │  │  ├─ db.ts               ✅ Mongoose connect/disconnect
 │  │  ├─ redis.ts            ✅ ioredis client or null (local/test)
-│  │  ├─ orderKey.ts         ✅ fractional-indexing helpers
+│  │  ├─ orderKey.ts         ✅ fractional-indexing helpers (keyBetween, keysAfter, rebalance threshold)
+│  │  ├─ contentText.ts      ✅ ProseMirror JSON → contentPlainText; 1 MB content cap
+│  │  ├─ tz.ts               ✅ IANA wall-clock ↔ UTC via Intl (DST-safe)
+│  │  ├─ recurrence.ts       ✅ occurrenceStart(anchor, rule, n, tz, allDay)
+│  │  ├─ contentDoc.ts       ✅ niwaLink extraction, heading titles, section find/replace (promotion)
 │  │  └─ crypto.ts           🔜 M8 AES-256-GCM for AI key
 │  ├─ middleware/
 │  │  ├─ auth.ts             ✅ requireAuth(tokens) → res.locals.auth; authOf()
@@ -123,26 +127,43 @@ backend/
 │  ├─ models/
 │  │  ├─ user.model.ts       ✅
 │  │  ├─ workspace.model.ts  ✅
-│  │  ├─ item.model.ts       ✅ all §6.1 fields + indexes + weighted text index
+│  │  ├─ item.model.ts       ✅ all §6.1 fields + deleteBatchId/deleteRoot/deletedParentId + indexes + weighted text index
 │  │  ├─ refreshSession.model.ts ✅ hashed tokens, familyId, TTL index
-│  │  └─ link / attachment / scheduleEntry   🔜 M4 / M7 / M5
-│  ├─ repositories/          ✅ user, workspace, item (roots only so far), refreshSession · always .lean()
+│  │  ├─ link.model.ts       ✅ source → target (+ anchor), origin content|manual, unique per pair
+│  │  ├─ schedule.model.ts   ✅ ScheduleEntry (events/blocks/occurrences) + ScheduleSeries (recurring rule)
+│  │  └─ attachment          🔜 M7
+│  ├─ repositories/
+│  │  ├─ item.repo.ts        ✅ tree/list/siblings, versioned update, ancestors, descendants, soft delete/restore/hard delete, trash, focus queries, tag counts/rename
+│  │  ├─ schedule.repo.ts    ✅ entries (overlap, upcoming per item), series (open, materialized, end-before), purge by item
+│  │  ├─ link.repo.ts        ✅ by source/target, content-link sync, delete for purge
+│  │  └─ user · workspace · refreshSession ✅   (always .lean())
 │  ├─ services/
 │  │  ├─ token.service.ts    ✅ access JWT sign/verify, refresh issue/rotate/revoke (reuse → family revoke)
 │  │  ├─ auth.service.ts     ✅ register (+workspace +root containers), login, refresh, logout, me
+│  │  ├─ item.service.ts     ✅ item rules: create/update/move (cycles, server-minted keys, rebalance), archive, delete/restore/purge batches, focus, tags, review, promoteSection, capture, inbox, file; syncs content links on save
+│  │  ├─ schedule.service.ts ✅ range + materialization, create/update/delete with scopes, all-day normalisation, item blocks
+│  │  ├─ search.service.ts   ✅ text index + substring fallback, snippets, matchedIn
+│  │  ├─ link.service.ts     ✅ links + backlinks with section names, manual links, content sync
 │  │  ├─ workspace.service.ts ✅
-│  │  └─ serializers.ts      ✅ DB doc → contract DTO (strips secrets)
+│  │  └─ serializers.ts      ✅ DB doc → contract DTO (strips secrets; derives nature)
 │  ├─ controllers/
 │  │  ├─ auth.controller.ts  ✅ cookie vs native-client token transport, CSRF header check
+│  │  ├─ schedule.controller.ts ✅ /schedule, /items/:id/schedule
+│  │  ├─ item.controller.ts  ✅ items, tree, trash, focus, tags, review, promote-section, links, inbox, file, search
 │  │  └─ system.controller.ts ✅ health, workspace
 │  └─ routes/v1/index.ts     ✅ mounts every implemented path
 └─ tests/
    ├─ helpers.ts             ✅ in-memory Mongo, buildApp(), refreshCookie()
-   ├─ auth.test.ts           ✅
+   ├─ auth.test.ts           ✅ incl. rate limits
+   ├─ items.test.ts          ✅ tree, ordering, moves, versions, delete/restore/purge, focus, tags
+   ├─ schedule.test.ts       ✅ events, recurrence, scopes, blocks
+   ├─ recurrence.test.ts     ✅ tz + DST + month clamping
+   ├─ inbox-search.test.ts   ✅ capture, filing, search ranking/filters
+   ├─ knowledge.test.ts      ✅ content links, backlinks, manual links, review, promote section
    └─ system.test.ts         ✅ health, error envelope, env validation
 ```
 
-Implemented endpoints so far: `GET /health`, `POST /auth/{register,login,refresh,logout}`, `GET /auth/me`, `GET /workspace`. Everything else in the contract is 🔜.
+Implemented endpoints: health · auth (register, login, refresh, logout, me) · workspace · `GET /tree` · items (list, create, get, patch, delete, ancestors, move, archive, unarchive, restore, permanent) · trash · focus · tags (list, rename) · review · promote-section · links (item links, create, delete) · schedule (range, create, update, delete, item blocks). inbox (list, capture, file) · search. Not yet: uploads, ai.
 
 ---
 
@@ -150,7 +171,7 @@ Implemented endpoints so far: `GET /health`, `POST /auth/{register,login,refresh
 
 ```text
 packages/api-client/src/
-├─ index.ts                  ✅ createApiClient(): request(), session (memory), restoreSession(), single-flight refresh, ApiError, auth.*, workspace.*
+├─ index.ts                  ✅ createApiClient(): request(), session (memory), restoreSession(), single-flight refresh, ApiError, auth.*, workspace.*, items.* (incl. links, review, promoteSection), links.*, schedule.*, inbox.*, search(), tags.*
 └─ client.test.ts            ✅
 ```
 
@@ -168,7 +189,11 @@ frontend/
 ├─ .env.example              ✅
 ├─ e2e/
 │  ├─ fixtures.ts            ✅ throwaway test account for the in-memory backend
-│  └─ smoke.spec.ts          ✅
+│  ├─ smoke.spec.ts          ✅ auth + shell + theme (desktop + phone)
+│  ├─ tree.spec.ts           ✅ build/reorder/indent/complete/delete/restore, lens filtering, drag and drop (desktop)
+│  ├─ scheduler.spec.ts      ✅ month create/drag, week create/move/resize, repeat scopes, item block (desktop, Asia/Manila)
+│  ├─ inbox-search.spec.ts   ✅ capture → file → tree; search highlights (desktop + phone)
+│  └─ knowledge.spec.ts      ✅ editor, outline, [[ section links, backlinks, promote, broken section, review (desktop)
 └─ src/
    ├─ main.tsx               ✅ entry
    ├─ app/
@@ -184,20 +209,59 @@ frontend/
    │  ├─ RegisterPage.tsx    ✅
    │  └─ auth.test.tsx       ✅
    ├─ layout/
-   │  ├─ AppShell.tsx        ✅ rail | tree | main | detail, responsive breakpoints
+   │  ├─ AppShell.tsx        ✅ Notifier + ItemDialogs providers; rail | tree | main | detail; phone: tree as lens home
    │  ├─ destinations.tsx    ✅ the six destinations (label, path, icon, shortcut, showsTree)
    │  ├─ NavRail.tsx         ✅ NavRail (≥ md) + BottomNav (< md)
    │  ├─ TopBar.tsx          ✅ title, search, capture (disabled until M6), detail toggle, account menu
-   │  ├─ TreePane.tsx        ✅ placeholder until M3
-   │  ├─ DetailPanel.tsx     ✅ placeholder until M3
+   │  ├─ TreePane.tsx        ✅ lens-filtered SimpleTreeView, drag-and-drop zones, keyboard moves, hover actions
+   │  ├─ DetailPanel.tsx     ✅ selected item's ItemFields (docked ≥ lg, drawer otherwise)
    │  ├─ useGlobalShortcuts.ts ✅ g-shortcuts + `/`
    │  └─ shell.test.tsx      ✅
    ├─ features/
-   │  ├─ placeholders.tsx    ✅ Knowledge / Actionable / Scheduler / Inbox / Search landings (replaced per milestone)
-   │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance (theme), account, ai (M8), trash (M3)
-   │  └─ tree (M3) · knowledge (M4) · scheduler (M5) · inbox, search (M6) · ai (M8) · graph (M11)   🔜
-   ├─ components/            ✅ Wordmark, EmptyState, PagePlaceholder, FullPageLoader, NotFoundPage
+   │  ├─ pages.tsx           ✅ Knowledge/Actionable pages (item view when `:itemId`), ItemRedirect (/items/:id)
+   │  ├─ items/
+   │  │  ├─ queries.ts       ✅ TanStack Query hooks: tree, item, focus, trash, tags + mutations; storeItem() keeps item + tree caches in step; latestVersion() for writes
+   │  │  ├─ treeModel.ts     ✅ buildTree, ancestors, lensView (visible/dimmed), moveUp/Down, indent/outdent, dropMove
+   │  │  ├─ itemMeta.tsx     ✅ labels, type icons/colors, LENS_PATH, todayLocal, formatDay
+   │  │  ├─ ItemView.tsx     ✅ main item view: breadcrumbs, editable title, chips, children
+   │  │  ├─ ItemFields.tsx   ✅ editable fields (detail panel / inline on phone)
+   │  │  ├─ ItemMenu.tsx     ✅ per-item command menu
+   │  │  ├─ ItemDialogs.tsx  ✅ create / move-to / confirm dialogs (context)
+   │  │  ├─ useItemActions.ts ✅ move, delete (+Undo), archive (+Undo)
+   │  │  ├─ TrashSection.tsx ✅ Settings → Trash
+   │  │  ├─ EditableTitle.tsx · useSelectedItemId.ts ✅
+   │  │  └─ treeModel.test.ts ✅
+   │  ├─ actionable/FocusView.tsx ✅ Focus sections with completion checkbox (optimistic)
+   │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance (theme), account, ai (M8), trash
+   │  ├─ knowledge/
+   │  │  ├─ editor/NoteEditor.tsx   ✅ TipTap body: extensions, outline, toolbar, autosave, deep-link scroll, promote
+   │  │  ├─ editor/extensions.ts    ✅ AnchoredHeading (anchorId), AnchorGuard (unique ids), NiwaLink node
+   │  │  ├─ editor/NiwaLinkView.tsx ✅ inline link chip (live title, section name, missing state)
+   │  │  ├─ editor/linkSuggestion.ts + LinkPicker.tsx ✅ [[ picker with → for sections
+   │  │  ├─ editor/useAutosave.ts   ✅ debounced versioned save, silent field-conflict retry, conflict pause
+   │  │  ├─ editor/Outline.tsx · EditorToolbar.tsx · headings.ts ✅
+   │  │  ├─ LinksPanel.tsx      ✅ links (content + related, add/remove) and backlinks
+   │  │  ├─ ReviewQueue.tsx · KnowledgeHome.tsx ✅
+   │  │  └─ queries.ts          ✅ links, review, create/remove link
+   │  ├─ scheduler/
+   │  │  ├─ SchedulerPage.tsx   ✅ /scheduler/:view/:date — header, view switch, dialogs, drag saves; SchedulerHome redirect
+   │  │  ├─ MonthView.tsx       ✅ 6-week grid, chips, all-day bars, drag to another day
+   │  │  ├─ TimeGridView.tsx    ✅ week/day grid: pointer create/move/resize, overlap columns, now line
+   │  │  ├─ EntryDialog.tsx     ✅ create/edit event or block, repeat, colour, scope, delete
+   │  │  ├─ ItemScheduleSection.tsx ✅ item details: upcoming blocks + Schedule time
+   │  │  ├─ layout.ts · entryDisplay.ts · queries.ts ✅
+   │  │  └─ scheduler.test.ts   ✅
+   │  ├─ inbox/
+   │  │  ├─ CaptureProvider.tsx ✅ quick capture dialog + useQuickCapture() (c / Capture button), queued saves
+   │  │  ├─ InboxPage.tsx       ✅ newest-first list, multi-select, file / delete
+   │  │  ├─ FileDialog.tsx      ✅ filing panel (parent with path, type, due, tags; bulk)
+   │  │  └─ queries.ts          ✅ inbox, capture, file
+   │  ├─ search/SearchPage.tsx  ✅ URL-synced search, filters, Highlight
+   │  └─ ai (M8) · graph (M11)   🔜
+   ├─ components/            ✅ Wordmark, EmptyState, FullPageLoader, NotFoundPage, Notifier (snackbar + Undo)
+   ├─ lib/dates.ts           ✅ local grid math, all-day UTC date keys, input/format helpers
    ├─ lib/forms.ts           ✅ muiField(): RHF register → TextField inputRef
+   ├─ lib/usePersistentState.ts ✅ localStorage-backed UI state (expanded nodes, toggles)
    └─ test/                  ✅ setup.ts (jest-dom, matchMedia), renderApp.tsx (real routes + mocked fetch)
 ```
 

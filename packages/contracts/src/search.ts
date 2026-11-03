@@ -15,9 +15,15 @@ export type SearchQuery = z.infer<typeof SearchQuery>;
 export const SearchHit = z
   .object({
     item: ItemSummary,
-    snippet: z.string().nullable().meta({ description: 'Up to ~160 chars around the first match' }),
+    snippet: z
+      .string()
+      .nullable()
+      .meta({ description: 'Up to ~160 chars of the body around the first match' }),
+    matchedIn: z.enum(['title', 'tags', 'content']),
     score: z.number(),
   })
   .meta({ id: 'SearchHit' });
+export type SearchHit = z.infer<typeof SearchHit>;
 
 export const SearchResponse = z.object({ hits: z.array(SearchHit) }).meta({ id: 'SearchResponse' });
+export type SearchResponse = z.infer<typeof SearchResponse>;

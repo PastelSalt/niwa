@@ -10,10 +10,10 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /**
- * `g k` / `g a` / `g s` / `g i` navigate, `/` focuses search (CONCEPT.md §1.4).
+ * `g k` / `g a` / `g s` / `g i` navigate, `/` focuses search, `c` captures (CONCEPT.md §1.4).
  * Ignored while typing in a field or the editor.
  */
-export function useGlobalShortcuts(focusSearch: () => void) {
+export function useGlobalShortcuts(focusSearch: () => void, capture: () => void) {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,6 +37,9 @@ export function useGlobalShortcuts(focusSearch: () => void) {
       } else if (e.key === '/') {
         e.preventDefault();
         focusSearch();
+      } else if (e.key === 'c' && !document.querySelector('[role="dialog"]')) {
+        e.preventDefault();
+        capture();
       }
     };
 
@@ -45,5 +48,5 @@ export function useGlobalShortcuts(focusSearch: () => void) {
       window.removeEventListener('keydown', onKey);
       if (pendingG !== null) window.clearTimeout(pendingG);
     };
-  }, [navigate, focusSearch]);
+  }, [navigate, focusSearch, capture]);
 }

@@ -14,7 +14,7 @@ describe('app shell', () => {
 
   it('hides the tree pane on non-tree destinations', async () => {
     renderApp('/scheduler', signedIn);
-    expect(await screen.findByText('Plan your month')).toBeInTheDocument();
+    expect(await screen.findByRole('grid', { name: 'Month' })).toBeInTheDocument();
     expect(screen.queryByLabelText(/tree$/)).not.toBeInTheDocument();
   });
 
@@ -36,7 +36,8 @@ describe('app shell', () => {
     const { router } = renderApp('/knowledge', signedIn);
     await userEvent.type(await screen.findByRole('textbox', { name: 'Search' }), 'bgp routing{Enter}');
     await waitFor(() => expect(router.state.location.search).toBe('?q=bgp%20routing'));
-    expect(await screen.findByText('Search for “bgp routing”')).toBeInTheDocument();
+    expect(await screen.findByRole('textbox', { name: 'Search query' })).toHaveValue('bgp routing');
+    expect(await screen.findByText('Nothing matches “bgp routing”')).toBeInTheDocument();
   });
 
   it('opens and closes the detail panel', async () => {

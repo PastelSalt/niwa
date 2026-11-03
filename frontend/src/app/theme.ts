@@ -1,11 +1,23 @@
 import { createTheme, type ColorSystemOptions } from '@mui/material/styles';
-import { palettes, shape, typography, type Palette } from '@niwa/tokens';
+import { palettes, shape, typeColors, typography, type Palette } from '@niwa/tokens';
 
 /** MUI theme built only from @niwa/tokens — no color literals anywhere else (specs §1, §11.7). */
 
-function colorScheme(p: Palette): ColorSystemOptions {
+type ItemTypeColors = (typeof typeColors)['light'];
+
+declare module '@mui/material/styles' {
+  interface Palette {
+    itemType: ItemTypeColors;
+  }
+  interface PaletteOptions {
+    itemType?: ItemTypeColors;
+  }
+}
+
+function colorScheme(p: Palette, types: ItemTypeColors): ColorSystemOptions {
   return {
     palette: {
+      itemType: types,
       primary: { main: p.primary, contrastText: p.primaryContrast },
       secondary: { main: p.secondary, contrastText: p.secondaryContrast },
       background: { default: p.background, paper: p.surface },
@@ -21,7 +33,10 @@ function colorScheme(p: Palette): ColorSystemOptions {
 
 export const theme = createTheme({
   cssVariables: { colorSchemeSelector: 'data' },
-  colorSchemes: { light: colorScheme(palettes.light), dark: colorScheme(palettes.dark) },
+  colorSchemes: {
+    light: colorScheme(palettes.light, typeColors.light),
+    dark: colorScheme(palettes.dark, typeColors.dark),
+  },
   typography: {
     fontFamily: typography.fontFamily,
     fontSize: typography.baseSize,

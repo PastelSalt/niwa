@@ -16,10 +16,12 @@ import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+
 import { useState, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../auth/AuthProvider.tsx';
 import { Wordmark } from '../components/Wordmark.tsx';
+import { useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
 
 interface TopBarProps {
   title: string;
@@ -31,6 +33,7 @@ interface TopBarProps {
 
 export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }: TopBarProps) {
   const { user, logout } = useAuth();
+  const capture = useQuickCapture();
   const navigate = useNavigate();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState('');
@@ -43,9 +46,15 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
 
   return (
     <AppBar position="sticky" sx={{ bgcolor: 'background.default', borderBottom: 1, borderColor: 'divider' }}>
-      <Toolbar variant="dense" sx={{ gap: 1.5, minHeight: 56 }}>
+      <Toolbar variant="dense" sx={{ gap: { xs: 1, md: 1.5 }, minHeight: 56, px: { xs: 1.5, sm: 2 } }}>
         {compact && <Wordmark size="small" />}
-        <Typography variant="subtitle1" component="h1" noWrap sx={{ fontWeight: 600, flexShrink: 0 }}>
+        {/* On phones the bottom nav already shows where you are; keep the h1 for screen readers. */}
+        <Typography
+          variant="subtitle1"
+          component="h1"
+          noWrap
+          sx={compact ? visuallyHidden : { fontWeight: 600, flexShrink: 0 }}
+        >
           {title}
         </Typography>
 
@@ -77,18 +86,16 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
           />
         </Box>
 
-        <Tooltip title="Quick capture arrives with the Inbox (M6)">
-          <span>
-            {compact ? (
-              <IconButton aria-label="Capture" disabled>
-                <AddRounded />
-              </IconButton>
-            ) : (
-              <Button variant="contained" startIcon={<AddRounded />} disabled>
-                Capture
-              </Button>
-            )}
-          </span>
+        <Tooltip title="Quick capture  ·  c">
+          {compact ? (
+            <IconButton aria-label="Capture" onClick={capture.open}>
+              <AddRounded />
+            </IconButton>
+          ) : (
+            <Button variant="contained" startIcon={<AddRounded />} onClick={capture.open}>
+              Capture
+            </Button>
+          )}
         </Tooltip>
 
         {!compact && (
@@ -158,3 +165,12 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
     </AppBar>
   );
 }
+
+const visuallyHidden = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+} as const;

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as ai from './ai.ts';
 import * as att from './attachment.ts';
 import * as auth from './auth.ts';
-import { ErrorEnvelope, HealthResponse, IdParams, OkResponse } from './common.ts';
+import { ErrorEnvelope, HealthResponse, IdParams } from './common.ts';
 import * as item from './item.ts';
 import * as link from './link.ts';
 import * as schedule from './schedule.ts';
@@ -117,6 +117,12 @@ export function buildRegistry(): OpenAPIRegistry {
   });
 
   // ---- Items (specs §6, DATA_MODEL.md) ----
+  add('get', '/tree', {
+    tag: 'Items',
+    summary: 'Every filed item as a flat list (build the hierarchy from parentId)',
+    query: item.TreeQuery,
+    response: item.ItemListResponse,
+  });
   add('get', '/items', {
     tag: 'Items',
     summary: 'List items (children of a parent, or filtered)',
@@ -147,7 +153,7 @@ export function buildRegistry(): OpenAPIRegistry {
     tag: 'Items',
     summary: 'Soft delete (cascades to descendants)',
     params: IdParams,
-    response: OkResponse,
+    response: item.DeleteResponse,
   });
   add('get', '/items/{id}/ancestors', {
     tag: 'Items',
@@ -178,15 +184,15 @@ export function buildRegistry(): OpenAPIRegistry {
   });
   add('post', '/items/{id}/restore', {
     tag: 'Trash',
-    summary: 'Restore a deleted batch',
+    summary: 'Restore a deleted batch (to its parent, or to Inbox if the parent is gone)',
     params: IdParams,
-    response: item.ItemResponse,
+    response: item.RestoreResponse,
   });
   add('delete', '/items/{id}/permanent', {
     tag: 'Trash',
     summary: 'Delete permanently (items, links, schedule entries, attachments)',
     params: IdParams,
-    response: OkResponse,
+    response: item.DeleteResponse,
   });
   add('post', '/items/{id}/file', {
     tag: 'Inbox',
@@ -258,7 +264,13 @@ export function buildRegistry(): OpenAPIRegistry {
     response: null,
   });
 
-  // ---- Scheduler (provisional until SCHEDULER.md) ----
+  // ---- Scheduler (docs/SCHEDULER.md) ----
+  add('get', '/items/{id}/schedule', {
+    tag: 'Scheduler',
+    summary: 'Upcoming time blocks for an item (its derived scheduled time)',
+    params: IdParams,
+    response: schedule.ScheduleListResponse,
+  });
   add('get', '/schedule', {
     tag: 'Scheduler',
     summary: 'Entries overlapping a range (materializes recurrences)',

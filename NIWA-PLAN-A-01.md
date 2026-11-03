@@ -38,10 +38,10 @@
 | M0 | Contract & docs | 🟨 Owner review (docs + contract freeze) | — |
 | M1 | Foundation (backend skeleton + auth) | 🟨 Code ✅ · hosting accounts pending | M0 |
 | M2 | Web shell + auth | ✅ Local · Vercel pending | M1 |
-| M3 | Item tree + Actionable base | ⬜ | M2 |
-| M4 | Knowledge base | ⬜ | M3 |
-| M5 | Scheduler | ⬜ | M3 |
-| M6 | Inbox + Search | ⬜ | M3 |
+| M3 | Item tree + Actionable base | ✅ Local | M2 |
+| M4 | Knowledge base | ✅ Local | M3 |
+| M5 | Scheduler | ✅ Local | M3 |
+| M6 | Inbox + Search | ✅ Local | M3 |
 | M7 | Cloudinary + polish (**MVP complete**) | ⬜ | M4, M5, M6 |
 | M8 | AI (DeepSeek) | ⬜ | M7 |
 | M9 | Desktop (Electron) | ⬜ | M7 |
@@ -193,128 +193,148 @@
 ## M3 — Item tree + Actionable base
 
 **Goal:** the core item tree with CRUD, move, reorder, and the Actionable lens.
-**Status:** ⬜
+**Status:** ✅ Done locally (2026-11-03)
 
-### M3.P1 — Items API
-- [ ] `items` model with all §6.1 fields + indexes (§6.3)
-- [ ] Derived `nature` from `type`
-- [ ] CRUD endpoints with optimistic concurrency (`version`)
-- [ ] Type transition validation (per `DATA_MODEL.md`)
-- [ ] `completedAt` set/cleared on status change
+### M3.P1 — Items API — ✅
+- [x] `items` model with all §6.1 fields + indexes (§6.3) + `deleteRoot`, tags index
+- [x] Derived `nature` from `type` (serializer; never stored)
+- [x] CRUD endpoints with optimistic concurrency (`version`; 409 `VERSION_CONFLICT` returns the current item)
+- [x] Type transitions: all allowed, actionable fields kept across round trips (DATA_MODEL.md §3)
+- [x] `completedAt` set/cleared on status change
+- [x] `GET /tree` (whole filed tree, no content) + `GET /items/:id/ancestors`
+- [x] `contentPlainText` extraction on save (ready for M4/M6)
 
-### M3.P2 — Move, reorder, delete
-- [ ] Fractional indexing for `orderKey` (§12.7) — move writes one row
-- [ ] Move to new parent (cycle prevention)
-- [ ] Soft delete with cascade to descendants; restore
-- [ ] Archive / unarchive
-- [ ] Trash view endpoint + "delete permanently"
+### M3.P2 — Move, reorder, delete — ✅
+- [x] Fractional indexing for `orderKey` (§12.7) — server-minted from `beforeId`/`afterId`; rebalance past 50 chars
+- [x] Move to new parent (cycle + self prevention; neighbours must be siblings)
+- [x] Soft delete with cascade to descendants; restore by batch (to original parent, or Inbox if it's gone)
+- [x] Archive / unarchive (hides the subtree)
+- [x] Trash view endpoint + "delete permanently" (removes everything under the item)
+- [x] `GET /focus`, `GET /tags`, `POST /tags/rename` (merge)
 
-### M3.P3 — Tree UI
-- [ ] `@mui/x-tree-view` tree with lazy children
-- [ ] Create child at any depth; rename inline
-- [ ] Drag to move/reorder
-- [ ] Item detail panel (title, type, status, priority, dueAt, estimate, tags)
+### M3.P3 — Tree UI — ✅
+- [x] `@mui/x-tree-view` SimpleTreeView (full tree loaded once — single-user scale; no lazy loading needed)
+- [x] Create child at any depth (hover +, menu, Inside list); rename inline in the item view
+- [x] Drag to move/reorder (native HTML5 DnD: before / inside / after zones) — MUI X drag-reorder is Pro-only
+- [x] Keyboard: Alt+↑/↓ reorder, Tab/Shift+Tab indent/outdent, Del delete; item menu with Move to…
+- [x] Item detail panel (type, status, priority, due, estimate, review, tags, source URL, move/archive/delete)
+- [x] Item view: breadcrumbs, editable title, chips, children list; delete with Undo snackbar
+- [x] Phone: tree is the lens home; item fields shown inline
 
-### M3.P4 — Actionable lens
-- [ ] Filter tree to `nature = actionable`
-- [ ] Focus sections: In Progress, High Priority, Overdue, Upcoming, Recently Updated
-- [ ] Tag editing (shared namespace)
+### M3.P4 — Actionable lens — ✅
+- [x] Lens filtering: items of the lens's nature + dimmed context ancestors; roots always shown (CONCEPT.md §2)
+- [x] Focus sections: Overdue, In Progress, High Priority, Upcoming (7 days), Recently Updated; complete with a checkbox
+- [x] Tag editing (shared namespace, normalized, suggestions from existing tags)
+- [x] Settings → Trash: restore / delete permanently
 
-### M3.P5 — Tests
-- [ ] Service tests: orderKey generation, cascade delete, type transitions, cycle prevention
-- [ ] E2E: create project → add tasks → reorder → complete
+### M3.P5 — Tests — ✅
+- [x] Backend integration (19 new): order keys, rebalance, cascade delete/restore batches, Inbox fallback, purge, cycles, versions, type round trip, plain text, focus, tags, cross-workspace isolation
+- [x] Frontend unit: treeModel (lens view, moves, drop rules)
+- [x] E2E: create project → add tasks → keyboard reorder/indent → status → complete from Focus → delete/undo → Trash restore; lens filtering; drag and drop
 
-**Exit criteria:** can build a multi-level project, reorder/move it, see it in Focus sections, soft-delete and restore.
+**Exit criteria:** ✅ build a multi-level project, reorder/move it, see it in Focus, soft-delete and restore (e2e verified).
 
 ---
 
 ## M4 — Knowledge base
 
 **Goal:** notes with rich content, outline, links, and review.
-**Status:** ⬜
+**Status:** ✅ Done locally (2026-11-03)
 
-### M4.P1 — Editor
-- [ ] TipTap editor storing ProseMirror JSON in `content`
-- [ ] `contentPlainText` extraction on save (server-side)
-- [ ] Autosave with version conflict handling
+### M4.P1 — Editor — ✅
+- [x] TipTap 3 editor storing ProseMirror JSON in `content` (every item type has a body; styled via MUI `sx`)
+- [x] `contentPlainText` extraction on save (server-side)
+- [x] Autosave (800 ms debounce, flush on blur/leave, tab-close warning) with version conflict handling: field-only conflicts retried silently; real conflicts pause with "Keep mine / Load latest"
+- [x] Formatting toolbar (H1–H3, bold, italic, strike, code, lists, quote, code block, link-to-item) + save status
+- [x] Opening a note never counts as an edit (baseline = editor's normalized JSON)
 
-### M4.P2 — Outline (§5)
-- [ ] Derived H1–H3 outline panel (collapsible, click to scroll)
-- [ ] Guarantee headings never create items or touch `parentId`
+### M4.P2 — Outline (§5) — ✅
+- [x] Derived H1–H3 outline panel (collapsible, click to scroll, updates the `#h-` hash)
+- [x] Stable heading `anchorId`s (unique even after copy/paste)
+- [x] Headings never create items or touch `parentId` — only explicit **Promote to child item** (outline menu) does
+- [x] Promote section → child item + inline link left behind (`POST /items/:id/promote-section`, atomic)
+- [x] Section deep links `/items/:id#h-<anchor>`; missing section → notice (CONCEPT.md §5.3)
 
-### M4.P3 — Links
-- [ ] `links` model + endpoints
-- [ ] Related items picker
-- [ ] Backlinks panel
+### M4.P3 — Links — ✅
+- [x] `links` model + endpoints (`GET /items/:id/links`, `POST /links`, `DELETE /links/:id`)
+- [x] Inline `[[` links with optional section (→ / Tab in the picker); content links synced on every save
+- [x] Related items picker (manual links)
+- [x] Backlinks panel with section names; links to deleted items hidden, removed on purge
 
-### M4.P4 — Review queue
-- [ ] Set/clear `reviewAt` (date-only)
-- [ ] Review queue view (due today + overdue)
+### M4.P4 — Review queue — ✅
+- [x] Set/clear `reviewAt` (date-only) in details
+- [x] Review queue view `/knowledge/review` (due today + overdue) with "again in 1 week / 1 month / 3 months / Done"
+- [x] Knowledge home shows how many notes are due
 
-### M4.P5 — Tests
-- [ ] Plain-text extraction tests
-- [ ] Link/backlink tests
-- [ ] E2E: write note with headings → outline appears → link another note → backlink shows
+### M4.P5 — Tests — ✅
+- [x] Backend (8 new): content-link sync, ignores self/unknown ids, deleted/restored/purged targets, manual links, review queue, promote (incl. nested headings, stale version, missing heading)
+- [x] Frontend unit: autosave latest-version, silent retry, conflict pause/keep/load
+- [x] E2E: headings → outline → `[[` link to a section → reload persists → follow link → backlink → promote → broken-section notice → review queue
 
-**Exit criteria:** knowledge lens works end-to-end with outline, links, backlinks, review queue.
+**Exit criteria:** ✅ knowledge lens works end-to-end with outline, links, backlinks, review queue (e2e verified, 3× repeat).
 
 ---
 
 ## M5 — Scheduler
 
 **Goal:** manual month + week/day planner with events and blocks.
-**Status:** ⬜
-**Pre-req doc:** `docs/SCHEDULER.md`
+**Status:** ✅ Done locally (2026-11-03)
+**Pre-req doc:** `docs/SCHEDULER.md` ✅
 
-### M5.P1 — Scheduler doc
-- [ ] Write `docs/SCHEDULER.md`: drag semantics, recurrence instances, timezone display, overlaps
+### M5.P1 — Scheduler doc — ✅
+- [x] `docs/SCHEDULER.md`: entries vs series, timezones (UTC + IANA wall-clock stepping, all-day as UTC dates), recurrence + materialization, edit scopes, drag semantics, overlaps, item ↔ block rules
 
-### M5.P2 — Schedule API
-- [ ] `schedule_entries` model (`kind: event | block`, UTC instants)
-- [ ] Range query endpoint (`startAt`/`endAt` index)
-- [ ] Block ↔ item linkage (derived scheduled time; no `scheduledStartAt` on item)
-- [ ] Recurrence: `none | daily | weekly | monthly`, materialized instances
-- [ ] Edit scope: "this instance" vs "this and future"
+### M5.P2 — Schedule API — ✅
+- [x] `schedule_entries` model (`kind: event | block`, UTC instants) + `schedule_series` (rule, anchor, duration, timeZone, materializedThrough, untilIndex)
+- [x] Range query endpoint (overlap on `startAt`/`endAt`, ≤ 62 days) that materializes recurrences on demand
+- [x] Block ↔ item linkage (derived scheduled time via `GET /items/:id/schedule`; hidden when the item is deleted, removed on purge)
+- [x] Recurrence: `none | daily | weekly | monthly`, DST-safe in the creator's zone, monthly clamping without drift, never re-creates deleted occurrences
+- [x] Edit/delete scope: "this event" (detached) vs "this and following" (splits the series)
 
-### M5.P3 — Month view
-- [ ] Month grid with entry chips
-- [ ] Drag chip to another day (preserve time)
+### M5.P3 — Month view — ✅
+- [x] Month grid (Monday start) with entry chips, all-day bars, "+N more" → day view, today marker
+- [x] Drag chip to another day (preserves time and duration)
 
-### M5.P4 — Week / day view
-- [ ] Time grid with current-time indicator
-- [ ] Drag to create, drag to move, resize
-- [ ] Schedule an item as a block from its detail panel
+### M5.P4 — Week / day view — ✅
+- [x] Time grid with current-time indicator, all-day row, side-by-side overlap layout
+- [x] Drag to create, drag to move (across days), resize bottom edge (15-min snap); click to edit
+- [x] Schedule an item as a block from its detail panel ("Scheduled" list + "Schedule time")
+- [x] Entry dialog: event / time block, all-day, dates/times, colour (token swatches), repeat, scope choice, delete
+- [x] Phones open on the day view
 
-### M5.P5 — Tests
-- [ ] Recurrence materialization tests
-- [ ] Timezone display tests (UTC storage, local display)
-- [ ] E2E: create event, create block for a task, move in month view
+### M5.P5 — Tests — ✅
+- [x] Recurrence/timezone unit tests (Manila, New York DST gap, weekly across DST, month-end clamping, leap year, all-day)
+- [x] API tests: overlap ranges, validation, all-day normalisation, materialization, both scopes for edit and delete, one-off ↔ series, blocks (upcoming, hide on delete, purge)
+- [x] Frontend unit: overlap layout, week/month grid dates, all-day keys
+- [x] E2E: month create + drag to another day; week drag-create, move, resize; weekly repeat with "this and following" and single delete; schedule a block from an item
 
-**Exit criteria:** can plan a month, time-block tasks, and manage simple recurrence.
+**Exit criteria:** ✅ can plan a month, time-block tasks, and manage simple recurrence (e2e verified).
 
 ---
 
 ## M6 — Inbox + Search
 
 **Goal:** frictionless capture and one search across everything.
-**Status:** ⬜
+**Status:** ✅ Done locally (2026-11-03)
 
-### M6.P1 — Inbox
-- [ ] Quick capture endpoint (sets `inboxedAt`)
-- [ ] Inbox view (query `inboxedAt != null, deletedAt == null`)
-- [ ] Filing flow: pick parent + type → clears `inboxedAt`
-- [ ] Global quick-capture shortcut in the web shell
+### M6.P1 — Inbox — ✅
+- [x] Quick capture endpoint `POST /inbox` (sets `inboxedAt`, default type idea, optional body and `suggestedParentId`)
+- [x] Inbox view `GET /inbox` (newest first) with count badge on the nav
+- [x] Filing flow `POST /items/:id/file`: parent + type (+ due, tags) → clears `inboxedAt`, appends to the parent
+- [x] Bulk filing (multi-select → one parent, keep or set type)
+- [x] Global quick capture: `c` anywhere / Capture button; Enter saves, Shift+Enter saves and keeps going; suggests the open item as parent
+- [x] Opening an inbox item shows "In your Inbox — File"
 
-### M6.P2 — Search
-- [ ] MongoDB text index on `title` + `contentPlainText`
-- [ ] Search endpoint with filters (type, nature, tag, status)
-- [ ] Search UI with result snippets and jump-to-item
+### M6.P2 — Search — ✅
+- [x] MongoDB weighted text index (`title` 10, `tags` 5, `contentPlainText` 1) + substring fallback for partial words
+- [x] `GET /search` with filters (type, nature, status, tag, include archived); inbox included, deleted never
+- [x] Search UI: URL-synced query (debounced), base filter, archived toggle, highlighted titles and body snippets, path + tags, jump to item
 
-### M6.P3 — Tests
-- [ ] Inbox capture/file tests
-- [ ] Search relevance + filter tests
+### M6.P3 — Tests — ✅
+- [x] Backend (10): capture, suggested parent, filing (type/due/tags), guards (double file, stale version, inbox parent, move), ranking, tags, partial words, filters, archived, deleted, regex-safe input
+- [x] E2E (desktop + phone): capture ×3 with Shift+Enter → inbox badge → file one → bulk-file two → in the tree; search by partial word, tag and body with highlights → open result
 
-**Exit criteria:** capture → file works in under a few seconds; search finds items by title and body.
+**Exit criteria:** ✅ capture → file in seconds; search finds items by title, tags and body (e2e verified).
 
 ---
 
@@ -486,3 +506,7 @@
 | 2026-11-03 | M0.P2 drafted, M0.P3 done. Added hosting tasks (M1.P2b, M2.P1b) and pure-MUI enforcement task. |
 | 2026-11-03 | M0.P4 contract generated. M1.P1/P2/P3/P5 done; api-client moved to start of M2. |
 | 2026-11-03 | M2 done locally (api-client, frontend scaffold, auth UI, shell, tests). |
+| 2026-11-03 | M3 done locally (items API, tree UI, detail panel, Focus, Trash). |
+| 2026-11-03 | M4 done locally (editor, outline, promote, links/backlinks, review queue). |
+| 2026-11-03 | M5 done locally (SCHEDULER.md, schedule API with recurrence, month + week/day views, item blocks). |
+| 2026-11-03 | M6 done locally (quick capture, inbox + filing, search). Only M7 remains for the MVP. |

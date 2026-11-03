@@ -1,3 +1,4 @@
+import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 import Drawer from '@mui/material/Drawer';
@@ -8,7 +9,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { NavLink, useLocation, useNavigate } from 'react-router';
 import { Wordmark } from '../components/Wordmark.tsx';
-import { DESTINATIONS, destinationForPath } from './destinations.tsx';
+import { useInbox } from '../features/inbox/queries.ts';
+import { DESTINATIONS, destinationForPath, type Destination } from './destinations.tsx';
 
 export const RAIL_WIDTH = 76;
 
@@ -64,7 +66,7 @@ export function NavRail() {
                 '&.Mui-focusVisible': { outline: 2, outlineColor: 'primary.main' },
               })}
             >
-              {d.icon}
+              <DestIcon d={d} />
               <Typography component="span" sx={{ fontSize: 11, fontWeight: 600 }}>
                 {d.label}
               </Typography>
@@ -104,11 +106,29 @@ export function BottomNav() {
             key={d.key}
             value={d.key}
             label={d.label}
-            icon={d.icon}
+            icon={<DestIcon d={d} />}
             sx={{ minWidth: 0 }}
           />
         ))}
       </BottomNavigation>
     </Paper>
+  );
+}
+
+/** Destination icon; Inbox shows how many captures await filing. */
+function DestIcon({ d }: { d: Destination }) {
+  const { data: inbox } = useInbox();
+  if (d.key !== 'inbox') return <>{d.icon}</>;
+  const count = inbox?.length ?? 0;
+  return (
+    <Badge
+      badgeContent={count}
+      color="secondary"
+      max={99}
+      invisible={count === 0}
+      aria-label={count ? `${count} in inbox` : undefined}
+    >
+      {d.icon}
+    </Badge>
   );
 }

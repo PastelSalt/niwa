@@ -12,6 +12,10 @@ export const Link = z
     targetAnchorId: z.string().nullable(),
     label: z.string().nullable(),
     origin: LinkOrigin,
+    targetSection: z
+      .string()
+      .nullable()
+      .meta({ description: 'Heading text of targetAnchorId, or null when no anchor / the section is gone' }),
     createdAt: IsoDateTime,
   })
   .meta({ id: 'Link' });
@@ -35,3 +39,4 @@ export const LinkWithItem = z
 export const ItemLinksResponse = z
   .object({ outgoing: z.array(LinkWithItem), backlinks: z.array(LinkWithItem) })
   .meta({ id: 'ItemLinksResponse' });
+export type ItemLinksResponse = z.infer<typeof ItemLinksResponse>;

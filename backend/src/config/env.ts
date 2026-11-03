@@ -29,6 +29,10 @@ const EnvSchema = z
 
     /** Single-user app: by default only the very first account can be created. */
     REGISTRATION_MODE: z.enum(['first_user_only', 'open', 'closed']).default('first_user_only'),
+    /** Login/register attempts per 15 min per IP. Raised only for local e2e runs. */
+    RATE_LIMIT_AUTH_MAX: z.coerce.number().int().min(1).default(20),
+    /** All /api/v1 requests per minute per IP (autosave + page loads stay well under this). */
+    RATE_LIMIT_GENERAL_MAX: z.coerce.number().int().min(1).default(600),
 
     CORS_ORIGINS: csv,
 

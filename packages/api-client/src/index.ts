@@ -3,12 +3,32 @@ import {
   CSRF_HEADER_VALUE,
   NATIVE_CLIENT_HEADER,
   type AuthResponse,
+  type CaptureInput,
+  type CreateItemInput,
+  type CreateLinkInput,
+  type CreateScheduleEntryInput,
+  type EditScope,
+  type DeleteResponse,
   type ErrorCode,
   type ErrorEnvelope,
+  type FileItemInput,
+  type FocusResponse,
   type HealthResponse,
+  type Item,
+  type ItemLinksResponse,
+  type ItemSummary,
+  type Link,
+  type ListItemsQuery,
   type LoginInput,
+  type MoveItemInput,
   type PublicUser,
   type RegisterInput,
+  type RestoreResponse,
+  type SearchQuery,
+  type SearchResponse,
+  type ScheduleEntry,
+  type UpdateScheduleEntryInput,
+  type UpdateItemInput,
   type Workspace,
 } from '@niwa/contracts';
 
@@ -62,7 +82,7 @@ type SessionListener = (session: Session | null) => void;
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
-  query?: Record<string, string | number | boolean | undefined>;
+  query?: Record<string, string | number | boolean | null | undefined>;
   /** Skip bearer auth + refresh-retry (auth endpoints themselves). */
   anonymous?: boolean;
   signal?: AbortSignal;
@@ -84,7 +104,7 @@ export function createApiClient(options: ApiClientOptions) {
 
   function buildUrl(path: string, query?: RequestOptions['query']) {
     const qs = new URLSearchParams();
-    for (const [k, v] of Object.entries(query ?? {})) if (v !== undefined) qs.set(k, String(v));
+    for (const [k, v] of Object.entries(query ?? {})) if (v !== undefined && v !== null) qs.set(k, String(v));
     const s = qs.toString();
     return `${baseUrl}${path}${s ? `?${s}` : ''}`;
   }
@@ -210,6 +230,74 @@ export function createApiClient(options: ApiClientOptions) {
 
     workspace: {
       get: () => request<{ workspace: Workspace }>('/workspace'),
+    },
+
+    items: {
+      tree: (includeArchived = false) =>
+        request<{ items: ItemSummary[] }>('/tree', {
+          query: { includeArchived: includeArchived || undefined },
+        }),
+      list: (query: ListItemsQuery = {}) => request<{ items: ItemSummary[] }>('/items', { query }),
+      get: (id: string) => request<{ item: Item }>(`/items/${id}`),
+      ancestors: (id: string) => request<{ items: ItemSummary[] }>(`/items/${id}/ancestors`),
+      create: (input: CreateItemInput) => request<{ item: Item }>('/items', { method: 'POST', body: input }),
+      update: (id: string, input: UpdateItemInput) =>
+        request<{ item: Item }>(`/items/${id}`, { method: 'PATCH', body: input }),
+      move: (id: string, input: MoveItemInput) =>
+        request<{ item: Item }>(`/items/${id}/move`, { method: 'POST', body: input }),
+      archive: (id: string, version: number) =>
+        request<{ item: Item }>(`/items/${id}/archive`, { method: 'POST', body: { version } }),
+      unarchive: (id: string, version: number) =>
+        request<{ item: Item }>(`/items/${id}/unarchive`, { method: 'POST', body: { version } }),
+      remove: (id: string) => request<DeleteResponse>(`/items/${id}`, { method: 'DELETE' }),
+      restore: (id: string) => request<RestoreResponse>(`/items/${id}/restore`, { method: 'POST' }),
+      purge: (id: string) => request<DeleteResponse>(`/items/${id}/permanent`, { method: 'DELETE' }),
+      trash: () => request<{ items: ItemSummary[] }>('/trash'),
+      focus: (today: string, upcomingDays?: number) =>
+        request<FocusResponse>('/focus', { query: { today, upcomingDays } }),
+      review: (today: string) => request<{ items: ItemSummary[] }>('/review', { query: { today } }),
+      links: (id: string) => request<ItemLinksResponse>(`/items/${id}/links`),
+      promoteSection: (id: string, version: number, anchorId: string) =>
+        request<{ parent: Item; child: Item }>(`/items/${id}/promote-section`, {
+          method: 'POST',
+          body: { version, anchorId },
+        }),
+    },
+
+    inbox: {
+      list: () => request<{ items: ItemSummary[] }>('/inbox'),
+      capture: (input: CaptureInput) => request<{ item: Item }>('/inbox', { method: 'POST', body: input }),
+      file: (id: string, input: FileItemInput) =>
+        request<{ item: Item }>(`/items/${id}/file`, { method: 'POST', body: input }),
+    },
+
+    search: (query: SearchQuery) => request<SearchResponse>('/search', { query }),
+
+    schedule: {
+      range: (from: string, to: string) =>
+        request<{ entries: ScheduleEntry[] }>('/schedule', { query: { from, to } }),
+      forItem: (itemId: string) => request<{ entries: ScheduleEntry[] }>(`/items/${itemId}/schedule`),
+      create: (input: CreateScheduleEntryInput) =>
+        request<{ entry: ScheduleEntry }>('/schedule', { method: 'POST', body: input }),
+      update: (id: string, input: UpdateScheduleEntryInput, scope: EditScope = 'instance') =>
+        request<{ entry: ScheduleEntry }>(`/schedule/${id}`, {
+          method: 'PATCH',
+          body: input,
+          query: { scope },
+        }),
+      remove: (id: string, scope: EditScope = 'instance') =>
+        request<void>(`/schedule/${id}`, { method: 'DELETE', query: { scope } }),
+    },
+
+    links: {
+      create: (input: CreateLinkInput) => request<{ link: Link }>('/links', { method: 'POST', body: input }),
+      remove: (id: string) => request<void>(`/links/${id}`, { method: 'DELETE' }),
+    },
+
+    tags: {
+      list: () => request<{ tags: { tag: string; count: number }[] }>('/tags'),
+      rename: (from: string, to: string) =>
+        request<{ updated: number }>('/tags/rename', { method: 'POST', body: { from, to } }),
     },
   };
 }

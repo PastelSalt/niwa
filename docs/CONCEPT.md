@@ -142,7 +142,7 @@ Lets a section that grew too big become its own child item — without breaking 
 
 ### 4.1 Trigger
 
-Explicit only: heading hover menu → **"Promote to child item"** (web/desktop). Not available on mobile in v1.
+Explicit only: **Outline → heading ⋯ menu → "Promote to child item"** (implemented M4; the outline menu replaced an in-editor heading hover menu, which fought with text selection). Not available on mobile in v1.
 
 ### 4.2 Behavior
 

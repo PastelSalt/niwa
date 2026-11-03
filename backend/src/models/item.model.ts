@@ -19,9 +19,13 @@ export interface ItemDoc {
   reviewAt: string | null;
   sourceUrl: string | null;
   inboxedAt: Date | null;
+  /** Inbox only: where capture suggested filing it (CONCEPT.md §3.1). */
+  suggestedParentId: Types.ObjectId | null;
   archivedAt: Date | null;
   deletedAt: Date | null;
   deleteBatchId: string | null;
+  /** True on the item the user deleted (the batch root shown in Trash); false on cascaded descendants. */
+  deleteRoot: boolean;
   deletedParentId: Types.ObjectId | null;
   version: number;
   completedAt: Date | null;
@@ -50,9 +54,11 @@ const itemSchema = new Schema<ItemDoc>(
     reviewAt: { type: String, default: null },
     sourceUrl: { type: String, default: null },
     inboxedAt: { type: Date, default: null },
+    suggestedParentId: { type: Schema.Types.ObjectId, default: null },
     archivedAt: { type: Date, default: null },
     deletedAt: { type: Date, default: null },
     deleteBatchId: { type: String, default: null },
+    deleteRoot: { type: Boolean, default: false },
     deletedParentId: { type: Schema.Types.ObjectId, default: null },
     version: { type: Number, default: 1 },
     completedAt: { type: Date, default: null },
@@ -67,6 +73,8 @@ itemSchema.index({ workspaceId: 1, deletedAt: 1 });
 itemSchema.index({ workspaceId: 1, status: 1, dueAt: 1 });
 itemSchema.index({ workspaceId: 1, updatedAt: -1 });
 itemSchema.index({ workspaceId: 1, deleteBatchId: 1 });
+itemSchema.index({ workspaceId: 1, deleteRoot: 1, deletedAt: -1 });
+itemSchema.index({ workspaceId: 1, tags: 1 });
 itemSchema.index(
   { title: 'text', tags: 'text', contentPlainText: 'text' },
   { weights: { title: 10, tags: 5, contentPlainText: 1 }, default_language: 'none', name: 'item_text' },

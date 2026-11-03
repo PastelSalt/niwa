@@ -26,6 +26,7 @@ These are needed by `CONCEPT.md` flows. Once accepted, fold them into `PROJECT-S
 | Collection | Field | Type | Why |
 |---|---|---|---|
 | `items` | `deleteBatchId` | string \| null | Restore exactly the set deleted together (§5) |
+| `items` | `deleteRoot` | boolean | ✅ implemented (M3). True on the item the user deleted; Trash lists only these |
 | `items` | `deletedParentId` | string \| null | Remember original parent for restore |
 | `links` | `targetAnchorId` | string \| null | Link to a heading section (`CONCEPT.md` §5) |
 | `links` | `origin` | `content` \| `manual` | Content links re-sync on save; manual ones don't |
@@ -33,7 +34,8 @@ These are needed by `CONCEPT.md` flows. Once accepted, fold them into `PROJECT-S
 | `attachments` | `workspaceId` | string | Ownership boundary |
 | `attachments` | `orphanedAt` | ISO timestamp \| null | Orphan cleanup grace period (§8) |
 | `schedule_entries` | `workspaceId` | string | Ownership boundary (missing in §6.2) |
-| `schedule_entries` | `seriesId`, `seriesIndex` | string \| null, number \| null | Recurrence instances (detailed in `SCHEDULER.md`) |
+| `schedule_entries` | `seriesId`, `seriesIndex`, `detached` | ObjectId \| null, number \| null, boolean | ✅ M5 — recurrence occurrences (see `SCHEDULER.md`) |
+| `schedule_series` | `recurrence`, `anchorAt`, `durationMs`, `isAllDay`, `color`, `timeZone`, `materializedThrough`, `untilIndex` | — | ✅ M5 — new collection for recurring rules |
 | `refresh_sessions` | `id`, `userId`, `tokenHash`, `familyId`, `expiresAt`, `revokedAt`, `createdAt` | — | Refresh rotation + reuse detection (§12.1) |
 | `users` | `workspaceId` | string | Single-workspace MVP link |
 
@@ -115,7 +117,8 @@ Always preserved: `id`, children, `content`, `links`, `tags`, `inboxedAt`, `revi
 - If the original parent is alive → back under it (at end of siblings). If not → into **Inbox** (`inboxedAt = now`, `parentId = null`) with a notice.
 
 **Delete permanently** (Trash only):
-- Hard-deletes the batch, its `links` (both directions), its `schedule_entries`, and its attachments (Cloudinary destroy, then records).
+- Hard-deletes the batch **and every item still under it** (including descendants soft-deleted earlier in another batch — they have nowhere to be restored to), plus their `links` (both directions), `schedule_entries`, and attachments (Cloudinary destroy, then records). Links/schedule/attachment cleanup is wired as those collections land (M4/M5/M7).
+- Purging any member of a batch purges the whole batch from its root.
 - Requires an explicit confirm in UI.
 
 **Trash retention:** items in Trash > 30 days are purged by a scheduled job (proposed; can be disabled in Settings).

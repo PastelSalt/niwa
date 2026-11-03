@@ -23,7 +23,7 @@ export function createApp({ config, logger, redis }: AppDeps): Express {
   const app = express();
   const tokens = createTokenService(config);
   const auth = createAuthService(config, tokens);
-  const limiters = createRateLimiters(redis);
+  const limiters = createRateLimiters(redis, config.RATE_LIMIT_AUTH_MAX, config.RATE_LIMIT_GENERAL_MAX);
 
   // Render (and the Vercel rewrite) sit in front of us: trust the first proxy hop for IP + secure cookies.
   app.set('trust proxy', 1);

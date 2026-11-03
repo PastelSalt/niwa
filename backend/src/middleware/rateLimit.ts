@@ -4,7 +4,7 @@ import { RedisStore, type RedisReply } from 'rate-limit-redis';
 import { AppError } from '../lib/errors.ts';
 
 /** Centralized rate limiting — Redis-backed when available, in-memory otherwise (local/test only). */
-export function createRateLimiters(redis: Redis | null) {
+export function createRateLimiters(redis: Redis | null, authMax = 20, generalMax = 600) {
   const make = (prefix: string, limit: number, windowMs: number) => {
     const options: Partial<Options> = {
       windowMs,
@@ -26,8 +26,8 @@ export function createRateLimiters(redis: Redis | null) {
 
   return {
     /** Every /api/v1 request. */
-    general: make('general', 300, 60_000),
-    /** Login / register / refresh — brute-force protection. */
-    auth: make('auth', 20, 15 * 60_000),
+    general: make('general', generalMax, 60_000),
+    /** Login / register — brute-force protection. */
+    auth: make('auth', authMax, 15 * 60_000),
   };
 }
