@@ -61,6 +61,8 @@ components:
         - VERSION_CONFLICT
         - RATE_LIMITED
         - REGISTRATION_CLOSED
+        - QUOTA_EXCEEDED
+        - ACCOUNT_DISABLED
         - INVALID_CREDENTIALS
         - AI_KEY_MISSING
         - AI_KEY_INVALID
@@ -211,6 +213,22 @@ components:
       required:
         - currentPassword
         - newPassword
+    AccountUsage:
+      type: object
+      properties:
+        items:
+          type: integer
+        itemLimit:
+          type: integer
+        imageBytes:
+          type: integer
+        imageByteLimit:
+          type: integer
+      required:
+        - items
+        - itemLimit
+        - imageBytes
+        - imageByteLimit
     AccountExport:
       type: object
       properties:
@@ -1749,6 +1767,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /account/usage:
+    get:
+      summary: Items and image storage used, against the per-account limits
+      tags:
+        - Account
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountUsage"
         "400":
           description: Validation error
           content:

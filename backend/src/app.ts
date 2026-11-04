@@ -5,9 +5,12 @@ import express, { type Express } from 'express';
 import helmet from 'helmet';
 import type { Redis } from 'ioredis';
 import type { Logger } from 'pino';
+import compression from 'compression';
 import { pinoHttp } from 'pino-http';
 import type { AppConfig } from './config/env.ts';
 import { createCloudinary, setCloudinary } from './lib/cloudinary.ts';
+import { requestWithoutQuery } from './lib/logger.ts';
+import { setQuotas } from './lib/quota.ts';
 import { errorHandler, notFoundHandler } from './middleware/error.ts';
 import { createRateLimiters } from './middleware/rateLimit.ts';
 import { createV1Router } from './routes/v1/index.ts';
@@ -29,7 +32,16 @@ export function createApp({ config, logger, redis, fetch: fetchImpl }: AppDeps):
   const auth = createAuthService(config, tokens);
   setCloudinary(createCloudinary(config, fetchImpl));
   setUploadFolder(config.CLOUDINARY_FOLDER);
-  const limiters = createRateLimiters(redis, config.RATE_LIMIT_AUTH_MAX, config.RATE_LIMIT_GENERAL_MAX);
+  setQuotas({
+    items: config.MAX_ITEMS_PER_ACCOUNT,
+    imageBytes: config.MAX_IMAGE_MB_PER_ACCOUNT * 1024 * 1024,
+  });
+  const limiters = createRateLimiters(redis, {
+    authMax: config.RATE_LIMIT_AUTH_MAX,
+    generalMax: config.RATE_LIMIT_GENERAL_MAX,
+    accountMax: config.RATE_LIMIT_ACCOUNT_MAX,
+    signupPerHour: config.RATE_LIMIT_SIGNUP_PER_HOUR,
+  });
 
   // Render (and the Vercel rewrite) sit in front of us: trust the first proxy hop for IP + secure cookies.
   app.set('trust proxy', 1);
@@ -45,9 +57,12 @@ export function createApp({ config, logger, redis, fetch: fetchImpl }: AppDeps):
         return id;
       },
       autoLogging: { ignore: (req) => req.url === '/api/v1/health' },
+      serializers: { req: requestWithoutQuery },
     }),
   );
   app.use(helmet());
+  // gzip/brotli JSON: a full tree at the item quota is ~4.7 MB raw, a few hundred KB compressed.
+  app.use(compression());
   app.use(
     cors({
       // Same-origin via the Vercel rewrite needs no CORS; this list is for direct callers (OPS.md §6.1).
@@ -58,7 +73,7 @@ export function createApp({ config, logger, redis, fetch: fetchImpl }: AppDeps):
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
 
-  app.use('/api/v1', limiters.general, createV1Router({ config, tokens, auth, authLimiter: limiters.auth }));
+  app.use('/api/v1', limiters.general, createV1Router({ config, tokens, auth, limiters }));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

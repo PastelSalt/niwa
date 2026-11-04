@@ -12,6 +12,8 @@ process.env.MONGODB_URI = mongo.getUri();
 process.env.MONGODB_DB ??= 'niwa_memory';
 process.env.JWT_ACCESS_SECRET ??= randomBytes(48).toString('base64url');
 process.env.REGISTRATION_MODE ??= 'open';
+// Local dev creates throwaway accounts freely; production keeps the default cap.
+process.env.RATE_LIMIT_SIGNUP_PER_HOUR ??= '1000';
 
 const stop = () => void mongo.stop().finally(() => process.exit(0));
 process.on('SIGINT', stop);

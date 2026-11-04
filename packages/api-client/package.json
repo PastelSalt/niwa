@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Typed NIWA API client for web and desktop (types from @niwa/contracts)",
+  "license": "MIT",
   "exports": {
     ".": "./src/index.ts"
   },

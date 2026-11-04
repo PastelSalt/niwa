@@ -27,12 +27,20 @@ const EnvSchema = z
     ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().min(300).max(900).default(600),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(7).max(30).default(14),
 
-    /** Single-user app: by default only the very first account can be created. */
+    /** `open` in production (NIWA is open to everyone); the code default stays safe for fresh installs. */
     REGISTRATION_MODE: z.enum(['first_user_only', 'open', 'closed']).default('first_user_only'),
     /** Login/register attempts per 15 min per IP. Raised only for local e2e runs. */
     RATE_LIMIT_AUTH_MAX: z.coerce.number().int().min(1).default(20),
     /** All /api/v1 requests per minute per IP (autosave + page loads stay well under this). */
     RATE_LIMIT_GENERAL_MAX: z.coerce.number().int().min(1).default(600),
+    /** Signed-in requests per minute per account, whatever the IP (multi-user readiness). */
+    RATE_LIMIT_ACCOUNT_MAX: z.coerce.number().int().min(1).default(600),
+    /** New accounts per hour across the whole server — caps sign-up bursts from many IPs. */
+    RATE_LIMIT_SIGNUP_PER_HOUR: z.coerce.number().int().min(1).default(30),
+
+    /** Per-account limits (lib/quota.ts). Trash counts until purged. */
+    MAX_ITEMS_PER_ACCOUNT: z.coerce.number().int().min(10).default(10_000),
+    MAX_IMAGE_MB_PER_ACCOUNT: z.coerce.number().int().min(1).default(200),
 
     CORS_ORIGINS: csv,
 

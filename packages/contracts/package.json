@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "NIWA API contract: Zod schemas (source of truth) and generated OpenAPI document",
+  "license": "MIT",
   "exports": {
     ".": "./src/index.ts"
   },

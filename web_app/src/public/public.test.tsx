@@ -75,3 +75,36 @@ describe('public pages', () => {
     expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Log in' })).toBeInTheDocument();
   });
 });
+
+describe('policy pages (B3)', () => {
+  it.each([
+    ['/privacy', 'Privacy Policy', /zoletakyle\.1111@gmail\.com/],
+    ['/terms', 'Terms of Use', /laws of the Republic of the Philippines/],
+    ['/eula', 'App licence', /MIT licence/],
+  ])('%s shows %s with the agreed facts', async (path, title, fact) => {
+    renderApp(path);
+    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+    expect(screen.getByText(/Last updated 4 November 2026/)).toBeInTheDocument();
+    expect(document.body.textContent).toMatch(fact);
+  });
+
+  it('privacy says what is and isn’t collected, and the minimum age', async () => {
+    renderApp('/privacy');
+    const table = await screen.findByRole('table', { name: 'What NIWA collects' });
+    expect(within(table).getByText('Your IP address')).toBeInTheDocument();
+    expect(document.body.textContent).toMatch(/not for anyone under 16/);
+    expect(document.body.textContent).toMatch(/without search terms/);
+  });
+
+  it('footer links every policy page; sign-up names Terms, Privacy and the age', async () => {
+    renderApp('/');
+    const footer = await screen.findByRole('contentinfo');
+    for (const name of ['Privacy', 'Terms', 'App licence', 'Cookies', 'Licences', 'Source code']) {
+      expect(within(footer).getByRole('link', { name })).toBeInTheDocument();
+    }
+
+    renderApp('/register');
+    expect(await screen.findAllByRole('link', { name: 'Terms of Use' })).not.toHaveLength(0);
+    expect(document.body.textContent).toMatch(/confirm you’?'?re at least 16/);
+  });
+});

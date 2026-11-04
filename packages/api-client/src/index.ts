@@ -3,6 +3,7 @@ import {
   CSRF_HEADER_VALUE,
   NATIVE_CLIENT_HEADER,
   type AccountExport,
+  type AccountUsage,
   type AuthConfig,
   type AuthResponse,
   type ChangePasswordInput,
@@ -263,6 +264,7 @@ export function createApiClient(options: ApiClientOptions) {
       async changePassword(input: ChangePasswordInput) {
         return acceptAuth(await request<AuthResponse>('/account/password', { method: 'POST', body: input }));
       },
+      usage: () => request<AccountUsage>('/account/usage'),
       export: () => request<AccountExport>('/account/export'),
       async delete(password: string) {
         await request<void>('/account/delete', { method: 'POST', body: { password } });

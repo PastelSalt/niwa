@@ -51,6 +51,7 @@ dependencies:
   package_info_plus: ^10.2.2
   riverpod_annotation: ^4.0.7
   timezone: ^0.11.2
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   # The "flutter_lints" package below contains a set of recommended lints to

@@ -108,6 +108,17 @@ export const AccountExport = z
   .meta({ id: 'AccountExport' });
 export type AccountExport = z.infer<typeof AccountExport>;
 
+/** How much of the per-account limits is used (Settings › Account). */
+export const AccountUsage = z
+  .object({
+    items: z.number().int(),
+    itemLimit: z.number().int(),
+    imageBytes: z.number().int(),
+    imageByteLimit: z.number().int(),
+  })
+  .meta({ id: 'AccountUsage' });
+export type AccountUsage = z.infer<typeof AccountUsage>;
+
 export const REFRESH_COOKIE = 'niwa_rt';
 export const CSRF_HEADER = 'x-requested-with';
 export const CSRF_HEADER_VALUE = 'niwa';

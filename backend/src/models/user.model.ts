@@ -12,6 +12,9 @@ export interface UserDoc {
   aiEnabled: boolean;
   /** First-run tour (NIWA-PLAN-B-01 B7); null until finished or skipped. */
   onboarding: { status: 'completed' | 'skipped'; version: number; at: Date } | null;
+  /** Set by the operator (scripts/admin.ts) to block sign-in; never shown to other users. */
+  disabledAt: Date | null;
+  disabledReason: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +39,8 @@ const userSchema = new Schema<UserDoc>(
       ),
       default: null,
     },
+    disabledAt: { type: Date, default: null },
+    disabledReason: { type: String, default: null },
   },
   { timestamps: true, versionKey: false },
 );

@@ -45,6 +45,8 @@ const DEFAULT_HANDLERS: Record<string, Handler> = {
   'GET /inbox': () => json(200, { items: [] }),
   'GET /search': () => json(200, { hits: [] }),
   'GET /auth/config': () => json(200, { registrationOpen: true }),
+  'GET /account/usage': () =>
+    json(200, { items: 4, itemLimit: 10_000, imageBytes: 0, imageByteLimit: 200 * 1024 * 1024 }),
 };
 
 /**

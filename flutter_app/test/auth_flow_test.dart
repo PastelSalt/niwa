@@ -151,6 +151,10 @@ void main() {
     await tester.tap(find.text('Create your account'));
     await tester.pumpAndSettle();
     expect(find.text('Plant your garden'), findsOneWidget);
+    // Sign-up states the agreement and the minimum age (B-01 B3).
+    expect(find.text('Terms of Use'), findsOneWidget);
+    expect(find.text('Privacy Policy'), findsOneWidget);
+    expect(find.text(", and confirm you're at least 16."), findsOneWidget);
 
     await tester.enterText(field('Email'), 'me@example.com');
     await tester.enterText(field('Password'), 'short');

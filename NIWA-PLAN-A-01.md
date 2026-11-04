@@ -164,7 +164,7 @@
 - [x] `pnpm dev:memory` — full stack locally with an in-memory MongoDB (no Atlas needed)
 
 ### M2.P1b — Hosting setup (frontend) — needs owner accounts
-- [ ] Vercel project (root `web_app`, Vite preset, ignored build step)
+- [x] Vercel project (root `web_app`, Vite preset, ignored build step) — `niwa`, live at https://niwa-delta.vercel.app (2026-11-04)
 - [x] `web_app/vercel.json` with `/api/*` → Render rewrite + SPA fallback (`docs/OPS.md` §6) — update the Render hostname once the service exists
 - [ ] Verify refresh cookie works end-to-end on the Vercel preview URL
 
@@ -355,7 +355,7 @@
 
 ### M7.P3 — Accessibility & quality
 - [x] Accessibility audit (contrast in both themes, focus order, ARIA on tree/calendar) — `e2e/a11y.spec.ts` + token contrast tests
-- [ ] Performance pass on large trees
+- [ ] Performance pass on large trees *(2026-11-04: server side measured by `pnpm --filter @niwa/backend scale-check` — `/tree` ~0.7 s at 10k items, gzip on; browser rendering of a 2–5k tree still to measure — `GAPS.md`)*
 - [x] Core test suite green (coverage review: every endpoint group has integration tests; UI flows covered by e2e)
 
 ### M7.P4 — Backups (flagged gap)
@@ -434,24 +434,9 @@
 **Goal:** mobile client with full data/behavior parity, differentiated UI.
 **Status:** ➡ Superseded by **`NIWA-PLAN-A-02.md`** (MA0–MA11). The tasks below are kept for reference only.
 
-### M10.P1 — Scaffold
-- [ ] Flutter 3.x project; Riverpod 3; go_router; Dio
-- [ ] Dart models generated from OpenAPI (freezed + json_serializable)
-- [ ] Dart theme from `tokens`
-
-### M10.P2 — Auth & storage
-- [ ] Refresh token in `flutter_secure_storage`
-- [ ] Drift/SQLite local cache; connectivity_plus handling
-
-### M10.P3 — Features
-- [ ] Tree, Actionable lens, Focus sections
-- [ ] `flutter_quill` editor (content conversion strategy defined)
-- [ ] Scheduler (month + day)
-- [ ] Inbox capture, Search
-
-### M10.P4 — Tests
-- [ ] `flutter_test` unit/widget tests
-- [ ] `integration_test` against local API
+All of M10's original tasks were done in A-02 MA1–MA9 (2026-11-04), except `integration_test` against the local
+API, which is A-02 MA10.P2. Models are hand-written freezed classes checked against `openapi.yaml`
+(`flutter_app/test/contract_test.dart`) rather than generated.
 
 **Exit criteria:** mobile passes parity checklist against the contract (graph excepted).
 
@@ -471,8 +456,8 @@
 - [ ] Hybrid search (text + semantic)
 
 ### M11.P3 — Export / import
-- [ ] Export format (JSON + Markdown) per `docs/OPS.md`
-- [ ] Full export endpoint + import with validation
+- [ ] Export format (JSON + Markdown) per `docs/OPS.md` *(2026-11-04: JSON export shipped — `GET /account/export`, B-01 B4; Markdown still open)*
+- [ ] Full export endpoint + import with validation *(export done; import open)*
 
 **Exit criteria:** graph renders 1000+ nodes within target; export → import round-trips cleanly.
 

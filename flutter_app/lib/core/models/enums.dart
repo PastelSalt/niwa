@@ -57,6 +57,8 @@ enum ErrorCode {
   versionConflict,
   rateLimited,
   registrationClosed,
+  quotaExceeded,
+  accountDisabled,
   invalidCredentials,
   aiKeyMissing,
   aiKeyInvalid,

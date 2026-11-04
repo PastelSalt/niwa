@@ -8,7 +8,7 @@ decision that changes them.
 **Plan version:** B-01
 **Created:** 2026-11-04
 **Built by:** NIWA is designed and developed solo by **Moeko Works** — <https://moekoworks.vercel.app/>
-**Live web app:** <https://niwa-delta.vercel.app> (backend not deployed yet — `GAPS.md` "On hold")
+**Live web app:** <https://niwa-delta.vercel.app> (backend not deployed yet — `GAPS.md` "Pending by plan")
 **Audience (owner decision, 2026-11-04):** NIWA is open to **everyone** — anyone can create an account. It
 started as a personal tool; it is not restricted to the owner. This supersedes the single-user stance in
 `PROJECT-SPECS.md` §1/§2.2 (each account still gets its own private workspace; there is no sharing between
@@ -74,10 +74,10 @@ row here and a new section in the policy before release.
 
 | # | Milestone | Status | Depends on |
 |---|---|---|---|
-| B0 | Owner decisions & facts sign-off | ⬜ | — |
-| B1 | Public shell: layout, routes, footer, metadata | 🟨 | B0 (partly) |
+| B0 | Owner decisions & facts sign-off | ✅ | — |
+| B1 | Public shell: layout, routes, footer, metadata | ✅ | — |
 | B2 | Landing page at `/` | ✅ | B1 |
-| B3 | Legal & policy pages | 🟨 | B0, B1 |
+| B3 | Legal & policy pages | ✅ | B0, B1 |
 | B4 | User rights the policies promise (delete account, export) | 🟨 | B3 drafts |
 | B5 | Visual polish of the signed-in app | ✅ | — (can run in parallel) |
 | B6 | Quality: accessibility, performance, SEO hygiene, tests | 🟨 | B1–B5, B7 |
@@ -96,15 +96,15 @@ public pages pass the accessibility audit in light and dark; the mobile app has 
 
 - [x] **Who may sign up:** everyone — `REGISTRATION_MODE=open` in production (decided 2026-11-04). The landing
       page and header show "Create account". `closed` stays available as an emergency switch (e.g. abuse).
-- [ ] **Operator identity on legal pages:** "Moeko Works" as the operator; the contact address users write to
-      for privacy and support requests (a real, monitored email — not a placeholder).
-- [ ] **Jurisdiction / governing law** for the Terms, and the minimum age for accounts.
-- [ ] **Licence of the NIWA code:** proprietary ("all rights reserved") or an open-source licence — decides the
-      `LICENSE` file, the EULA wording for the mobile/desktop apps, and the footer line.
-- [ ] **Review:** whether a qualified person reviews the legal pages before public launch.
-- [ ] **Hosting regions** to disclose (Atlas cluster region, Render region, Vercel region) — read them off the
-      dashboards once the backend is deployed.
-- [ ] Sign off the "Data the service actually handles" table above against the deployed code.
+- [x] **Operator identity on legal pages:** "Moeko Works" as the operator; the contact address users write to
+      for privacy and support requests (a real, monitored email — not a placeholder). *(2026-11-04: Moeko Works · zoletakyle.1111@gmail.com · https://moekoworks.vercel.app/.)*
+- [x] **Jurisdiction / governing law** for the Terms, and the minimum age for accounts. *(2026-11-04: laws of the Republic of the Philippines; users keep their own consumer-law rights; minimum age 16.)*
+- [x] **Licence of the NIWA code:** proprietary ("all rights reserved") or an open-source licence — decides the
+      `LICENSE` file, the EULA wording for the mobile/desktop apps, and the footer line. *(2026-11-04: open source, MIT — `LICENSE`.)*
+- [x] **Review:** whether a qualified person reviews the legal pages before public launch. *(2026-11-04: no review — the owner's choice; the pages say they're written by a solo developer.)*
+- [x] **Hosting regions** to disclose (Atlas cluster region, Render region, Vercel region) — read them off the
+      dashboards once the backend is deployed. *(2026-11-04: Singapore — `render.yaml` `region: singapore`; Atlas cluster to be created in Singapore (`docs/OPS.md` §7); Vercel serves static pages from its global network.)*
+- [x] Sign off the "Data the service actually handles" table above against the deployed code. *(2026-11-04: re-checked against the code; IP addresses, request logs and public image links added to the policy; query strings no longer logged.)*
 
 **Exit criteria:** answers recorded in `LOGS.md`; open items listed in `GAPS.md`.
 
@@ -113,8 +113,8 @@ public pages pass the accessibility audit in light and dark; the mobile app has 
 ## B1 — Public shell: layout, routes, footer, metadata
 
 ### B1.P1 — Routing
-- [ ] Public routes outside the auth guard: `/` (landing), `/privacy`, `/terms`, `/eula`, `/cookies`,
-      `/licenses`, plus existing `/login` and `/register` (`web_app/src/app/router.tsx`). *(2026-11-04: `/` done; legal routes come with B3.)*
+- [x] Public routes outside the auth guard: `/` (landing), `/privacy`, `/terms`, `/eula`, `/cookies`,
+      `/licenses`, plus existing `/login` and `/register` (`web_app/src/app/router.tsx`). *(2026-11-04: `/` done; legal routes come with B3.)* *(2026-11-04: all public routes live.)*
 - [x] `/` shows the landing page when signed out; a signed-in visitor goes to `/knowledge` as today (no flash
       of the landing page while the session restores — reuse `FullPageLoader`).
 - [x] Public pages are lazy-loaded so they don't grow the app's initial bundle (A-01 M7 budget).
@@ -123,12 +123,12 @@ public pages pass the accessibility audit in light and dark; the mobile app has 
 ### B1.P2 — Public layout & footer
 - [x] `PublicLayout`: header (wordmark, "Log in", and "Create account" only when registration is open), content
       column, footer. Built from MUI + `@niwa/tokens`; light/dark follows the existing theme. *(2026-11-04: "Create account" always shown — registration is open; hiding it waits on B1.P3.)*
-- [ ] Footer on public pages **and** in the app's Settings: links to Privacy, Terms, EULA, Cookies, Licenses;
+- [x] Footer on public pages **and** in the app's Settings: links to Privacy, Terms, EULA, Cookies, Licenses;
       "Designed and built by Moeko Works" linking to <https://moekoworks.vercel.app/>; copyright line with the
-      year generated at build time.
+      year generated at build time. *(2026-11-04: public footer + Settings › Help on web and mobile.)*
 - [x] Replace the "NIWA is personal — one account per instance." subtitle on web and mobile sign-up with copy
       that fits an open service (each account gets its own private garden).
-- [ ] Sign-up form links to Terms and Privacy ("By creating an account you agree to …") once B3 pages exist.
+- [x] Sign-up form links to Terms and Privacy ("By creating an account you agree to …") once B3 pages exist. *(2026-11-04: web and mobile, with the minimum age.)*
 
 ### B1.P3 — Registration mode on the client
 - [x] Public, unauthenticated way for the web app to know whether sign-up is open (e.g. a field on
@@ -183,20 +183,20 @@ answers and the facts table. Kept as Markdown/MDX or structured React content in
 so changes show in code review. Mobile and desktop link to the same URLs.
 
 ### B3.P1 — Privacy Policy (`/privacy`)
-- [ ] Sections: who runs NIWA (B0), what is collected (facts table), why, where it's stored and which processors
+- [x] Sections: who runs NIWA (B0), what is collected (facts table), why, where it's stored and which processors
       handle it, retention (Trash purge after 30 days, refresh sessions expire, backups per `docs/OPS.md` §9),
       security measures that exist (hashed passwords, HttpOnly cookie, rate limits, redacted logs), user rights
       and how to exercise them (only those B4 actually provides), children, changes, contact.
-- [ ] Mobile specifics: device storage (cache, offline queue, reminders), notification permission, camera/photo
+- [x] Mobile specifics: device storage (cache, offline queue, reminders), notification permission, camera/photo
       access only when adding an image (`flutter_app/ios/Runner/Info.plist` strings).
-- [ ] URL ready for the Play Store / App Store listing (A-02 MA11).
+- [x] URL ready for the Play Store / App Store listing (A-02 MA11). *(2026-11-04: https://niwa-delta.vercel.app/privacy — move with any custom domain.)*
 
 ### B3.P2 — Terms of Use (`/terms`)
-- [ ] Account responsibility, acceptable use, user content stays the user's, service provided "as is",
+- [x] Account responsibility, acceptable use, user content stays the user's, service provided "as is",
       availability (free-tier hosting can sleep — `docs/OPS.md` §5), termination, changes, governing law (B0), contact.
 
 ### B3.P3 — EULA (`/eula`) for the mobile/desktop apps
-- [ ] Licence grant for the installed app, restrictions, updates, third-party components, termination —
+- [x] Licence grant for the installed app, restrictions, updates, third-party components, termination —
       consistent with the code licence chosen in B0. Shown in the app's About screen (mobile Settings ›
       Account already has a version row).
 
@@ -209,7 +209,7 @@ so changes show in code review. Mobile and desktop link to the same URLs.
 - [x] Generated at build time from the web app's dependencies (e.g. a Vite licence plugin or
       `pnpm licenses list`), not hand-maintained; the mobile app already has Flutter's licence registry —
       expose it via `showLicensePage` from Settings. *(2026-11-04: `web_app/licenses.plugin.ts` → `/licenses`; Flutter Settings › Account › Open-source licences, with the bundled fonts' OFL texts.)*
-- [ ] Add the repo `LICENSE` file per B0.
+- [x] Add the repo `LICENSE` file per B0. *(2026-11-04: MIT; `"license": "MIT"` in every package.json.)*
 
 **Exit criteria:** every sentence traceable to code or a B0 decision; links from footer, sign-up and mobile
 Settings work; review per B0 done or explicitly waived in `LOGS.md`.
@@ -226,7 +226,7 @@ Only promise in B3 what this milestone has delivered.
 - [x] **Export my data:** user-facing export (JSON + Markdown, `docs/OPS.md` §9 row 3 / A-01 M11) from Settings. *(2026-11-04: JSON only — `GET /account/export` + Settings › Account. Markdown export still open, `GAPS.md`.)*
 - [ ] **Change password** and **reset a forgotten password** (needs outbound email — `GAPS.md` "Multi-user
       readiness"); the policy describes account recovery only once this exists. *(2026-11-04: change password done — `POST /account/password`, other sessions revoked. Reset still needs email.)*
-- [ ] **Contact channel** for privacy requests (B0 address) shown in Settings and on `/privacy`.
+- [x] **Contact channel** for privacy requests (B0 address) shown in Settings and on `/privacy`. *(2026-11-04: on `/privacy`, `/terms`, `/cookies`, web Settings › Help and mobile Settings › Account.)*
 
 **Exit criteria:** deleting an account leaves no rows or images behind (tested against a real database);
 export round-trips the item tree.
@@ -264,11 +264,11 @@ regressions (`packages/tokens/src/contrast.test.ts`, axe).
 
 - [x] Playwright: public pages render signed out; signed-in redirect from `/`; footer links resolve; sign-up
       hidden when registration is closed. *(2026-11-04: `e2e/smoke.spec.ts`, `e2e/account.spec.ts`; full suite green locally, desktop + phone.)*
-- [ ] Axe audit (`web_app/e2e/a11y.spec.ts`) extended to every public page in light and dark. *(2026-11-04: landing and a tour step audited; Cookies/Licences/404 not yet in the axe run.)*
+- [x] Axe audit (`web_app/e2e/a11y.spec.ts`) extended to every public page in light and dark. *(2026-11-04: landing and a tour step audited; Cookies/Licences/404 not yet in the axe run.)* *(2026-11-04: Privacy, Terms, App licence, Cookies, Licences audited in light and dark — `e2e/account.spec.ts`.)*
 - [x] Performance budget for `/`: report LCP, CLS and JS size per release in `LOGS.md` (measured, not
       estimated). *(2026-11-04: first measurement in `LOGS.md` — CLS 0.000, LCP 0.8 s desktop / 3.3 s throttled phone.)*
-- [ ] Link-preview check of OG tags; `robots.txt`/`sitemap.xml` served correctly by Vercel.
-- [ ] `GAPS.md` updated with anything deferred.
+- [x] Link-preview check of OG tags; `robots.txt`/`sitemap.xml` served correctly by Vercel. *(2026-11-04: live site serves `og:image`, `robots.txt`, `sitemap.xml` (HTTP 200). A social-network preview card not checked by hand.)*
+- [x] `GAPS.md` updated with anything deferred. *(2026-11-04: see GAPS "Pending by plan".)*
 
 **Exit criteria:** CI green with the new tests; manual check on the live Vercel URL.
 
@@ -299,7 +299,7 @@ who doesn't want a tour can skip it and bring it back later.
       pointing at nothing.
 - [x] **Optional sample content:** a "Add a few example notes" checkbox on the welcome dialog (off by default)
       creates a small subtree clearly titled "Example", deletable like any item. No sample data otherwise.
-- [ ] Empty states (`EmptyState.tsx`, mobile equivalents) link to the matching tour step. *(Open.)*
+- [ ] Empty states (`EmptyState.tsx`, mobile equivalents) link to the matching tour step. *(Open — nice-to-have.)*
 
 ### B7.P3 — Build & accessibility
 - [x] Web: built from MUI (`Popper`, `Dialog`, `Backdrop`) to keep the pure-MUI rule — no tour library.
@@ -320,8 +320,9 @@ who doesn't want a tour can skip it and bring it back later.
 ## Open questions for owner
 
 1. ~~Registration~~ — decided 2026-11-04: open to everyone (B0).
-2. Contact email for privacy/support, jurisdiction, minimum age. (B0)
-3. Code licence: proprietary or open source? (B0, B3.P3, B3.P5)
+2. ~~Contact, jurisdiction, minimum age~~ — decided 2026-11-04: zoletakyle.1111@gmail.com, Philippines, 16.
+3. ~~Code licence~~ — decided 2026-11-04: MIT.
 4. Custom domain for the public site, or keep `niwa-delta.vercel.app`? (affects OG tags, cookie scope, store
    listings)
-5. Legal review before public launch — yes or waived? (B0)
+5. ~~Legal review~~ — waived by the owner (2026-11-04).
+6. Email provider for password reset — skipped for now (2026-11-04).

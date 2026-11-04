@@ -21,6 +21,9 @@ const ReviewQueue = named(() => import('../features/knowledge/ReviewQueue.tsx'),
 const SchedulerHome = named(() => import('../features/scheduler/SchedulerPage.tsx'), 'SchedulerHome');
 const SchedulerPage = named(() => import('../features/scheduler/SchedulerPage.tsx'), 'SchedulerPage');
 const CookiesPage = named(() => import('../public/CookiesPage.tsx'), 'CookiesPage');
+const PrivacyPage = named(() => import('../public/PrivacyPage.tsx'), 'PrivacyPage');
+const TermsPage = named(() => import('../public/TermsPage.tsx'), 'TermsPage');
+const EulaPage = named(() => import('../public/EulaPage.tsx'), 'EulaPage');
 const LicensesPage = named(() => import('../public/LicensesPage.tsx'), 'LicensesPage');
 const SettingsPage = named(() => import('../features/settings/SettingsPage.tsx'), 'SettingsPage');
 
@@ -35,6 +38,9 @@ export const routes: RouteObject[] = [
       {
         element: <PublicLayout />,
         children: [
+          { path: '/privacy', element: <PrivacyPage /> },
+          { path: '/terms', element: <TermsPage /> },
+          { path: '/eula', element: <EulaPage /> },
           { path: '/cookies', element: <CookiesPage /> },
           { path: '/licenses', element: <LicensesPage /> },
         ],

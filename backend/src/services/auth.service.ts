@@ -22,6 +22,7 @@ import { WorkspaceModel } from '../models/workspace.model.ts';
 import { itemRepo } from '../repositories/item.repo.ts';
 import { userRepo } from '../repositories/user.repo.ts';
 import { workspaceRepo } from '../repositories/workspace.repo.ts';
+import { usageOf } from '../lib/quota.ts';
 import { attachmentService } from './attachment.service.ts';
 import { toPublicUser } from './serializers.ts';
 import type { ClientKind, TokenService } from './token.service.ts';
@@ -36,6 +37,16 @@ export interface Session {
   response: AuthResponse;
   refreshToken: string;
   refreshExpiresAt: Date;
+}
+
+/** Disabled accounts can't sign in or refresh (operator action, scripts/admin.ts). */
+function assertEnabled(user: UserDoc): void {
+  if (user.disabledAt) {
+    throw new AppError(
+      'ACCOUNT_DISABLED',
+      'This account has been disabled. If you think this is a mistake, email zoletakyle.1111@gmail.com.',
+    );
+  }
 }
 
 export function createAuthService(config: AppConfig, tokens: TokenService) {
@@ -101,6 +112,7 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
       const user = await userRepo.findByEmail(input.email);
       const ok = await verify(user?.passwordHash ?? (await DUMMY_HASH_PROMISE), input.password);
       if (!user || !ok) throw new AppError('INVALID_CREDENTIALS', 'Email or password is incorrect.');
+      assertEnabled(user);
       return startSession(user, client);
     },
 
@@ -108,6 +120,7 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
       const rotated = await tokens.rotateRefresh(refreshToken);
       const user = await userRepo.findById(rotated.userId);
       if (!user) throw unauthorized('Session expired. Please log in again.');
+      assertEnabled(user);
       return buildSession(user, rotated.token, rotated.expiresAt);
     },
 
@@ -146,6 +159,12 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
       return startSession(updated!, client);
     },
 
+    async usage(userId: string) {
+      const user = await userRepo.findById(userId);
+      if (!user) throw unauthorized();
+      return usageOf(user.workspaceId);
+    },
+
     /** Everything the account owns, as plain JSON (NIWA-PLAN-B-01 B4). */
     async exportData(userId: string): Promise<AccountExport> {
       const user = await userRepo.findById(userId);
@@ -176,22 +195,26 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
 
     /** Permanent: removes the user and everything in their workspace, images included. */
     async deleteAccount(userId: string, password: string): Promise<void> {
-      const user = await verifiedUser(userId, password);
-      const wid = user.workspaceId;
-      const itemIds = (await ItemModel.find({ workspaceId: wid }, { _id: 1 }).lean()).map((i) => i._id);
-      await attachmentService.purgeForItems(wid, itemIds);
-      await AttachmentModel.deleteMany({ workspaceId: wid });
-      await Promise.all([
-        ScheduleEntryModel.deleteMany({ workspaceId: wid }),
-        ScheduleSeriesModel.deleteMany({ workspaceId: wid }),
-        LinkModel.deleteMany({ workspaceId: wid }),
-        ItemModel.deleteMany({ workspaceId: wid }),
-        RefreshSessionModel.deleteMany({ userId: user._id }),
-      ]);
-      await WorkspaceModel.deleteOne({ _id: wid });
-      await userRepo.deleteById(user._id);
+      await purgeAccount(await verifiedUser(userId, password));
     },
   };
+}
+
+/** Deletes a user and everything they own (account deletion and `scripts/admin.ts delete`). */
+export async function purgeAccount(user: UserDoc): Promise<void> {
+  const wid = user.workspaceId;
+  const itemIds = (await ItemModel.find({ workspaceId: wid }, { _id: 1 }).lean()).map((i) => i._id);
+  await attachmentService.purgeForItems(wid, itemIds);
+  await AttachmentModel.deleteMany({ workspaceId: wid });
+  await Promise.all([
+    ScheduleEntryModel.deleteMany({ workspaceId: wid }),
+    ScheduleSeriesModel.deleteMany({ workspaceId: wid }),
+    LinkModel.deleteMany({ workspaceId: wid }),
+    ItemModel.deleteMany({ workspaceId: wid }),
+    RefreshSessionModel.deleteMany({ userId: user._id }),
+  ]);
+  await WorkspaceModel.deleteOne({ _id: wid });
+  await userRepo.deleteById(user._id);
 }
 
 export type AuthService = ReturnType<typeof createAuthService>;

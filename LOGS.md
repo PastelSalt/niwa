@@ -795,3 +795,83 @@
   - Markdown export.
   - Phone LCP.
   - axe on the remaining public pages.
+
+### 2026-11-04 — B-01 B0 + B3: owner decisions, legal pages, licence
+- **Owner decisions (B0):**
+  - Contact: zoletakyle.1111@gmail.com and https://moekoworks.vercel.app/.
+  - Governing law: Republic of the Philippines. Users keep their own consumer-law rights.
+  - Minimum age 16 ("play it safe").
+  - Code licence: open source, MIT.
+  - **No legal review — the owner's choice.** The pages say a solo developer wrote them.
+  - Hosting region: Singapore for everything.
+  - Drafts approved after reading `docs/LEGAL-DRAFTS.md`.
+- **Actions:**
+  - `/privacy`, `/terms` and `/eula` (app licence) pages from the approved text. Footer links on all public pages, plus a source-code link.
+  - Sign-up line on web and mobile: "By creating an account you agree to the Terms of Use and Privacy Policy, and confirm you're at least 16."
+  - Contact and policy links in web Settings › Help and mobile Settings › Account. Mobile uses `url_launcher` 6.3.3, with Android `<queries>` for https and mailto.
+  - Contact line on `/cookies`; landing privacy section links to the policy; sitemap lists the policy pages.
+  - `LICENSE` (MIT, © 2026 Moeko Works), and `"license": "MIT"` in every package.json.
+  - `render.yaml`: `region: singapore` for `niwa-api` and `niwa-cache`; before this, no region was set, which Render treats as Oregon. OPS §7: create the Atlas cluster in Singapore.
+  - Privacy fix (owner approved): request logs keep paths only — the query string is dropped from both the URL and the `Referer` header, so search terms aren't logged. The serializer is in `backend/src/lib/logger.ts`, with a test.
+- **Verified:**
+  - Backend 92, web 60 and Flutter 409 tests pass; typecheck, lint, format and OpenAPI checks clean.
+  - Playwright full suite green on desktop and phone, now including an axe audit of Privacy, Terms, App licence, Cookies and Licences in light and dark.
+  - Pages checked in screenshots: desktop light, phone dark.
+- **Open:**
+  - Password reset (needs email).
+  - Mobile tour and account screens.
+  - Axe on the welcome dialog and 404.
+  - 200 % text check for the tour.
+  - Empty-state links to tour steps.
+  - Phone LCP.
+
+### 2026-11-04 — Multi-user readiness: quotas, limits, admin tools, scale check
+- **Plan ref:** GAPS "Multi-user readiness" (owner: NIWA is for many users; backend work approved; no commit yet).
+- **Actions:**
+  - **Quotas** (`backend/src/lib/quota.ts`): `MAX_ITEMS_PER_ACCOUNT` (10,000, Trash included) and `MAX_IMAGE_MB_PER_ACCOUNT` (200).
+    - Checked on create, capture, upload sign and upload confirm. An upload over the quota is deleted from Cloudinary.
+    - New error code `QUOTA_EXCEEDED`.
+    - `GET /account/usage`, shown as two progress bars in Settings › Account.
+  - **Rate limits:** per-account limit (600/min) behind sign-in, so one account spread across many IPs can't hog the shared server. A server-wide cap on new accounts (30/hour; failed sign-ups don't count), logged as `signup_cap_reached` when hit. e2e and `dev:memory` raise both.
+  - **Admin:**
+    - `users.disabledAt` / `disabledReason` and new error code `ACCOUNT_DISABLED`; login and refresh are refused while set.
+    - `pnpm --filter @niwa/backend admin list | disable | enable | delete --confirm | indexes` (`scripts/admin.ts`, `services/admin.service.ts`). No admin HTTP endpoint.
+    - Account deletion is shared through `purgeAccount()`.
+  - **Scale check** (`scripts/scale-check.ts`): 200 accounts × 300 items plus one account at 10k (70k items). It found and fixed:
+    - **Indexes in production:** `autoIndex` is off in production, and the "migration script" OPS mentioned didn't exist. A fresh Atlas database would have had no unique-email, session-TTL or per-account indexes. The server now runs `syncIndexes()` on every deployed start.
+    - **Text search:** the text index wasn't scoped to the account. It's now `{ workspaceId, text… }`.
+    - **Trash purge:** the cross-account purge had no usable index; added `{ deletedAt }`.
+    - **Compression:** no response compression; added `compression`. `/tree` at the quota goes from 4.7 MB raw to ~128 KB gzip with the test data.
+    - Tried an index for the tree's sort order; it made no difference (the cost is reading 10k docs), so it was reverted.
+  - **Policy pages:** two factual additions so they stay true:
+    - Privacy: a row for the disabled-account note.
+    - Terms §4: accounts have item and image limits, shown in Settings.
+  - **Docs:** OPS env table and new §13 (running a shared server); DATA_MODEL (`disabledAt`, indexes); CODEMAP.
+- **Measured** (`scale-check`, median):
+  - `/tree`: 17 ms (300 items), ~0.7 s (10k items).
+  - Search: 6 ms (light) / 25 ms (10k).
+  - Focus: 59 ms; usage: 9 ms; create with quota check: 10 ms; register: 38 ms.
+  - Every checked query uses an index.
+- **Verified:**
+  - Backend 97 (new `multiuser.test.ts`, `logger.test.ts`), web 61, Flutter 409 tests pass.
+  - Typecheck, lint, format and `openapi:check` clean; full Playwright suite green.
+- **Still open:**
+  - Email provider, then password reset and (optional) verification.
+  - Lazy tree loading if accounts get near the quota.
+
+### 2026-11-04 — Docs clean-up and "Pending by plan" summary
+- **Actions:**
+  - `GAPS.md` now starts with "Pending by plan": what blocks the live app, what's left in each plan (A-01, A-02, B-01), and the decisions only the owner can make. Email/password reset marked skipped for now; the two large-tree items merged.
+  - `NIWA-PLAN-A-01.md`:
+    - M10's old task list replaced with a pointer to A-02, where it was done.
+    - Vercel project ticked.
+    - Large-tree and export notes updated.
+  - `NIWA-PLAN-A-02.md`:
+    - Open questions answered from the owner's earlier decisions; iOS timing stays open.
+    - New MA10.P4 "parity with the web" (tour, account screens, sign-up gating, quota/disabled messages).
+    - MA11 privacy URL is live.
+  - `NIWA-PLAN-B-01.md`: answered questions struck through, email skipped, GAPS task ticked.
+  - `PROJECT-SPECS.md` and `CODEMAP.md` statuses refreshed.
+  - `docs/OPS.md`: open questions moved after §13; Render region answered.
+  - `docs/DATA_MODEL.md`: retention/size questions settled by the published Privacy Policy.
+- **Verified:** docs only; `format:check` clean; cited paths exist.

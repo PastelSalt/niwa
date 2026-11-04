@@ -13,6 +13,7 @@ import { cloudinary, PENDING_TAG } from '../lib/cloudinary.ts';
 import { AppError, notFound } from '../lib/errors.ts';
 import { AttachmentModel, type AttachmentDoc } from '../models/attachment.model.ts';
 import { itemRepo, toObjectId } from '../repositories/item.repo.ts';
+import { assertImageQuota } from '../lib/quota.ts';
 
 /** Signed Cloudinary uploads + attachment lifecycle — DATA_MODEL.md §8. */
 
@@ -78,6 +79,7 @@ export const attachmentService = {
   async sign(workspaceId: string, itemId: string): Promise<UploadSignatureResponse> {
     const wid = toObjectId(workspaceId);
     if (!(await itemRepo.findById(wid, itemId))) throw notFound('Item');
+    await assertImageQuota(wid); // fail before the upload when already full
     const c = cloudinary();
     const params = {
       folder: folderFor(workspaceId),
@@ -123,6 +125,12 @@ export const attachmentService = {
         'VALIDATION_ERROR',
         `Images must be PNG, JPEG, WebP or GIF and at most ${MAX_IMAGE_BYTES / 1024 / 1024} MB.`,
       );
+    }
+    try {
+      await assertImageQuota(wid, res.bytes);
+    } catch (err) {
+      await destroyQuietly(input.publicId);
+      throw err;
     }
     const doc = await AttachmentModel.create({
       workspaceId: wid,

@@ -114,6 +114,10 @@ export function createAuthController(config: AppConfig, auth: AuthService) {
     sendSession(res, client, await auth.changePassword(authOf(res.locals).userId, input, client));
   };
 
+  const usage: RequestHandler = async (_req, res) => {
+    res.json(await auth.usage(authOf(res.locals).userId));
+  };
+
   const exportData: RequestHandler = async (_req, res) => {
     const data = await auth.exportData(authOf(res.locals).userId);
     const day = data.exportedAt.slice(0, 10);
@@ -138,6 +142,7 @@ export function createAuthController(config: AppConfig, auth: AuthService) {
     config: config_,
     setOnboarding,
     changePassword,
+    usage,
     exportData,
     deleteAccount,
   };

@@ -1,13 +1,55 @@
 # NIWA — Known gaps
 
 Open items that were deferred or not yet verified. Add here when something is skipped; tick and note the
-date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `NIWA-PLAN-A-02.md` (mobile).
+date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (backend, web, desktop), `NIWA-PLAN-A-02.md`
+(mobile), `NIWA-PLAN-B-01.md` (public site, legal, multi-user).
+
+## Pending by plan (summary — updated 2026-11-04)
+
+Start here. Details for each line are further down or in the plan named.
+
+**Blocking the live app** — sign-in on https://niwa-delta.vercel.app fails until the API is deployed:
+1. Fix the MongoDB connection (owner) → create the Atlas cluster in **Singapore** → connect the Render Blueprint →
+   `scripts/deploy/render.sh` → set `CORS_ORIGINS`. Then check sign-in and the refresh cookie on the live site.
+
+**A-01 — backend, web, desktop** · done: M1–M7 code, web live on Vercel
+- M0: formal sign-off of the docs and contract (low priority — the contract has been in use since M1).
+- M1: Atlas + Render setup and first deploy (blocked above).
+- M7: browser performance with a 2–5k-item tree; test Cloudinary with a real account.
+- M8 AI: paused by the owner.
+- M9 Desktop (Electron): not started — after mobile.
+- M11: graph view, semantic search, Markdown export + import (JSON export is done).
+- M12 Release: nightly backups (needs secrets), monitoring/alerts, user guide, developer README (no root `README.md` yet).
+
+**A-02 — mobile** · done: MA0–MA9 code (409 tests)
+- Never built or run on a phone/emulator yet — waiting for the owner's go.
+- MA10: accessibility (TalkBack, 200 % text), golden tests, integration tests in CI, 5k-item performance, and
+  **parity with the web**: onboarding tour, Settings › Account (password, export, delete, usage), hide sign-up when
+  closed, quota/disabled messages.
+- MA11: icon/splash, signing, Play Console + data-safety form (privacy URL is ready); iOS needs a Mac + Apple
+  developer account.
+- Stretch: agenda view, share-to-NIWA, capture tile.
+
+**B-01 — public site, legal, multi-user** · done: B0, B1, B2, B3, B5; quotas, rate limits, admin tools, scale check
+- B4: password reset — **skipped for now** (needs an email provider).
+- B6: landing load time on phones (3.3 s, target 2.5 s); accessibility audit of the 404 page and welcome dialog.
+- B7: tour at 200 % text; empty states linking to tour steps; the mobile tour (A-02 MA10).
+- Markdown export (also A-01 M11).
+
+**Decisions only the owner can make**
+- Fix MongoDB access (unblocks the backend deploy).
+- Email provider for password reset/verification (skipped for now).
+- When to build and run the mobile app on a device; when to do iOS.
+- Whether to resume AI (M8).
+- Custom domain, or keep `niwa-delta.vercel.app` (B-01 open question 4).
+- Long-term backup copies beyond 14 days (`docs/OPS.md` open questions).
 
 ## Open
 
 ### From M7 (Cloudinary + polish)
-- [ ] **Performance pass on large trees** (M7.P3) — not done. Seed ~2,000–5,000 items, measure `GET /tree`
-      time and tree-pane render/expand/drag cost; virtualize the tree or lazy-load branches if it's slow.
+- [ ] **Performance pass on large trees** (M7.P3) — server side measured (2026-11-04, `scale-check`): `/tree`
+      ~0.7 s at the 10k-item quota, ~130 KB gzip. Still to do: browser render/expand/drag cost with 2–5k items;
+      virtualize the tree or lazy-load branches if it's slow.
 - [ ] **Cloudinary against a live account** — only tested against a fake Cloudinary API. Needs
       `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET`; then upload, confirm, orphan sweep and purge by hand.
 - [ ] **Nightly backup secrets** — `.github/workflows/backup.yml` needs `BACKUP_MONGODB_URI`,
@@ -26,19 +68,11 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 NIWA was built single-user per instance; the owner has opened it to anyone. Data is already separated per
 account (every query is scoped by `workspaceId`), but these backend items are still needed or worth doing.
 Product side is in `NIWA-PLAN-B-01.md`.
-- [ ] **Outbound email** — none exists. Needed for password reset and (optionally) email verification; pick a
+- [ ] **Outbound email** — *skipped for now (owner, 2026-11-04).* None exists. Needed for password reset and (optionally) email verification; pick a
       provider and add its secret to `render.yaml` as `sync: false`.
 - [ ] **Password reset** — change is done (`POST /account/password`, 2026-11-04); reset still needs single-use, short-lived, hashed tokens and must
       revoke all refresh sessions (reuse `revokeAllForUser`).
 - [ ] **Email verification** — accounts are usable without proving the address; decide whether to require it.
-- [ ] **Per-account limits** — rate limits are per IP only (`middleware/rateLimit.ts`); there's a per-image size
-      cap but no per-account quota on items, attachments or total Cloudinary storage. Free-tier Cloudinary and
-      Atlas (512 MB) are shared by all accounts, so one heavy account can fill them.
-- [ ] **Sign-up abuse** — register only has the auth IP limiter; consider a per-email cooldown and alerting on
-      bursts of new accounts.
-- [ ] **Scale checks** — indexes are workspace-scoped already; re-check `GET /tree`, search and the maintenance
-      job with many accounts (ties to "Performance pass on large trees").
-- [ ] **Admin basics** — no way for the operator to disable an abusive account other than editing the database.
 
 ### Carried from earlier milestones
 - [ ] **Hosting accounts** (M1/M2) — Vercel project `niwa` exists; Atlas and the Render service don't yet. `web_app/vercel.json` points at the default `niwa-api.onrender.com` until Render assigns the real host.
@@ -74,18 +108,13 @@ Product side is in `NIWA-PLAN-B-01.md`.
 - [ ] **Offline editing** — edits are refused offline (only capture queues); a full outbox needs conflict UX (A-02 "later").
 
 ### Web
-- [ ] **Legal pages (B-01 B3)** — Privacy, Terms, EULA, the repo `LICENSE`, the sign-up "you agree" line and a
-      privacy contact all wait on the owner's B0 answers (contact email, jurisdiction, minimum age, code licence,
-      review). Cookies and Licences are live.
 - [ ] **Landing LCP on phones** — 3.3 s with 4× CPU / ~4G throttling (desktop 0.8 s; CLS 0.000). Visitors still
       download the shared MUI/app chunks; splitting them further would bring it under 2.5 s.
-- [ ] **Accessibility leftovers (B-01 B6/B7)** — axe not yet run on Cookies, Licences, 404 or the welcome dialog;
+- [ ] **Accessibility leftovers (B-01 B6/B7)** — axe not yet run on the 404 page or the welcome dialog;
       tour not checked at 200 % text; empty states don't link to tour steps yet.
 - [ ] **Export as Markdown** — export is JSON only (`GET /account/export`); Markdown per note still to do.
 - [ ] **Mobile: tour and account actions** — the Flutter app reads `onboarding` but has no tour, change-password,
       export or delete-account screens yet (web has them). Fold into A-02 MA10/MA11.
-- [ ] **Link previews on the live site** — `og:image` and `robots.txt`/`sitemap.xml` checked locally only; check
-      on niwa-delta.vercel.app after this deploys.
 - [ ] **Flaky `shell.test.tsx` › "hides the tree pane on non-tree destinations"** — fails about 1 run in 3 on
       the Linux laptop (~1.1 s, likely a timing-sensitive wait); untouched code. Seen 2026-11-04.
 
@@ -94,13 +123,19 @@ Product side is in `NIWA-PLAN-B-01.md`.
 
 ## Closed
 
+- [x] **Per-account limits** — item and image-storage quotas (`lib/quota.ts`, env-tunable), per-account rate limit; usage in Settings › Account (2026-11-04).
+- [x] **Sign-up abuse** — server-wide cap on new accounts per hour, logged when hit (2026-11-04).
+- [x] **Scale checks** — `scale-check` script; fixed per-account text index, cross-account purge index, missing production indexes, added gzip (2026-11-04).
+- [x] **Admin basics** — `scripts/admin.ts`: list, disable/enable, delete, indexes (2026-11-04).
+- [x] **Legal pages (B-01 B3)** — Privacy, Terms, App licence live; MIT `LICENSE`; sign-up agreement + age line and
+      privacy contact on web and mobile; owner's B0 answers recorded in `docs/LEGAL-DRAFTS.md` (2026-11-04).
+- [x] **Link previews on the live site** — `og:image`, `robots.txt`, `sitemap.xml` served by Vercel (2026-11-04).
+- [x] **Search terms in request logs** — query strings (URL and `Referer`) dropped from logs (2026-11-04).
 - [x] **Registration mode** — `render.yaml` sets `REGISTRATION_MODE=open`; `GET /auth/config` tells clients (2026-11-04).
 - [x] **Onboarding state** — `users.onboarding` + `PUT /account/onboarding` (2026-11-04).
 - [x] **Account deletion** — `POST /account/delete`, password-confirmed (2026-11-04).
 - [x] **B-01 B5 leftovers** — design pass finished, JetBrains Mono loaded, layout shift measured (2026-11-04).
 - [x] **Playwright on the laptop** — Chromium installed; full e2e suite green locally (2026-11-04).
 - [x] **Bundled fonts (Flutter)** — Inter, JetBrains Mono and the 庭 slice bundled with OFL texts (2026-11-04).
-
 - [x] **MA9 not committed** — committed as `7a39bc9` and pushed with `738aeb6` (2026-11-04).
-
 - [x] **Flutter CI first run** — passed on push of `05ed969` (2026-11-04): analyze, format, codegen freshness, tests and debug APK. LOGS 2026-11-04.

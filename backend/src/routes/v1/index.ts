@@ -13,19 +13,21 @@ export interface V1Deps {
   config: AppConfig;
   tokens: TokenService;
   auth: AuthService;
-  authLimiter: RequestHandler;
+  limiters: Record<'auth' | 'account' | 'signup', RequestHandler>;
 }
 
 /** /api/v1 — paths mirror packages/contracts/src/openapi.ts. */
-export function createV1Router({ config, tokens, auth, authLimiter }: V1Deps): Router {
+export function createV1Router({ config, tokens, auth, limiters }: V1Deps): Router {
+  const authLimiter = limiters.auth;
   const router = Router();
   const system = createSystemController(config);
   const authCtl = createAuthController(config, auth);
-  const protect = requireAuth(tokens);
+  // Every signed-in route: verify the token, then count the request against the account's limit.
+  const protect = [requireAuth(tokens), limiters.account];
 
   router.get('/health', system.health);
 
-  router.post('/auth/register', authLimiter, authCtl.register);
+  router.post('/auth/register', authLimiter, limiters.signup, authCtl.register);
   router.post('/auth/login', authLimiter, authCtl.login);
   // Refresh tokens are 256-bit random values (not guessable), so only the general limiter applies;
   // the strict limiter would lock out normal page reloads.
@@ -38,6 +40,7 @@ export function createV1Router({ config, tokens, auth, authLimiter }: V1Deps): R
   // Account (NIWA-PLAN-B-01 B4, B7). Password checks go through the strict limiter like login.
   router.put('/account/onboarding', protect, authCtl.setOnboarding);
   router.post('/account/password', authLimiter, protect, authCtl.changePassword);
+  router.get('/account/usage', protect, authCtl.usage);
   router.get('/account/export', protect, authCtl.exportData);
   router.post('/account/delete', authLimiter, protect, authCtl.deleteAccount);
 

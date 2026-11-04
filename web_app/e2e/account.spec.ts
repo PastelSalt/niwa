@@ -58,11 +58,27 @@ test('tour once per account, replay, export, change password, delete account', a
   await expect(page.getByRole('alert')).toContainText('Email or password is incorrect.');
 });
 
-test('public pages work signed out', async ({ page }) => {
-  await page.goto('/cookies');
-  await expect(page.getByRole('heading', { level: 1, name: 'Cookies' })).toBeVisible();
-  await page.goto('/licenses');
-  await expect(page.getByRole('table', { name: 'Open-source packages' })).toBeVisible();
+test('public pages work signed out and pass the accessibility audit', async ({ page }, info) => {
+  const pages: [string, string][] = [
+    ['/privacy', 'Privacy Policy'],
+    ['/terms', 'Terms of Use'],
+    ['/eula', 'App licence'],
+    ['/cookies', 'Cookies'],
+    ['/licenses', 'Open-source licences'],
+  ];
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    for (const [path, title] of pages) {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
+      if (info.project.use.isMobile) continue;
+      const axe = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      const bad = axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+      expect(bad.map((v) => `${path} (${scheme}) · ${v.id}: ${v.help}`)).toEqual([]);
+    }
+  }
   await page.goto('/this-does-not-exist');
   await expect(page.getByText('Nothing grows here')).toBeVisible();
   const robots = await page.request.get('/robots.txt');

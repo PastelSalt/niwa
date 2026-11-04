@@ -1,4 +1,6 @@
+import Link from '@mui/material/Link';
 import { LegalPage } from './LegalPage.tsx';
+import { site } from './site.ts';
 
 /**
  * Cookies (NIWA-PLAN-B-01 B3.P4). Every statement is about the code: the only cookie is set in
@@ -47,6 +49,11 @@ export function CookiesPage() {
       <p>
         If NIWA ever adds a cookie that isn't strictly necessary, this page will be updated first and you'll
         be asked before it is set.
+      </p>
+
+      <h2>Questions</h2>
+      <p>
+        Email <Link href={`mailto:${site.contactEmail}`}>{site.contactEmail}</Link>.
       </p>
     </LegalPage>
   );

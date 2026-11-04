@@ -38,6 +38,7 @@ These are needed by `CONCEPT.md` flows. Once accepted, fold them into `PROJECT-S
 | `schedule_series` | `recurrence`, `anchorAt`, `durationMs`, `isAllDay`, `color`, `timeZone`, `materializedThrough`, `untilIndex` | — | ✅ M5 — new collection for recurring rules |
 | `refresh_sessions` | `id`, `userId`, `tokenHash`, `familyId`, `expiresAt`, `revokedAt`, `createdAt` | — | Refresh rotation + reuse detection (§12.1) |
 | `users` | `workspaceId` | string | Single-workspace MVP link |
+| `users` | `disabledAt`, `disabledReason` | Date \| null, string \| null | Operator block (`scripts/admin.ts`); sign-in and refresh refused while set |
 | `users` | `onboarding` | `{ status: 'completed' \| 'skipped', version, at }` \| null | First-run tour state (B-01 B7); null until finished or skipped |
 | `items` | `captureClientId` | string (UUID) \| null | ✅ A-02 MA5 — idempotency key from offline capture queues (`CaptureInput.clientId`); never returned |
 
@@ -48,6 +49,7 @@ links:            { workspaceId, sourceId }, { workspaceId, targetId }
 attachments:      { itemId }, { orphanedAt }
 schedule_entries: { workspaceId, startAt, endAt }, { seriesId }
 refresh_sessions: { tokenHash } unique, { familyId }, { expiresAt } TTL
+items:            { deletedAt } (cross-account Trash purge); text index is { workspaceId, title/tags/contentPlainText } so searches stay inside one account
 items:            { workspaceId, deleteBatchId }
 items:            { workspaceId, captureClientId } unique, partial (string only)
 ```
@@ -203,6 +205,6 @@ Computed **server-side** on every content save from ProseMirror JSON.
 
 ## Open questions for owner
 
-- [ ] Trash auto-purge after 30 days — keep, change, or disable by default?
-- [ ] Orphan grace period of 7 days OK?
-- [ ] Image size cap 10 MB OK for Cloudinary free tier?
+- [x] Trash auto-purge after 30 days — kept; published in the Privacy Policy (owner approved 2026-11-04).
+- [x] Orphan grace period of 7 days — kept; published in the Privacy Policy.
+- [x] Image size cap 10 MB — kept, plus a 200 MB per-account image quota (2026-11-04).

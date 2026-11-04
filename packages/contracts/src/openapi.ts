@@ -133,6 +133,11 @@ export function buildRegistry(): OpenAPIRegistry {
     body: auth.ChangePasswordInput,
     response: auth.AuthResponse,
   });
+  add('get', '/account/usage', {
+    tag: 'Account',
+    summary: 'Items and image storage used, against the per-account limits',
+    response: auth.AccountUsage,
+  });
   add('get', '/account/export', {
     tag: 'Account',
     summary: 'Download everything this account owns as JSON',

@@ -7,6 +7,7 @@ import 'package:niwa/core/theme/theme_mode.dart';
 import 'package:niwa/core/ui/snackbars.dart';
 import 'package:niwa/core/ui/state_views.dart';
 import 'package:niwa/core/util/app_version.dart';
+import 'package:niwa/core/util/links.dart';
 import 'package:niwa/features/auth/ui/logout.dart';
 import 'package:niwa/features/settings/ui/trash_section.dart';
 
@@ -123,6 +124,32 @@ class _Account extends ConsumerWidget {
           subtitle: Text(
             'Version ${ref.watch(appVersionProvider).value ?? '…'}',
           ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.mail_outline),
+          title: const Text('Questions or privacy requests'),
+          subtitle: const Text(NiwaLinks.contactEmail),
+          onTap: () => openLink(NiwaLinks.contact),
+        ),
+        ListTile(
+          leading: const Icon(Icons.privacy_tip_outlined),
+          title: const Text('Privacy Policy'),
+          onTap: () => openLink(NiwaLinks.privacy),
+        ),
+        ListTile(
+          leading: const Icon(Icons.gavel_outlined),
+          title: const Text('Terms of Use'),
+          onTap: () => openLink(NiwaLinks.terms),
+        ),
+        ListTile(
+          leading: const Icon(Icons.verified_outlined),
+          title: const Text('App licence (MIT)'),
+          onTap: () => openLink(NiwaLinks.appLicence),
+        ),
+        ListTile(
+          leading: const Icon(Icons.code),
+          title: const Text('Source code'),
+          onTap: () => openLink(NiwaLinks.source),
         ),
         ListTile(
           leading: const Icon(Icons.description_outlined),

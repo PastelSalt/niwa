@@ -87,6 +87,10 @@ Each app ships a committed `.env.example`; real `.env` files are git-ignored.
 | `REGISTRATION_MODE` | `first_user_only` (code default) \| `open` \| `closed`. NIWA is open to everyone (2026-11-04), so production should use `open`; `closed` is the emergency switch. `render.yaml` sets `open`; clients read it from `GET /auth/config` |
 | `RATE_LIMIT_AUTH_MAX` | Login/register attempts per 15 min per IP. Default `20`; e2e raises it |
 | `RATE_LIMIT_GENERAL_MAX` | All `/api/v1` requests per minute per IP. Default `600` |
+| `RATE_LIMIT_ACCOUNT_MAX` | Signed-in requests per minute per account, whatever the IP. Default `600` |
+| `RATE_LIMIT_SIGNUP_PER_HOUR` | New accounts per hour across the whole server (successful sign-ups only; hitting it logs `signup_cap_reached`). Default `30` |
+| `MAX_ITEMS_PER_ACCOUNT` | Item quota per account, Trash included. Default `10000` |
+| `MAX_IMAGE_MB_PER_ACCOUNT` | Image storage quota per account (MB). Default `200` |
 | `CORS_ORIGINS` | Comma list, e.g. `http://localhost:5173,https://niwa.vercel.app` |
 | `COOKIE_DOMAIN` | Unset (host-only cookie on the Vercel domain via rewrite) |
 | `CLOUDINARY_CLOUD_NAME` | — |
@@ -168,11 +172,15 @@ Set-Cookie: niwa_rt=…; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth
 ## 7. MongoDB Atlas
 
 - One project `niwa`, cluster per tier; databases `niwa_dev`, `niwa_staging`, `niwa_prod`.
+- **Region: Singapore** (AWS `ap-southeast-1`) — owner decision 2026-11-04; the Privacy Policy says data lives in
+  Singapore, so pick it when creating the cluster. Render (`render.yaml`) is pinned to `singapore` too.
 - **Network access:** Render free/Starter services don't have a fixed IP by default. Options:
   1. Use Render's published **outbound IP ranges for the service region** in the Atlas allowlist (preferred).
   2. `0.0.0.0/0` + strong unique credentials + TLS (only as a temporary dev fallback — record it in `LOGS.md` if used).
 - Database users: least privilege (`readWrite` on one db).
-- Indexes are created by the app at startup in `local`; in production via a migration script (no `autoIndex` in prod).
+- Indexes: `autoIndex` builds them in `local`/`test`. Deployed, the server runs `syncIndexes()` on every start
+  (`backend/src/lib/db.ts`) — creates missing indexes, drops ones no schema declares. `pnpm --filter @niwa/backend admin indexes`
+  does the same by hand.
 
 ---
 
@@ -282,8 +290,21 @@ bash scripts/deploy/render.sh --env-only  # after adding the Vercel origin to CO
 
 When Render is live, set `CORS_ORIGINS=https://niwa-delta.vercel.app` (and update the rewrite if the service URL differs).
 
+## 13. Running a shared server (multi-user)
+
+- **Accounts:** `pnpm --filter @niwa/backend admin list` (email, created, items, image MB, disabled),
+  `admin disable <email> --reason "…"` (blocks sign-in, signs it out everywhere; access tokens lapse within
+  10 min), `admin enable <email>`, `admin delete <email> --confirm <email>` (same as the user's own deletion).
+  Uses `MONGODB_URI` / `MONGODB_DB` and Cloudinary env from `backend/.env`. There is no admin HTTP endpoint.
+- **Limits:** the env vars above; users see their usage in Settings › Account. Free-tier Atlas is 512 MB for
+  everyone — watch `admin list` and lower the quotas before it fills.
+- **Scale check:** `pnpm --filter @niwa/backend scale-check [--accounts 200] [--items 300]` seeds an in-memory
+  database (many accounts + one at the item quota), times the busy endpoints and fails if a query scans the
+  whole collection. Last run (2026-11-04, 70k items): `/tree` 17 ms for 300 items and ~0.7 s for 10k items
+  (4.7 MB JSON → ~130 KB gzip); search ≤ 25 ms; Trash purge across all accounts uses an index.
+
 ## Open questions for owner
 
 - [ ] Long-term backup copies: nightly archives live 14 days as encrypted workflow artifacts — add a bucket (e.g. Cloudflare R2 / B2) for weekly copies, or move to Atlas M10?
-- [ ] Production domain: stay on `*.vercel.app` or use a custom domain? (A custom domain lets the API be `api.<domain>` on Render as a same-site alternative to the rewrite.)
-- [ ] Render region (pick the one closest to you and to the Atlas cluster region).
+- [ ] Production domain: stay on `*.vercel.app` (current: niwa-delta.vercel.app) or use a custom domain? (A custom domain lets the API be `api.<domain>` on Render as a same-site alternative to the rewrite.)
+- [x] Render region — Singapore, with Atlas in Singapore too (owner, 2026-11-04; `render.yaml`).

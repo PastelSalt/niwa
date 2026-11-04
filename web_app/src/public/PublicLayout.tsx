@@ -78,13 +78,14 @@ export function SiteFooter() {
               {site.maker}
             </Link>
           </Typography>
-          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* Privacy, Terms and EULA join these once the owner's B0 answers are in (B3). */}
-            <Link component={RouterLink} to="/cookies" variant="body2" color="text.secondary">
-              Cookies
-            </Link>
-            <Link component={RouterLink} to="/licenses" variant="body2" color="text.secondary">
-              Licences
+          <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
+            {LEGAL_LINKS.map(([to, label]) => (
+              <Link key={to} component={RouterLink} to={to} variant="body2" color="text.secondary">
+                {label}
+              </Link>
+            ))}
+            <Link href={site.sourceUrl} target="_blank" rel="noopener" variant="body2" color="text.secondary">
+              Source code
             </Link>
             <Typography variant="body2" color="text.secondary">
               © {year} {site.maker}
@@ -95,3 +96,12 @@ export function SiteFooter() {
     </Box>
   );
 }
+
+/** Footer links to the policy pages (B-01 B3); also used by Settings › Help. */
+export const LEGAL_LINKS: [to: string, label: string][] = [
+  ['/privacy', 'Privacy'],
+  ['/terms', 'Terms'],
+  ['/eula', 'App licence'],
+  ['/cookies', 'Cookies'],
+  ['/licenses', 'Licences'],
+];

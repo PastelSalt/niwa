@@ -25,6 +25,9 @@ export default defineConfig({
         LOG_LEVEL: 'warn',
         RATE_LIMIT_AUTH_MAX: '1000',
         RATE_LIMIT_GENERAL_MAX: '100000',
+        RATE_LIMIT_ACCOUNT_MAX: '100000',
+        // Every spec signs up its own accounts.
+        RATE_LIMIT_SIGNUP_PER_HOUR: '1000',
       },
       url: `http://localhost:${API_PORT}/api/v1/health`,
       reuseExistingServer: !process.env.CI,

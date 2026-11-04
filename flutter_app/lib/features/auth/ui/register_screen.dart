@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:niwa/core/auth/session.dart';
 import 'package:niwa/core/theme/tokens.g.dart';
+import 'package:niwa/core/util/links.dart';
 import 'package:niwa/core/util/validators.dart';
 import 'package:niwa/features/auth/ui/auth_form.dart';
 import 'package:niwa/features/auth/ui/auth_layout.dart';
@@ -82,6 +83,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 busy: submitting,
                 onPressed: _submit,
               ),
+              const SizedBox(height: NiwaTokens.spacingUnit * 2),
+              const _AgreementNote(),
               gap,
               AuthSwitchPrompt(
                 question: 'Already have an account?',
@@ -92,6 +95,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "By creating an account you agree…" with links to the policies (B-01 B3).
+class _AgreementNote extends StatelessWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final small = theme.textTheme.bodySmall;
+    final link = small?.copyWith(
+      color: theme.colorScheme.primary,
+      decoration: TextDecoration.underline,
+    );
+    Widget linkTo(String label, Uri uri) => InkWell(
+      onTap: () => openLink(uri),
+      child: Text(label, style: link),
+    );
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 4,
+      children: [
+        Text('By creating an account you agree to the', style: small),
+        linkTo('Terms of Use', NiwaLinks.terms),
+        Text('and', style: small),
+        linkTo('Privacy Policy', NiwaLinks.privacy),
+        Text(", and confirm you're at least 16.", style: small),
+      ],
     );
   }
 }

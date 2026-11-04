@@ -3,7 +3,7 @@
 > **A garden for your ideas.**
 > Plant an idea. Grow a project. Let it bloom.
 
-**Status:** Concept ratified. In implementation — web/backend M0–M7 done (`NIWA-PLAN-A-01.md`), mobile MA0–MA9 done (`NIWA-PLAN-A-02.md`), public site planned (`NIWA-PLAN-B-01.md`).
+**Status:** Concept ratified. In implementation — web/backend M0–M7 done (`NIWA-PLAN-A-01.md`), mobile MA0–MA9 done (`NIWA-PLAN-A-02.md`), public site + legal pages + multi-user readiness mostly done (`NIWA-PLAN-B-01.md`). What's left: `GAPS.md` › "Pending by plan".
 **Role of this file:** The **single source of truth for the concept**. If any other document (plan, codemap, code comments) disagrees with this file, this file wins — or this file gets updated first.
 **Supersedes:** the concept sections of `niwa-web`, `niwa-desktop`, `niwa-mobile` specs.
 **Owner:** Project owner

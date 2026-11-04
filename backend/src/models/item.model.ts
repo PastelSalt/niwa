@@ -78,13 +78,16 @@ itemSchema.index({ workspaceId: 1, updatedAt: -1 });
 itemSchema.index({ workspaceId: 1, deleteBatchId: 1 });
 itemSchema.index({ workspaceId: 1, deleteRoot: 1, deletedAt: -1 });
 itemSchema.index({ workspaceId: 1, tags: 1 });
+// The maintenance job purges old Trash across every account (deletedAt range, no workspace filter).
+itemSchema.index({ deletedAt: 1 });
 // A retried offline capture must not duplicate (DATA_MODEL.md §1).
 itemSchema.index(
   { workspaceId: 1, captureClientId: 1 },
   { unique: true, partialFilterExpression: { captureClientId: { $type: 'string' } } },
 );
+// workspaceId first: searches look only at the caller's items instead of every account's matches.
 itemSchema.index(
-  { title: 'text', tags: 'text', contentPlainText: 'text' },
+  { workspaceId: 1, title: 'text', tags: 'text', contentPlainText: 'text' },
   { weights: { title: 10, tags: 5, contentPlainText: 1 }, default_language: 'none', name: 'item_text' },
 );
 

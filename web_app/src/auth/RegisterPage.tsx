@@ -85,6 +85,17 @@ export function RegisterPage() {
           <Button type="submit" variant="contained" size="large" loading={isSubmitting}>
             Create account
           </Button>
+          <Typography variant="caption" color="text.secondary" align="center">
+            By creating an account you agree to the{' '}
+            <Link component={RouterLink} to="/terms">
+              Terms of Use
+            </Link>{' '}
+            and{' '}
+            <Link component={RouterLink} to="/privacy">
+              Privacy Policy
+            </Link>
+            , and confirm you&apos;re at least 16.
+          </Typography>
           <Typography variant="body2" color="text.secondary" align="center">
             Already have an account?{' '}
             <Link component={RouterLink} to="/login">

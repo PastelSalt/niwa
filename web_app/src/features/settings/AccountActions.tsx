@@ -5,10 +5,12 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { Password } from '@niwa/contracts';
+import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { messageOf } from '../../api/client.ts';
 import { useAuth } from '../../auth/AuthProvider.tsx';
@@ -70,6 +72,44 @@ export function ChangePassword() {
   );
 }
 
+const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB`;
+
+/** How much of the per-account limits is used (multi-user readiness). */
+function Usage() {
+  const { api } = useAuth();
+  const { data } = useQuery({ queryKey: ['account-usage'], queryFn: () => api.account.usage() });
+  if (!data) return null;
+  const rows: [label: string, used: number, limit: number, text: string][] = [
+    [
+      'Items (Trash included)',
+      data.items,
+      data.itemLimit,
+      `${data.items.toLocaleString()} of ${data.itemLimit.toLocaleString()}`,
+    ],
+    ['Images', data.imageBytes, data.imageByteLimit, `${mb(data.imageBytes)} of ${mb(data.imageByteLimit)}`],
+  ];
+  return (
+    <Stack spacing={1.5} sx={{ width: '100%', maxWidth: 400 }}>
+      {rows.map(([label, used, limit, text]) => (
+        <div key={label}>
+          <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+            <Typography variant="body2">{label}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {text}
+            </Typography>
+          </Stack>
+          <LinearProgress
+            variant="determinate"
+            value={Math.min(100, (used / limit) * 100)}
+            aria-label={`${label}: ${text}`}
+            sx={{ mt: 0.5, height: 6, borderRadius: 3 }}
+          />
+        </div>
+      ))}
+    </Stack>
+  );
+}
+
 /** "Export my data" (B-01 B4): everything the account owns as one JSON file. */
 export function ExportData() {
   const { api } = useAuth();
@@ -96,6 +136,7 @@ export function ExportData() {
 
   return (
     <Stack spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+      <Usage />
       <Typography variant="body2" color="text.secondary">
         Download your notes, tasks, ideas, links and schedule as a JSON file. Images are listed with their
         links.

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "NIWA design tokens (colors, type, shape) shared by MUI and Dart themes",
+  "license": "MIT",
   "exports": {
     ".": "./src/index.ts"
   },

@@ -6,6 +6,13 @@ import { apiError, authOk, renderApp } from '../../test/renderApp.tsx';
 const signedIn = { 'POST /auth/refresh': authOk };
 
 describe('Settings › Account', () => {
+  it('shows how much of the account limits is used', async () => {
+    renderApp('/settings/account', signedIn);
+    // Settings is a lazy chunk; under a full parallel run it can take over a second to load.
+    expect(await screen.findByText('4 of 10,000', {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByText('0.0 MB of 200 MB')).toBeInTheDocument();
+  });
+
   it('changes the password with the current one', async () => {
     const { fetch } = renderApp('/settings/account', { ...signedIn, 'POST /account/password': authOk });
     await userEvent.type(await screen.findByLabelText('Current password'), 'old password here');

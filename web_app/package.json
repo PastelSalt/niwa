@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "NIWA web client (React 19 + pure MUI v9) — deployed to Vercel",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "dev:memory": "vite",

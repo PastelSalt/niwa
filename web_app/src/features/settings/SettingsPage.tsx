@@ -13,8 +13,9 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useColorScheme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { Navigate, Link as RouterLink, useNavigate, useParams } from 'react-router';
 import { useAuth } from '../../auth/AuthProvider.tsx';
+import { LEGAL_LINKS } from '../../public/PublicLayout.tsx';
 import { site } from '../../public/site.ts';
 import { TrashSection } from '../items/TrashSection.tsx';
 import { useOnboarding } from '../onboarding/OnboardingProvider.tsx';
@@ -106,14 +107,31 @@ function AccountSection() {
 function HelpSection() {
   const { startTour } = useOnboarding();
   return (
-    <Section
-      title="Tour"
-      description="A one-minute walk through capture, the tree, the three lenses and search."
-    >
-      <Button variant="outlined" onClick={startTour}>
-        Replay the tour
-      </Button>
-    </Section>
+    <Stack spacing={3}>
+      <Section
+        title="Tour"
+        description="A one-minute walk through capture, the tree, the three lenses and search."
+      >
+        <Button variant="outlined" onClick={startTour}>
+          Replay the tour
+        </Button>
+      </Section>
+      <Section title="Contact and policies">
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          Questions or privacy requests: <Link href={`mailto:${site.contactEmail}`}>{site.contactEmail}</Link>
+        </Typography>
+        <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          {LEGAL_LINKS.map(([to, label]) => (
+            <Link key={to} component={RouterLink} to={to} variant="body2">
+              {label}
+            </Link>
+          ))}
+          <Link href={site.sourceUrl} target="_blank" rel="noopener" variant="body2">
+            Source code
+          </Link>
+        </Stack>
+      </Section>
+    </Stack>
   );
 }
 

@@ -4,6 +4,7 @@ services:
     name: niwa-api
     runtime: node
     plan: free
+    region: singapore # owner decision 2026-11-04: all data in Singapore (B-01 B0)
     rootDir: .
     buildCommand: corepack enable && pnpm install --frozen-lockfile --filter @niwa/backend...
     startCommand: pnpm --filter @niwa/backend start
@@ -59,5 +60,6 @@ services:
   - type: keyvalue
     name: niwa-cache
     plan: free
+    region: singapore # must match niwa-api for the internal URL
     maxmemoryPolicy: noeviction
     ipAllowList: []

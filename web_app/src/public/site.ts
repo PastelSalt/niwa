@@ -6,6 +6,11 @@ export const site = {
   tagline: 'A garden for your ideas.',
   maker: 'Moeko Works',
   makerUrl: 'https://moekoworks.vercel.app/',
+  /** Privacy, support and legal contact (B-01 B0, approved 2026-11-04). */
+  contactEmail: 'zoletakyle.1111@gmail.com',
+  sourceUrl: 'https://github.com/PastelSalt/niwa',
+  /** Date the Privacy Policy, Terms and app licence were published. */
+  legalUpdated: '4 November 2026',
 } as const;
 
 /** Sets the tab title while the page is mounted; the app's default title comes back afterwards. */

@@ -12,9 +12,10 @@
 ```text
 niwa/   (local folder may still be named niwa-site)
 ├─ PROJECT-SPECS.md          ✅ concept source of truth
-├─ NIWA-PLAN-A-01.md         ✅ milestones → phases → tasks (backend, web, desktop)
-├─ NIWA-PLAN-A-02.md         🟨 mobile (Flutter) plan MA0–MA11 — MA0–MA9 done; MA10–MA11 next
-├─ NIWA-PLAN-B-01.md         ⬜ public site plan — landing page, legal pages, onboarding tour, visual polish (B0–B7)
+├─ NIWA-PLAN-A-01.md         🟨 backend, web, desktop — M1–M7 done; M8 AI paused; M9/M11/M12 open
+├─ NIWA-PLAN-A-02.md         🟨 mobile (Flutter) — MA0–MA9 done; MA10 (quality + web parity), MA11 (release) next
+├─ NIWA-PLAN-B-01.md         🟨 public site — B0–B3, B5 done; B4/B6/B7 have small leftovers
+├─ LICENSE                   ✅ MIT, © 2026 Moeko Works
 ├─ GAPS.md                   ✅ deferred / unverified items (add when skipping, tick when closed)
 ├─ CODEMAP.md                ✅ this file
 ├─ LOGS.md                   ✅ action log
@@ -23,6 +24,7 @@ niwa/   (local folder may still be named niwa-site)
 │  ├─ DATA_MODEL.md          ✅ draft — field additions, limits, type matrix, ordering, delete/restore, tags, attachments, search
 │  ├─ OPS.md                 ✅ services, envs, env vars, Render/Vercel/Atlas/Cloudinary, backups + restore drill, CI
 │  ├─ SCHEDULER.md           ✅ drag, recurrence edits, time zones, overlaps (M5)
+│  ├─ LEGAL-DRAFTS.md        ✅ approved B0 answers + policy texts (B-01; the web pages are now the source of truth)
 │  └─ AI.md · GRAPH.md       🔜 M8 / M11
 ├─ package.json              ✅ root scripts: dev, dev:memory (no Atlas), build, test, e2e, lint, typecheck, format, openapi; pnpm@12.15.0
 ├─ pnpm-workspace.yaml       ✅ backend, web_app, desktop_app, packages/* · allowBuilds policy
@@ -62,7 +64,7 @@ Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa.git` (
 | `apps/api` | `backend/` | Render | ✅ M1 |
 | `apps/web` | `web_app/` | Vercel | ✅ M2 |
 | `apps/desktop` | `desktop_app/` | — | 🔜 M9 |
-| `apps/mobile` | `flutter_app/` | — | 🟨 A-02 (MA1) |
+| `apps/mobile` | `flutter_app/` | — | 🟨 A-02 (MA0–MA9 done) |
 | `packages/contracts` | `packages/contracts/` | — | ✅ |
 | `packages/api-client` | `packages/api-client/` | — | ✅ |
 | `packages/tokens` | `packages/tokens/` | — | ✅ |
@@ -115,12 +117,15 @@ backend/
 ├─ scripts/dev-memory.ts     ✅ in-memory MongoDB + real server (local dev without Atlas, e2e)
 ├─ scripts/backup.ts         ✅ `pnpm --filter @niwa/backend backup [--out f]` → gzip'd EJSON NDJSON
 ├─ scripts/restore.ts        ✅ `… restore <file> --yes [--drop]` (dry run without --yes) + syncIndexes
+├─ scripts/admin.ts          ✅ operator tools: list / disable / enable / delete accounts, indexes (OPS §13)
+├─ scripts/scale-check.ts    ✅ in-memory many-accounts timing + index-use check (OPS §13)
 ├─ src/
 │  ├─ server.ts              ✅ process entry: config → db → redis → app.listen, graceful shutdown
 │  ├─ app.ts                 ✅ createApp(): trust proxy, pino-http, helmet, CORS, json, cookies, rate limit, /api/v1, errors
 │  ├─ config/env.ts          ✅ Zod env schema, loadConfig() fail-fast, secureCookies
 │  ├─ lib/
-│  │  ├─ logger.ts           ✅ Pino + redaction (pretty in local, silent in test)
+│  │  ├─ logger.ts           ✅ Pino + redaction (pretty in local, silent in test); request URLs/Referer logged without query strings
+│  │  ├─ quota.ts            ✅ per-account item + image-storage quotas, usage (multi-user)
 │  │  ├─ errors.ts           ✅ AppError(code → HTTP status), notFound(), unauthorized()
 │  │  ├─ parse.ts            ✅ parse(schema, data) — ZodError → 400 via error middleware
 │  │  ├─ db.ts               ✅ Mongoose connect/disconnect
@@ -151,6 +156,7 @@ backend/
 │  │  ├─ link.repo.ts        ✅ by source/target, content-link sync, delete for purge
 │  │  └─ user · workspace · refreshSession ✅   (always .lean())
 │  ├─ services/
+│  │  ├─ admin.service.ts    ✅ list/disable/enable/delete accounts (used by scripts/admin.ts only)
 │  │  ├─ token.service.ts    ✅ access JWT sign/verify, refresh issue/rotate/revoke (reuse → family revoke)
 │  │  ├─ auth.service.ts     ✅ register (+workspace +root containers), login, refresh, logout, me
 │  │  ├─ item.service.ts     ✅ item rules: create/update/move (cycles, server-minted keys, rebalance), archive, delete/restore/purge batches, focus, tags, review, promoteSection, capture, inbox, file; syncs content links on save
@@ -238,6 +244,7 @@ web_app/
    │  ├─ PublicLayout.tsx    ✅ header (Log in / Create account) + SiteFooter (Moeko Works credit)
    │  ├─ LandingPage.tsx     ✅ hero + example tree, three lenses, capture, privacy, maker (own lazy chunk)
    │  ├─ site.ts             ✅ public facts (name, tagline, maker link) + useDocumentTitle
+   │  ├─ PrivacyPage.tsx · TermsPage.tsx · EulaPage.tsx ✅ approved policy pages (B3; source text in docs/LEGAL-DRAFTS.md)
    │  ├─ CookiesPage.tsx · LicensesPage.tsx · LegalPage.tsx ✅ policy pages (B3)
    │  ├─ useRegistrationOpen.ts ✅ `GET /auth/config` → hide sign-up when closed
    │  └─ public.test.tsx     ✅

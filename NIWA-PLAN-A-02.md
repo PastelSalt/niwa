@@ -35,7 +35,7 @@ Same rules as A-01:
 | MA7 | Scheduler | ✅ (code; device run pending) | MA4 |
 | MA8 | Inbox, capture & search | ✅ (code; stretch items open) | MA4 (MA5 for offline capture) |
 | MA9 | Settings, Trash & images | ✅ (code; live Cloudinary + device pending) | MA6 |
-| MA10 | Quality: accessibility, tests, performance | ⬜ | MA4–MA9 |
+| MA10 | Quality: accessibility, tests, performance + web-parity (tour, account screens) | ⬜ | MA4–MA9 |
 | MA11 | Release (Android first, then iOS) | ⬜ | MA10 |
 
 **Exit criteria (whole plan):** the app passes the parity checklist (§ at the end) against the same backend
@@ -308,6 +308,13 @@ _Status 2026-11-04: node shape matches the web fixture and the upload flow is te
 - [ ] 5,000-item tree: drill-down lists stay smooth (lazy lists, memoised lens view), cold start < 2 s on a mid-range phone
 - [ ] Shares findings with the web large-tree pass (`GAPS.md`)
 
+### MA10.P4 — Parity with the web's B-01 features (added 2026-11-04)
+- [ ] Onboarding tour on mobile: welcome once per account (reads/writes `onboarding` via `PUT /account/onboarding`),
+      Skip/Replay from Settings — same steps as the web (`web_app/src/features/onboarding/tour.ts`)
+- [ ] Settings › Account: change password, export my data, delete account, usage bars (`/account/*` endpoints)
+- [ ] Hide "Create your account" when `GET /auth/config` says sign-up is closed
+- [ ] Friendly messages for `QUOTA_EXCEEDED` and `ACCOUNT_DISABLED` (server text is already user-ready)
+
 **Exit criteria:** parity checklist green; no TalkBack blockers; CI green including integration tests.
 
 ---
@@ -318,7 +325,7 @@ _Status 2026-11-04: node shape matches the web fixture and the upload flow is te
 - [ ] App icon, splash, name; versioning from git tag
 - [ ] Release signing (upload key kept out of git; GitHub secret for CI)
 - [ ] `flutter build appbundle` in CI; Play Console internal testing track
-- [ ] Privacy policy / data safety form — policy URL from `NIWA-PLAN-B-01.md` B3.P1 (open registration, data on NIWA's hosted backend)
+- [ ] Privacy policy / data safety form — policy URL is live: https://niwa-delta.vercel.app/privacy (B-01 B3.P1); data safety form still to fill in Play Console
 
 ### MA11.P2 — iOS (after Android)
 - [ ] Mac or macOS CI runner; Apple developer account
@@ -356,11 +363,13 @@ _Status 2026-11-04: node shape matches the web fixture and the upload flow is te
 
 ## Open questions for owner
 
-- [ ] Bundle id `works.moeko.niwa` OK? App display name "NIWA"?
-- [ ] iOS now or after Android ships?
-- [ ] Offline scope: is read cache + offline capture enough for v1?
-- [ ] Reminder default (off / 10 min before)?
-- [ ] Scheduler tab default on phones: agenda or month?
+- [x] Bundle id `works.moeko.niwa` OK? App display name "NIWA"? — yes (owner, 2026-11-04)
+- [ ] iOS now or after Android ships? — plan says Android first; iOS still needs a Mac or macOS CI runner and an
+      Apple developer account (owner to decide when)
+- [x] Offline scope: is read cache + offline capture enough for v1? — yes; full offline editing is "later" (`GAPS.md`)
+- [x] Reminder default (off / 10 min before)? — off by default, opt-in per entry, 10 min before (owner, 2026-11-04)
+- [x] Scheduler tab default on phones: agenda or month? — day view (as the web does on phones); agenda is a
+      stretch item
 
 ## Change log
 

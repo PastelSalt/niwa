@@ -22,6 +22,7 @@ import type { ItemDoc } from '../models/item.model.ts';
 import { itemRepo, toObjectId } from '../repositories/item.repo.ts';
 import { linkRepo } from '../repositories/link.repo.ts';
 import { attachmentService } from './attachment.service.ts';
+import { assertItemQuota } from '../lib/quota.ts';
 import { linkService } from './link.service.ts';
 import { scheduleService } from './schedule.service.ts';
 import { toItem, toItemSummary } from './serializers.ts';
@@ -62,6 +63,7 @@ export const itemService = {
 
   async create(workspaceId: string, input: CreateItemInput): Promise<Item> {
     const wid = toObjectId(workspaceId);
+    await assertItemQuota(wid);
     if (input.parentId) await requireFiledParent(wid, input.parentId);
     assertContentSize(input.content);
 
@@ -167,6 +169,7 @@ export const itemService = {
       const earlier = await itemRepo.findByCaptureClientId(wid, input.clientId);
       if (earlier) return toItem(earlier);
     }
+    await assertItemQuota(wid);
     assertContentSize(input.content);
     let suggestedParentId: Types.ObjectId | null = null;
     if (input.suggestedParentId) {

@@ -33,6 +33,8 @@ const _$ErrorCodeEnumMap = {
   ErrorCode.versionConflict: 'VERSION_CONFLICT',
   ErrorCode.rateLimited: 'RATE_LIMITED',
   ErrorCode.registrationClosed: 'REGISTRATION_CLOSED',
+  ErrorCode.quotaExceeded: 'QUOTA_EXCEEDED',
+  ErrorCode.accountDisabled: 'ACCOUNT_DISABLED',
   ErrorCode.invalidCredentials: 'INVALID_CREDENTIALS',
   ErrorCode.aiKeyMissing: 'AI_KEY_MISSING',
   ErrorCode.aiKeyInvalid: 'AI_KEY_INVALID',

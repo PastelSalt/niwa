@@ -345,6 +345,13 @@ function Privacy() {
             No analytics, no advertising and no tracking cookies — the only cookie keeps you signed in.
           </Typography>
           <Typography component="li">Passwords are stored only as a secure hash.</Typography>
+          <Typography component="li">
+            The full details are in the{' '}
+            <Link component={RouterLink} to="/privacy">
+              Privacy Policy
+            </Link>
+            .
+          </Typography>
         </Stack>
       </Stack>
     </Section>
