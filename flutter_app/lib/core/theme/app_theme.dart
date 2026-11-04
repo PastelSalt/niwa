@@ -52,7 +52,9 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: p.background,
       dividerColor: p.divider,
-      fontFamilyFallback: NiwaTokens.fontFamilies,
+      // Bundled in pubspec.yaml; the rest of the token list is the fallback.
+      fontFamily: NiwaTokens.fontFamilies.first,
+      fontFamilyFallback: NiwaTokens.fontFamilies.skip(1).toList(),
       extensions: [NiwaColors(palette: p, types: types)],
     );
     final text = base.textTheme;

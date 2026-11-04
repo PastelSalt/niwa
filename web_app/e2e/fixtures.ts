@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test';
+
 /** Throwaway test account for the in-memory dev/e2e backend (`pnpm dev:memory`). Not a real credential. */
 export const TEST_USER = {
   email: 'gardener@niwa.test',
@@ -10,4 +12,12 @@ export function uniqueEmail(tag: string): string {
     '@',
     `+${tag}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}@`,
   );
+}
+
+/** New accounts get the onboarding welcome (B-01 B7); specs about other screens skip it. */
+export async function skipWelcome(page: Page): Promise<void> {
+  await page
+    .getByRole('dialog', { name: 'Welcome to your garden' })
+    .getByRole('button', { name: 'Skip' })
+    .click();
 }

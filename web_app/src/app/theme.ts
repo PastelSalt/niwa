@@ -1,4 +1,5 @@
 import { createTheme, type ColorSystemOptions } from '@mui/material/styles';
+import { fontFaces } from './fonts.ts';
 import { palettes, shape, typeColors, typography, type Palette } from '@niwa/tokens';
 
 /** MUI theme built only from @niwa/tokens — no color literals anywhere else (specs §1, §11.7). */
@@ -38,7 +39,8 @@ export const theme = createTheme({
     dark: colorScheme(palettes.dark, typeColors.dark),
   },
   typography: {
-    fontFamily: typography.fontFamily,
+    // The variable build of Inter registers as "Inter Variable"; the token list follows as fallback.
+    fontFamily: `"Inter Variable", ${typography.fontFamily}`,
     fontSize: typography.baseSize,
     h1: { fontWeight: 600 },
     h2: { fontWeight: 600 },
@@ -50,6 +52,7 @@ export const theme = createTheme({
   },
   shape: { borderRadius: shape.radius },
   components: {
+    MuiCssBaseline: { styleOverrides: fontFaces },
     MuiButton: { defaultProps: { disableElevation: true } },
     MuiPaper: { defaultProps: { elevation: 0 } },
     MuiAppBar: { defaultProps: { elevation: 0, color: 'inherit' } },

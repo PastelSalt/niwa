@@ -82,6 +82,20 @@ describe('api-client', () => {
     expect(err).toMatchObject({ status: 403, code: 'REGISTRATION_CLOSED', requestId: 'r1' });
   });
 
+  it('explains proxy errors without an envelope (a sleeping server reads as waking up)', async () => {
+    for (const [status, text] of [
+      [504, 'waking up'],
+      [500, 'unavailable right now (HTTP 500)'],
+      [404, 'Request failed (HTTP 404)'],
+    ] as const) {
+      const fetch = vi.fn(async () => new Response('<html>gateway</html>', { status }));
+      const api = createApiClient({ baseUrl: '/api/v1', fetch });
+      const err = await api.auth.me().catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ApiError);
+      expect((err as ApiError).message).toContain(text);
+    }
+  });
+
   it('native clients use X-Client and the secure store instead of cookies', async () => {
     const store = {
       value: null as string | null,

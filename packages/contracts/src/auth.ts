@@ -17,6 +17,19 @@ export const LoginInput = z
   .meta({ id: 'LoginInput' });
 export type LoginInput = z.infer<typeof LoginInput>;
 
+/** First-run tour state, stored per account so web and mobile agree (NIWA-PLAN-B-01 B7). */
+export const OnboardingStatus = z.enum(['completed', 'skipped']);
+export type OnboardingStatus = z.infer<typeof OnboardingStatus>;
+
+export const OnboardingState = z
+  .object({
+    status: OnboardingStatus,
+    version: z.number().int().min(1).meta({ description: 'Tour version the user finished or skipped' }),
+    at: IsoDateTime,
+  })
+  .meta({ id: 'OnboardingState' });
+export type OnboardingState = z.infer<typeof OnboardingState>;
+
 export const PublicUser = z
   .object({
     id: Id,
@@ -25,6 +38,9 @@ export const PublicUser = z
     aiEnabled: z.boolean(),
     hasAiKey: z.boolean(),
     createdAt: IsoDateTime,
+    onboarding: OnboardingState.nullable().meta({
+      description: 'null until the user finishes or skips the tour',
+    }),
   })
   .meta({ id: 'PublicUser' });
 export type PublicUser = z.infer<typeof PublicUser>;
@@ -51,6 +67,46 @@ export const RefreshInput = z.object({ refreshToken: z.string().optional() }).me
 export type RefreshInput = z.infer<typeof RefreshInput>;
 
 export const MeResponse = z.object({ user: PublicUser }).meta({ id: 'MeResponse' });
+
+/** Public, unauthenticated: lets clients hide sign-up when the server would refuse it. */
+export const AuthConfig = z.object({ registrationOpen: z.boolean() }).meta({ id: 'AuthConfig' });
+export type AuthConfig = z.infer<typeof AuthConfig>;
+
+export const OnboardingInput = z
+  .object({ status: OnboardingStatus, version: z.number().int().min(1).max(1000) })
+  .meta({ id: 'OnboardingInput' });
+export type OnboardingInput = z.infer<typeof OnboardingInput>;
+
+export const ChangePasswordInput = z
+  .object({ currentPassword: z.string().min(1).max(256), newPassword: Password })
+  .meta({ id: 'ChangePasswordInput' });
+export type ChangePasswordInput = z.infer<typeof ChangePasswordInput>;
+
+export const DeleteAccountInput = z
+  .object({ password: z.string().min(1).max(256) })
+  .meta({ id: 'DeleteAccountInput' });
+export type DeleteAccountInput = z.infer<typeof DeleteAccountInput>;
+
+/**
+ * "Export my data" (NIWA-PLAN-B-01 B4, OPS §9 row 3). Plain JSON of everything the account owns; ids are
+ * strings and dates ISO strings. Images are listed with their URLs (the files stay on Cloudinary).
+ */
+export const ACCOUNT_EXPORT_FORMAT = 'niwa-export';
+export const AccountExport = z
+  .object({
+    format: z.literal(ACCOUNT_EXPORT_FORMAT),
+    version: z.literal(1),
+    exportedAt: IsoDateTime,
+    account: z.object({ email: z.string(), createdAt: IsoDateTime }),
+    workspace: z.record(z.string(), z.unknown()),
+    items: z.array(z.record(z.string(), z.unknown())),
+    links: z.array(z.record(z.string(), z.unknown())),
+    scheduleEntries: z.array(z.record(z.string(), z.unknown())),
+    scheduleSeries: z.array(z.record(z.string(), z.unknown())),
+    attachments: z.array(z.record(z.string(), z.unknown())),
+  })
+  .meta({ id: 'AccountExport' });
+export type AccountExport = z.infer<typeof AccountExport>;
 
 export const REFRESH_COOKIE = 'niwa_rt';
 export const CSRF_HEADER = 'x-requested-with';

@@ -84,7 +84,7 @@ Each app ships a committed `.env.example`; real `.env` files are git-ignored.
 | `JWT_ACCESS_SECRET` | ≥ 32 chars (secret); Render generates it |
 | `ACCESS_TOKEN_TTL_SECONDS` | `600` (allowed 300–900) |
 | `REFRESH_TOKEN_TTL_DAYS` | `14` (allowed 7–30). Refresh tokens are opaque random values stored as SHA-256 hashes — no signing secret needed |
-| `REGISTRATION_MODE` | `first_user_only` (code default) \| `open` \| `closed`. NIWA is open to everyone (2026-11-04), so production should use `open`; `closed` is the emergency switch. `render.yaml` still says `first_user_only` — `GAPS.md` "Multi-user readiness" |
+| `REGISTRATION_MODE` | `first_user_only` (code default) \| `open` \| `closed`. NIWA is open to everyone (2026-11-04), so production should use `open`; `closed` is the emergency switch. `render.yaml` sets `open`; clients read it from `GET /auth/config` |
 | `RATE_LIMIT_AUTH_MAX` | Login/register attempts per 15 min per IP. Default `20`; e2e raises it |
 | `RATE_LIMIT_GENERAL_MAX` | All `/api/v1` requests per minute per IP. Default `600` |
 | `CORS_ORIGINS` | Comma list, e.g. `http://localhost:5173,https://niwa.vercel.app` |

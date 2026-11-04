@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { TEST_USER, uniqueEmail } from './fixtures.ts';
+import { skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
 
 // One account per project run (the in-memory API runs with REGISTRATION_MODE=open).
 const userFor = (project: string) => ({ ...TEST_USER, email: uniqueEmail(project) });
@@ -10,15 +10,20 @@ async function fillAuthForm(page: Page, email: string, password: string, confirm
   if (confirm) await page.getByLabel('Confirm password').fill(password);
 }
 
-test('register → shell → reload keeps session → logout → login', async ({ page }, info) => {
+test('landing → register → shell → reload keeps session → logout → login', async ({ page }, info) => {
   const user = userFor(info.project.name);
 
   await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1, name: 'A garden for your ideas.' })).toBeVisible();
+  await page.getByRole('banner').getByRole('link', { name: 'Log in' }).click();
   await expect(page).toHaveURL(/\/login$/);
 
   await page.getByRole('link', { name: 'Create your account' }).click();
+  // Navigation runs in a transition: wait for the sign-up form before typing into it.
+  await expect(page.getByRole('heading', { name: 'Plant your garden' })).toBeVisible();
   await fillAuthForm(page, user.email, user.password, true);
   await page.getByRole('button', { name: 'Create account' }).click();
+  await skipWelcome(page);
 
   await expect(page).toHaveURL(/\/knowledge$/);
   const nav = page.getByRole('navigation', { name: 'Main' });
@@ -51,6 +56,7 @@ test('settings theme toggle switches the color scheme', async ({ page }, info) =
   await page.goto('/register');
   await fillAuthForm(page, user.email, user.password, true);
   await page.getByRole('button', { name: 'Create account' }).click();
+  await skipWelcome(page);
   await expect(page).toHaveURL(/\/knowledge$/);
 
   await page.goto('/settings/appearance');

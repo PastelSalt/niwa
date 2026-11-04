@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:niwa/core/models/enums.dart';
 
 part 'user.freezed.dart';
 part 'user.g.dart';
@@ -13,9 +14,26 @@ abstract class User with _$User {
     required bool aiEnabled,
     required bool hasAiKey,
     required DateTime createdAt,
+
+    /// First-run tour; null until finished or skipped (B-01 B7).
+    required OnboardingState? onboarding,
   }) = _User;
 
   factory fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+}
+
+/// Contract `OnboardingState`.
+@freezed
+abstract class OnboardingState with _$OnboardingState {
+  const factory({
+    @JsonKey(unknownEnumValue: OnboardingStatus.unknown)
+    required OnboardingStatus status,
+    required int version,
+    required DateTime at,
+  }) = _OnboardingState;
+
+  factory fromJson(Map<String, dynamic> json) =>
+      _$OnboardingStateFromJson(json);
 }
 
 /// Contract `AuthResponse`. `refreshToken` is only present because the app

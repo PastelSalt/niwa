@@ -14,6 +14,17 @@ export const userRepo = {
     return UserModel.estimatedDocumentCount().exec();
   },
 
+  update(
+    id: Types.ObjectId | string,
+    set: Partial<Pick<UserDoc, 'passwordHash' | 'onboarding'>>,
+  ): Promise<UserDoc | null> {
+    return UserModel.findByIdAndUpdate(id, { $set: set }, { returnDocument: 'after' }).lean<UserDoc>().exec();
+  },
+
+  async deleteById(id: Types.ObjectId | string): Promise<void> {
+    await UserModel.deleteOne({ _id: id }).exec();
+  },
+
   async create(data: { email: string; passwordHash: string; workspaceId: Types.ObjectId }): Promise<UserDoc> {
     const doc = await UserModel.create(data);
     return doc.toObject<UserDoc>();

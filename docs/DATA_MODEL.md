@@ -38,6 +38,7 @@ These are needed by `CONCEPT.md` flows. Once accepted, fold them into `PROJECT-S
 | `schedule_series` | `recurrence`, `anchorAt`, `durationMs`, `isAllDay`, `color`, `timeZone`, `materializedThrough`, `untilIndex` | — | ✅ M5 — new collection for recurring rules |
 | `refresh_sessions` | `id`, `userId`, `tokenHash`, `familyId`, `expiresAt`, `revokedAt`, `createdAt` | — | Refresh rotation + reuse detection (§12.1) |
 | `users` | `workspaceId` | string | Single-workspace MVP link |
+| `users` | `onboarding` | `{ status: 'completed' \| 'skipped', version, at }` \| null | First-run tour state (B-01 B7); null until finished or skipped |
 | `items` | `captureClientId` | string (UUID) \| null | ✅ A-02 MA5 — idempotency key from offline capture queues (`CaptureInput.clientId`); never returned |
 
 Additional indexes:

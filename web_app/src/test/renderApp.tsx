@@ -17,6 +17,8 @@ export const testUser = {
   aiEnabled: false,
   hasAiKey: false,
   createdAt: '2026-11-03T00:00:00.000Z',
+  // Tour already seen, so it doesn't cover the screens other tests look at.
+  onboarding: { status: 'completed', version: 1, at: '2026-11-03T00:00:00.000Z' },
 };
 
 const json = (status: number, body: unknown) =>
@@ -42,6 +44,7 @@ const DEFAULT_HANDLERS: Record<string, Handler> = {
   'GET /review': () => json(200, { items: [] }),
   'GET /inbox': () => json(200, { items: [] }),
   'GET /search': () => json(200, { hits: [] }),
+  'GET /auth/config': () => json(200, { registrationOpen: true }),
 };
 
 /**

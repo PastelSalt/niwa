@@ -37,7 +37,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ render.yaml               ✅ Render Blueprint: web `niwa-api` + Key Value `niwa-cache`
 ├─ .github/workflows/ci.yml  ✅ check: lint → format → typecheck → openapi:check → test → build · e2e job
 ├─ .github/workflows/backup.yml ✅ nightly portable dump → `age`-encrypted artifact (14 days); needs BACKUP_* secrets (OPS §9)
-├─ .claude/launch.json       ✅ preview config (pnpm dev:memory on 5173)
+├─ .claude/launch.json       ✅ preview config (pnpm dev:memory on 5173; `niwa-memory-npx` for machines without pnpm on PATH)
 ├─ packages/
 │  ├─ contracts/             ✅ Zod schemas + generated openapi.yaml
 │  ├─ tokens/                ✅ design tokens
@@ -46,7 +46,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ backend/                  ✅ NIWA API → Render
 ├─ web_app/                  ✅ web client → Vercel
 ├─ desktop_app/              🔜 M9 Electron Forge (README placeholder; after mobile)
-└─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); scaffolded (MA1.P1), token theme (MA1.P2), contract models (MA1.P3), CI, API + session + auth screens (MA2), app shell + routes (MA3), item tree + Focus (MA4), offline cache + capture queue (MA5), notes editor (MA6), scheduler + reminders (MA7), inbox filing + search (MA8), settings/trash/images (MA9): lib/{app,core,features}
+└─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); scaffolded (MA1.P1), token theme (MA1.P2), contract models (MA1.P3), CI, API + session + auth screens (MA2), app shell + routes (MA3), item tree + Focus (MA4), offline cache + capture queue (MA5), notes editor (MA6), scheduler + reminders (MA7), inbox filing + search (MA8), settings/trash/images (MA9), bundled fonts + licences page (B-01 B5/B3): lib/{app,core,features}, assets/fonts/ (TTF + OFL texts)
 ```
 
 Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa.git` (renamed from `niwa-site` 2026-11-04; pushed).
@@ -173,6 +173,7 @@ backend/
    ├─ uploads.test.ts        ✅ sign/confirm/reject, orphan sync, sweep, purge (fake Cloudinary)
    ├─ backup.test.ts         ✅ export → restore round trip, drop guard, format check
    ├─ auth.test.ts           ✅ incl. rate limits
+   ├─ account.test.ts        ✅ auth config, onboarding, change password, export, delete account (B-01)
    ├─ items.test.ts          ✅ tree, ordering, moves, versions, delete/restore/purge, focus, tags
    ├─ schedule.test.ts       ✅ events, recurrence, scopes, blocks
    ├─ recurrence.test.ts     ✅ tz + DST + month clamping
@@ -199,26 +200,31 @@ Add a namespace here (e.g. `items.*`) whenever backend endpoints land. Types com
 
 ```text
 web_app/
-├─ index.html                ✅
-├─ public/favicon.svg        ✅
-├─ vite.config.ts            ✅ dev proxy /api → API_PROXY_TARGET (default localhost:4000) + vitest (jsdom)
+├─ index.html                ✅ title, description, Open Graph / Twitter tags
+├─ public/                   ✅ favicon.svg · icon PNGs (192/512/maskable/apple-touch) · manifest.webmanifest · robots.txt (app routes disallowed) · sitemap.xml · og-image.png · screens/*.webp (landing screenshots)
+├─ assets/icons/             ✅ icon SVG sources + generate.sh (rsvg-convert → public/*.png)
+├─ vite.config.ts            ✅ dev proxy /api → API_PROXY_TARGET (default localhost:4000) + vitest (jsdom) + licences plugin
+├─ licenses.plugin.ts        ✅ `virtual:licenses` — production dependency licences read at build time (B-01 B3.P5)
 ├─ vercel.json               ✅ /api/* → niwa-api.onrender.com rewrite + SPA fallback
 ├─ playwright.config.ts      ✅ starts in-memory API (4100) + Vite (5174); desktop + phone projects
 ├─ .env.example              ✅
 ├─ e2e/
 │  ├─ fixtures.ts            ✅ throwaway test account for the in-memory backend
-│  ├─ smoke.spec.ts          ✅ auth + shell + theme (desktop + phone)
+│  ├─ smoke.spec.ts          ✅ landing → auth + shell + theme (desktop + phone)
 │  ├─ tree.spec.ts           ✅ build/reorder/indent/complete/delete/restore, lens filtering, drag and drop (desktop)
 │  ├─ scheduler.spec.ts      ✅ month create/drag, week create/move/resize, repeat scopes, item block (desktop, Asia/Manila)
 │  ├─ inbox-search.spec.ts   ✅ capture → file → tree; search highlights (desktop + phone)
-│  ├─ a11y.spec.ts           ✅ axe WCAG 2.1 A/AA audit of every main screen + capture dialog, light and dark (desktop)
-│  └─ knowledge.spec.ts      ✅ editor, outline, [[ section links, backlinks, promote, broken section, review (desktop)
+│  ├─ a11y.spec.ts           ✅ axe WCAG 2.1 A/AA audit of the landing page and every main screen + capture dialog, light and dark (desktop)
+│  ├─ knowledge.spec.ts      ✅ editor, outline, [[ section links, backlinks, promote, broken section, review (desktop)
+│  └─ account.spec.ts        ✅ tour once per account + replay, export, change password, delete; public pages + 404
 └─ src/
    ├─ main.tsx               ✅ entry
    ├─ app/
    │  ├─ App.tsx             ✅ ThemeProvider + CssBaseline + QueryClient + AuthProvider + RouterProvider
-   │  ├─ router.tsx          ✅ route tree (CONCEPT.md §1.3): guest routes, protected shell routes; secondary screens lazy-loaded; RouteError boundaries
-   │  └─ theme.ts            ✅ MUI theme from @niwa/tokens (colorSchemes light/dark, CSS vars)
+   │  ├─ router.tsx          ✅ route tree (CONCEPT.md §1.3): `/` HomeRoute, guest routes, protected shell routes; secondary screens lazy-loaded; RouteError boundaries
+   │  ├─ theme.ts            ✅ MUI theme from @niwa/tokens (colorSchemes light/dark, CSS vars); fonts via CssBaseline
+   │  └─ fonts.ts            ✅ self-hosted @font-face: Inter variable (Latin/Latin Ext) + Noto Sans JP slice for 庭
+   ├─ assets/fonts/          ✅ vendored Noto Sans JP slice + OFL licence
    ├─ api/client.ts          ✅ app-wide `api` instance + messageOf(err)
    ├─ auth/
    │  ├─ AuthProvider.tsx    ✅ session context: status, user, login/register/logout; restores on load
@@ -227,8 +233,16 @@ web_app/
    │  ├─ LoginPage.tsx       ✅
    │  ├─ RegisterPage.tsx    ✅
    │  └─ auth.test.tsx       ✅
+   ├─ public/               ✅ signed-out pages (NIWA-PLAN-B-01)
+   │  ├─ HomeRoute.tsx       ✅ `/`: landing for visitors, → /knowledge when signed in
+   │  ├─ PublicLayout.tsx    ✅ header (Log in / Create account) + SiteFooter (Moeko Works credit)
+   │  ├─ LandingPage.tsx     ✅ hero + example tree, three lenses, capture, privacy, maker (own lazy chunk)
+   │  ├─ site.ts             ✅ public facts (name, tagline, maker link) + useDocumentTitle
+   │  ├─ CookiesPage.tsx · LicensesPage.tsx · LegalPage.tsx ✅ policy pages (B3)
+   │  ├─ useRegistrationOpen.ts ✅ `GET /auth/config` → hide sign-up when closed
+   │  └─ public.test.tsx     ✅
    ├─ layout/
-   │  ├─ AppShell.tsx        ✅ Notifier + ItemDialogs providers; rail | tree | main | detail; phone: tree as lens home
+   │  ├─ AppShell.tsx        ✅ `noindex` meta; Notifier + ItemDialogs providers; rail | tree | main | detail; phone: tree as lens home
    │  ├─ destinations.tsx    ✅ the six destinations (label, path, icon, shortcut, showsTree)
    │  ├─ NavRail.tsx         ✅ NavRail (≥ md) + BottomNav (< md)
    │  ├─ TopBar.tsx          ✅ title, search, capture (disabled until M6), detail toggle, account menu
@@ -251,7 +265,9 @@ web_app/
    │  │  ├─ EditableTitle.tsx · useSelectedItemId.ts ✅
    │  │  └─ treeModel.test.ts ✅
    │  ├─ actionable/FocusView.tsx ✅ Focus sections with completion checkbox (optimistic)
-   │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance (theme), account, ai (M8), trash
+   │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance (theme), account, ai (M8), trash, help (replay tour); About credit
+   │  ├─ settings/AccountActions.tsx ✅ change password, export my data, delete account (B-01 B4)
+   │  ├─ onboarding/          ✅ OnboardingProvider (welcome + MUI Popper tour), tour.ts (steps, TOUR_VERSION), examples.ts (B-01 B7)
    │  ├─ knowledge/
    │  │  ├─ editor/NoteEditor.tsx   ✅ TipTap body: extensions, outline, toolbar, autosave, deep-link scroll, promote
    │  │  ├─ editor/extensions.ts    ✅ AnchoredHeading (anchorId), AnchorGuard (unique ids), NiwaLink node, NiwaImage (attachmentId)

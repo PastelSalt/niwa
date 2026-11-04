@@ -12,6 +12,7 @@ import { Link as RouterLink } from 'react-router';
 import { z } from 'zod';
 import { messageOf } from '../api/client.ts';
 import { muiField } from '../lib/forms.ts';
+import { useRegistrationOpen } from '../public/useRegistrationOpen.ts';
 import { AuthLayout } from './AuthLayout.tsx';
 import { useAuth } from './AuthProvider.tsx';
 
@@ -25,6 +26,7 @@ type FormOut = z.output<typeof RegisterForm>;
 
 export function RegisterPage() {
   const { register: createAccount } = useAuth();
+  const registrationOpen = useRegistrationOpen();
   const [error, setError] = useState<string | null>(null);
   const {
     register,
@@ -45,9 +47,15 @@ export function RegisterPage() {
   });
 
   return (
-    <AuthLayout title="Plant your garden" subtitle="NIWA is personal — one account per instance.">
+    <AuthLayout
+      title="Plant your garden"
+      subtitle="Your own private garden — notes, tasks and plans in one tree."
+    >
       <form onSubmit={onSubmit} noValidate>
         <Stack spacing={2.5}>
+          {!registrationOpen && (
+            <Alert severity="info">This NIWA server isn't accepting new accounts right now.</Alert>
+          )}
           {error && <Alert severity="error">{error}</Alert>}
           <TextField
             label="Email"

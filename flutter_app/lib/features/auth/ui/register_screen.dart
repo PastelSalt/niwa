@@ -42,7 +42,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     const gap = SizedBox(height: NiwaTokens.spacingUnit * 5);
     return AuthLayout(
       title: 'Plant your garden',
-      subtitle: 'NIWA is personal — one account per instance.',
+      subtitle: 'Your own private garden — notes, tasks and plans in one tree.',
       child: Form(
         key: formKey,
         child: AutofillGroup(

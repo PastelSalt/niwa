@@ -1,11 +1,28 @@
-import { ROOT_CONTAINERS, type AuthResponse, type LoginInput, type RegisterInput } from '@niwa/contracts';
+import {
+  ACCOUNT_EXPORT_FORMAT,
+  ROOT_CONTAINERS,
+  type AccountExport,
+  type AuthConfig,
+  type AuthResponse,
+  type ChangePasswordInput,
+  type LoginInput,
+  type OnboardingInput,
+  type RegisterInput,
+} from '@niwa/contracts';
 import { hash, verify } from '@node-rs/argon2';
 import type { AppConfig } from '../config/env.ts';
 import { AppError, unauthorized } from '../lib/errors.ts';
+import { AttachmentModel } from '../models/attachment.model.ts';
+import { ItemModel } from '../models/item.model.ts';
+import { LinkModel } from '../models/link.model.ts';
+import { RefreshSessionModel } from '../models/refreshSession.model.ts';
+import { ScheduleEntryModel, ScheduleSeriesModel } from '../models/schedule.model.ts';
 import type { UserDoc } from '../models/user.model.ts';
+import { WorkspaceModel } from '../models/workspace.model.ts';
 import { itemRepo } from '../repositories/item.repo.ts';
 import { userRepo } from '../repositories/user.repo.ts';
 import { workspaceRepo } from '../repositories/workspace.repo.ts';
+import { attachmentService } from './attachment.service.ts';
 import { toPublicUser } from './serializers.ts';
 import type { ClientKind, TokenService } from './token.service.ts';
 
@@ -39,10 +56,24 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
     };
   }
 
+  async function registrationOpen(): Promise<boolean> {
+    if (config.REGISTRATION_MODE === 'open') return true;
+    return config.REGISTRATION_MODE === 'first_user_only' && (await userRepo.count()) === 0;
+  }
+
   async function assertRegistrationAllowed() {
-    if (config.REGISTRATION_MODE === 'open') return;
-    if (config.REGISTRATION_MODE === 'first_user_only' && (await userRepo.count()) === 0) return;
+    if (await registrationOpen()) return;
     throw new AppError('REGISTRATION_CLOSED', 'Registration is closed for this NIWA instance.');
+  }
+
+  /** Re-checks the password for sensitive account actions; same message as a failed login. */
+  async function verifiedUser(userId: string, password: string): Promise<UserDoc> {
+    const user = await userRepo.findById(userId);
+    if (!user) throw unauthorized();
+    if (!(await verify(user.passwordHash, password))) {
+      throw new AppError('INVALID_CREDENTIALS', 'Password is incorrect.');
+    }
+    return user;
   }
 
   return {
@@ -93,6 +124,72 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
       const user = await userRepo.findById(userId);
       if (!user) throw unauthorized();
       return toPublicUser(user);
+    },
+
+    async config(): Promise<AuthConfig> {
+      return { registrationOpen: await registrationOpen() };
+    },
+
+    async setOnboarding(userId: string, input: OnboardingInput) {
+      const user = await userRepo.update(userId, { onboarding: { ...input, at: new Date() } });
+      if (!user) throw unauthorized();
+      return toPublicUser(user);
+    },
+
+    /** Other devices are signed out; the caller gets a fresh session so it stays signed in. */
+    async changePassword(userId: string, input: ChangePasswordInput, client: ClientKind): Promise<Session> {
+      const user = await verifiedUser(userId, input.currentPassword);
+      const updated = await userRepo.update(user._id, {
+        passwordHash: await hash(input.newPassword, ARGON_OPTS),
+      });
+      await tokens.revokeAllForUser(userId);
+      return startSession(updated!, client);
+    },
+
+    /** Everything the account owns, as plain JSON (NIWA-PLAN-B-01 B4). */
+    async exportData(userId: string): Promise<AccountExport> {
+      const user = await userRepo.findById(userId);
+      if (!user) throw unauthorized();
+      const wid = user.workspaceId;
+      const plain = <T>(docs: T[]) => JSON.parse(JSON.stringify(docs)) as Record<string, unknown>[];
+      const [workspace, items, links, entries, series, attachments] = await Promise.all([
+        WorkspaceModel.findById(wid).lean(),
+        ItemModel.find({ workspaceId: wid }).sort({ _id: 1 }).lean(),
+        LinkModel.find({ workspaceId: wid }).sort({ _id: 1 }).lean(),
+        ScheduleEntryModel.find({ workspaceId: wid }).sort({ _id: 1 }).lean(),
+        ScheduleSeriesModel.find({ workspaceId: wid }).sort({ _id: 1 }).lean(),
+        AttachmentModel.find({ workspaceId: wid }).sort({ _id: 1 }).lean(),
+      ]);
+      return {
+        format: ACCOUNT_EXPORT_FORMAT,
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        account: { email: user.email, createdAt: user.createdAt.toISOString() },
+        workspace: plain([workspace])[0] ?? {},
+        items: plain(items),
+        links: plain(links),
+        scheduleEntries: plain(entries),
+        scheduleSeries: plain(series),
+        attachments: plain(attachments),
+      };
+    },
+
+    /** Permanent: removes the user and everything in their workspace, images included. */
+    async deleteAccount(userId: string, password: string): Promise<void> {
+      const user = await verifiedUser(userId, password);
+      const wid = user.workspaceId;
+      const itemIds = (await ItemModel.find({ workspaceId: wid }, { _id: 1 }).lean()).map((i) => i._id);
+      await attachmentService.purgeForItems(wid, itemIds);
+      await AttachmentModel.deleteMany({ workspaceId: wid });
+      await Promise.all([
+        ScheduleEntryModel.deleteMany({ workspaceId: wid }),
+        ScheduleSeriesModel.deleteMany({ workspaceId: wid }),
+        LinkModel.deleteMany({ workspaceId: wid }),
+        ItemModel.deleteMany({ workspaceId: wid }),
+        RefreshSessionModel.deleteMany({ userId: user._id }),
+      ]);
+      await WorkspaceModel.deleteOne({ _id: wid });
+      await userRepo.deleteById(user._id);
     },
   };
 }

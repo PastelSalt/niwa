@@ -124,6 +124,16 @@ class _Account extends ConsumerWidget {
             'Version ${ref.watch(appVersionProvider).value ?? '…'}',
           ),
         ),
+        ListTile(
+          leading: const Icon(Icons.description_outlined),
+          title: const Text('Open-source licences'),
+          onTap: () => showLicensePage(
+            context: context,
+            applicationName: 'NIWA',
+            applicationVersion: ref.read(appVersionProvider).value,
+            applicationLegalese: 'Designed and built solo by Moeko Works',
+          ),
+        ),
       ],
     );
   }

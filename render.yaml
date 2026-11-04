@@ -44,7 +44,7 @@ services:
       - key: REFRESH_TOKEN_TTL_DAYS
         value: '14'
       - key: REGISTRATION_MODE
-        value: first_user_only
+        value: open # NIWA is open to everyone (2026-11-04)
       - key: CORS_ORIGINS
         sync: false
       - key: CLOUDINARY_CLOUD_NAME

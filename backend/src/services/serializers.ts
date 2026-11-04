@@ -13,6 +13,13 @@ export function toPublicUser(user: UserDoc): PublicUser {
     aiEnabled: user.aiEnabled,
     hasAiKey: !!user.aiApiKeyEncrypted,
     createdAt: user.createdAt.toISOString(),
+    onboarding: user.onboarding
+      ? {
+          status: user.onboarding.status,
+          version: user.onboarding.version,
+          at: user.onboarding.at.toISOString(),
+        }
+      : null,
   };
 }
 

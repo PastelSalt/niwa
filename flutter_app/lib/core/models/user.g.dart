@@ -13,6 +13,9 @@ _User _$UserFromJson(Map<String, dynamic> json) => _User(
   aiEnabled: json['aiEnabled'] as bool,
   hasAiKey: json['hasAiKey'] as bool,
   createdAt: DateTime.parse(json['createdAt'] as String),
+  onboarding: json['onboarding'] == null
+      ? null
+      : OnboardingState.fromJson(json['onboarding'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
@@ -22,6 +25,31 @@ Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
   'aiEnabled': instance.aiEnabled,
   'hasAiKey': instance.hasAiKey,
   'createdAt': instance.createdAt.toIso8601String(),
+  'onboarding': instance.onboarding?.toJson(),
+};
+
+_OnboardingState _$OnboardingStateFromJson(Map<String, dynamic> json) =>
+    _OnboardingState(
+      status: $enumDecode(
+        _$OnboardingStatusEnumMap,
+        json['status'],
+        unknownValue: OnboardingStatus.unknown,
+      ),
+      version: (json['version'] as num).toInt(),
+      at: DateTime.parse(json['at'] as String),
+    );
+
+Map<String, dynamic> _$OnboardingStateToJson(_OnboardingState instance) =>
+    <String, dynamic>{
+      'status': _$OnboardingStatusEnumMap[instance.status]!,
+      'version': instance.version,
+      'at': instance.at.toIso8601String(),
+    };
+
+const _$OnboardingStatusEnumMap = {
+  OnboardingStatus.completed: 'completed',
+  OnboardingStatus.skipped: 'skipped',
+  OnboardingStatus.unknown: 'unknown',
 };
 
 _AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) =>

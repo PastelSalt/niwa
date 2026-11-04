@@ -96,3 +96,9 @@ const _$ErrorCodeEnumMap = {
   ErrorCode.internalError: 'INTERNAL_ERROR',
   ErrorCode.unknown: 'UNKNOWN',
 };
+
+const _$OnboardingStatusEnumMap = {
+  OnboardingStatus.completed: 'completed',
+  OnboardingStatus.skipped: 'skipped',
+  OnboardingStatus.unknown: 'unknown',
+};

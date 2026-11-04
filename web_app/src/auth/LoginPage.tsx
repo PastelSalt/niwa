@@ -12,6 +12,7 @@ import { Link as RouterLink } from 'react-router';
 import type { z } from 'zod';
 import { messageOf } from '../api/client.ts';
 import { muiField } from '../lib/forms.ts';
+import { useRegistrationOpen } from '../public/useRegistrationOpen.ts';
 import { AuthLayout } from './AuthLayout.tsx';
 import { useAuth } from './AuthProvider.tsx';
 
@@ -19,6 +20,7 @@ type FormIn = z.input<typeof LoginInput>;
 type FormOut = z.output<typeof LoginInput>;
 
 export function LoginPage() {
+  const registrationOpen = useRegistrationOpen();
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const {
@@ -65,12 +67,14 @@ export function LoginPage() {
           <Button type="submit" variant="contained" size="large" loading={isSubmitting}>
             Log in
           </Button>
-          <Typography variant="body2" color="text.secondary" align="center">
-            First time here?{' '}
-            <Link component={RouterLink} to="/register">
-              Create your account
-            </Link>
-          </Typography>
+          {registrationOpen && (
+            <Typography variant="body2" color="text.secondary" align="center">
+              First time here?{' '}
+              <Link component={RouterLink} to="/register">
+                Create your account
+              </Link>
+            </Typography>
+          )}
         </Stack>
       </form>
     </AuthLayout>

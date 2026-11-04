@@ -1,0 +1,14 @@
+{
+  "name": "NIWA",
+  "short_name": "niwa",
+  "description": "Notes, ideas, tasks and schedule in one tree — a garden for your ideas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6EE",
+  "theme_color": "#59765C",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

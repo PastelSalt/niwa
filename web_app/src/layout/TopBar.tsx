@@ -22,6 +22,8 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../auth/AuthProvider.tsx';
 import { Wordmark } from '../components/Wordmark.tsx';
 import { useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
+import { useOnboarding } from '../features/onboarding/OnboardingProvider.tsx';
+import HelpOutlineRounded from '@mui/icons-material/HelpOutlineRounded';
 
 interface TopBarProps {
   title: string;
@@ -34,6 +36,7 @@ interface TopBarProps {
 export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }: TopBarProps) {
   const { user, logout } = useAuth();
   const capture = useQuickCapture();
+  const onboarding = useOnboarding();
   const navigate = useNavigate();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [query, setQuery] = useState('');
@@ -61,6 +64,7 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
         <Box
           component="form"
           role="search"
+          data-tour="search"
           onSubmit={submitSearch}
           sx={{ flex: 1, maxWidth: 480, mx: 'auto' }}
         >
@@ -88,11 +92,11 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
 
         <Tooltip title="Quick capture  ·  c">
           {compact ? (
-            <IconButton aria-label="Capture" onClick={capture.open}>
+            <IconButton aria-label="Capture" onClick={capture.open} data-tour="capture">
               <AddRounded />
             </IconButton>
           ) : (
-            <Button variant="contained" startIcon={<AddRounded />} onClick={capture.open}>
+            <Button variant="contained" startIcon={<AddRounded />} onClick={capture.open} data-tour="capture">
               Capture
             </Button>
           )}
@@ -109,6 +113,7 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
         <Tooltip title="Account">
           <IconButton
             aria-label="Account menu"
+            data-tour="account"
             aria-haspopup="menu"
             onClick={(e) => setMenuAnchor(e.currentTarget)}
             sx={{ p: 0.5 }}
@@ -148,6 +153,17 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
               <SettingsOutlined fontSize="small" />
             </ListItemIcon>
             Settings
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setMenuAnchor(null);
+              onboarding.startTour();
+            }}
+          >
+            <ListItemIcon>
+              <HelpOutlineRounded fontSize="small" />
+            </ListItemIcon>
+            Take the tour
           </MenuItem>
           <MenuItem
             onClick={() => {

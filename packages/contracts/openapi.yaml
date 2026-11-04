@@ -99,6 +99,27 @@ components:
           type: boolean
         createdAt:
           $ref: "#/components/schemas/IsoDateTime"
+        onboarding:
+          type:
+            - object
+            - "null"
+          properties:
+            status:
+              type: string
+              enum:
+                - completed
+                - skipped
+            version:
+              type: integer
+              minimum: 1
+              description: Tour version the user finished or skipped
+            at:
+              $ref: "#/components/schemas/IsoDateTime"
+          required:
+            - status
+            - version
+            - at
+          description: null until the user finishes or skips the tour
       required:
         - id
         - email
@@ -106,6 +127,7 @@ components:
         - aiEnabled
         - hasAiKey
         - createdAt
+        - onboarding
     Id:
       type: string
       pattern: ^[a-f0-9]{24}$
@@ -153,6 +175,113 @@ components:
           $ref: "#/components/schemas/PublicUser"
       required:
         - user
+    AuthConfig:
+      type: object
+      properties:
+        registrationOpen:
+          type: boolean
+      required:
+        - registrationOpen
+    OnboardingInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - completed
+            - skipped
+        version:
+          type: integer
+          minimum: 1
+          maximum: 1000
+      required:
+        - status
+        - version
+    ChangePasswordInput:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          minLength: 1
+          maxLength: 256
+        newPassword:
+          type: string
+          minLength: 12
+          maxLength: 256
+      required:
+        - currentPassword
+        - newPassword
+    AccountExport:
+      type: object
+      properties:
+        format:
+          type: string
+          enum:
+            - niwa-export
+        version:
+          type: number
+          enum:
+            - 1
+        exportedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        account:
+          type: object
+          properties:
+            email:
+              type: string
+            createdAt:
+              $ref: "#/components/schemas/IsoDateTime"
+          required:
+            - email
+            - createdAt
+        workspace:
+          type: object
+          additionalProperties: {}
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        links:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        scheduleEntries:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        scheduleSeries:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        attachments:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+        - format
+        - version
+        - exportedAt
+        - account
+        - workspace
+        - items
+        - links
+        - scheduleEntries
+        - scheduleSeries
+        - attachments
+    DeleteAccountInput:
+      type: object
+      properties:
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+      required:
+        - password
     Workspace:
       type: object
       properties:
@@ -1214,7 +1343,7 @@ paths:
                 $ref: "#/components/schemas/ErrorEnvelope"
   /auth/register:
     post:
-      summary: Create the account (single-user; gated by REGISTRATION_MODE)
+      summary: Create an account (gated by REGISTRATION_MODE)
       tags:
         - Auth
       security: []
@@ -1465,6 +1594,263 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MeResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /auth/config:
+    get:
+      summary: Whether this server accepts new accounts right now
+      tags:
+        - Auth
+      security: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthConfig"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /account/onboarding:
+    put:
+      summary: Record that the user finished or skipped the onboarding tour
+      tags:
+        - Account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingInput"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /account/password:
+    post:
+      summary: Change password; signs out every other session and returns a fresh one
+      tags:
+        - Account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /account/export:
+    get:
+      summary: Download everything this account owns as JSON
+      tags:
+        - Account
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountExport"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /account/delete:
+    post:
+      summary: Permanently delete the account, its workspace, items, schedule, images and sessions
+      tags:
+        - Account
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountInput"
+      responses:
+        "204":
+          description: No content
         "400":
           description: Validation error
           content:

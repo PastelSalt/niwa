@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { TEST_USER, uniqueEmail } from './fixtures.ts';
+import { skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
 
 test.skip(
   ({ isMobile }) => isMobile,
@@ -12,6 +12,7 @@ async function signUp(page: Page, tag: string) {
   await page.getByLabel('Password', { exact: true }).fill(TEST_USER.password);
   await page.getByLabel('Confirm password').fill(TEST_USER.password);
   await page.getByRole('button', { name: 'Create account' }).click();
+  await skipWelcome(page);
   await expect(page).toHaveURL(/\/knowledge$/);
 }
 

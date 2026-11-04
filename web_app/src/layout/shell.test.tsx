@@ -6,7 +6,7 @@ import { authOk, renderApp } from '../test/renderApp.tsx';
 const signedIn = { 'POST /auth/refresh': authOk };
 
 describe('app shell', () => {
-  it('redirects / to Knowledge and shows the tree pane there', async () => {
+  it('sends signed-in users from / to Knowledge and shows the tree pane there', async () => {
     const { router } = renderApp('/', signedIn);
     await waitFor(() => expect(router.state.location.pathname).toBe('/knowledge'));
     expect(await screen.findByLabelText('Knowledge tree')).toBeInTheDocument();

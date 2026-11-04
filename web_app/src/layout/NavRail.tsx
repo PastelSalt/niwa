@@ -50,6 +50,7 @@ export function NavRail() {
             <ButtonBase
               component={NavLink}
               to={d.path}
+              data-tour={`nav-${d.key}`}
               sx={(theme) => ({
                 width: 60,
                 py: 1,
@@ -107,6 +108,7 @@ export function BottomNav() {
           <BottomNavigationAction
             key={d.key}
             value={d.key}
+            data-tour={`nav-${d.key}`}
             label={d.label}
             icon={<DestIcon d={d} />}
             sx={{ minWidth: 0 }}

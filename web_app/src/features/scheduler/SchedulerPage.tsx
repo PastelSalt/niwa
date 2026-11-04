@@ -76,9 +76,10 @@ export function SchedulerPage() {
       days: list,
       title:
         view === 'day'
-          ? date.toLocaleDateString(undefined, {
-              weekday: 'long',
-              month: 'long',
+          ? // Short names, like the week title, so the header fits a phone.
+            date.toLocaleDateString(undefined, {
+              weekday: 'short',
+              month: 'short',
               day: 'numeric',
               year: 'numeric',
             })

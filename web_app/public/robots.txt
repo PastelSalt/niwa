@@ -1,0 +1,15 @@
+# Public pages may be indexed; signed-in screens are private (NIWA-PLAN-B-01 B1.P4).
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /register
+Disallow: /knowledge
+Disallow: /actionable
+Disallow: /scheduler
+Disallow: /inbox
+Disallow: /search
+Disallow: /settings
+Disallow: /items
+Disallow: /api/
+
+Sitemap: https://niwa-delta.vercel.app/sitemap.xml

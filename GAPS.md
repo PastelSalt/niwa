@@ -22,22 +22,15 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
       fail. Fix the Atlas connection (IP access list `0.0.0.0/0` for Render, user/password, SRV string), then
       run `scripts/deploy/render.sh`.
 
-### Multi-user readiness (owner, 2026-11-04 — NIWA is open to everyone; not coded yet)
+### Multi-user readiness (owner, 2026-11-04 — NIWA is open to everyone)
 NIWA was built single-user per instance; the owner has opened it to anyone. Data is already separated per
 account (every query is scoped by `workspaceId`), but these backend items are still needed or worth doing.
 Product side is in `NIWA-PLAN-B-01.md`.
-- [ ] **Registration mode** — code default and `render.yaml` are `first_user_only`; set `REGISTRATION_MODE=open`
-      for production (keep `closed` as an emergency switch). Expose it unauthenticated so the UI knows
-      (B-01 B1.P3).
-- [ ] **Onboarding state** — no field on `users`; add e.g. `onboarding { status: completed|skipped, version, at }`
-      plus `GET`/`PATCH` on the current user, contract + OpenAPI + tests (B-01 B7).
 - [ ] **Outbound email** — none exists. Needed for password reset and (optionally) email verification; pick a
       provider and add its secret to `render.yaml` as `sync: false`.
-- [ ] **Password reset / change** — no endpoints. Reset needs single-use, short-lived, hashed tokens and must
+- [ ] **Password reset** — change is done (`POST /account/password`, 2026-11-04); reset still needs single-use, short-lived, hashed tokens and must
       revoke all refresh sessions (reuse `revokeAllForUser`).
 - [ ] **Email verification** — accounts are usable without proving the address; decide whether to require it.
-- [ ] **Account deletion** — no endpoint; must remove user, workspace, items, links, schedule, attachments
-      (Cloudinary assets) and sessions (B-01 B4).
 - [ ] **Per-account limits** — rate limits are per IP only (`middleware/rateLimit.ts`); there's a per-image size
       cap but no per-account quota on items, attachments or total Cloudinary storage. Free-tier Cloudinary and
       Atlas (512 MB) are shared by all accounts, so one heavy account can fill them.
@@ -64,7 +57,6 @@ Product side is in `NIWA-PLAN-B-01.md`.
       and MA3 tabs have only run in widget tests; owner will say when to build.
 - [ ] **Shell golden tests** (MA3 exit) — font-dependent; generate on one fixed machine or in CI.
 - [ ] **Deep links on a device** — `niwa://open/…` intent filter / URL type not yet tried on Android or iOS.
-- [ ] **Bundled fonts** — Inter / Noto Sans JP not bundled; phones show the platform font.
 - [ ] **Airplane-mode run on a device** (MA5 exit) — covered by `test/offline_test.dart` only.
 - [ ] **Schedule + links in the offline cache** — join with MA7 / MA6.
 - [ ] **Manual web → phone → web note round-trip** (MA6 exit) — automated round-trip only so far.
@@ -82,6 +74,18 @@ Product side is in `NIWA-PLAN-B-01.md`.
 - [ ] **Offline editing** — edits are refused offline (only capture queues); a full outbox needs conflict UX (A-02 "later").
 
 ### Web
+- [ ] **Legal pages (B-01 B3)** — Privacy, Terms, EULA, the repo `LICENSE`, the sign-up "you agree" line and a
+      privacy contact all wait on the owner's B0 answers (contact email, jurisdiction, minimum age, code licence,
+      review). Cookies and Licences are live.
+- [ ] **Landing LCP on phones** — 3.3 s with 4× CPU / ~4G throttling (desktop 0.8 s; CLS 0.000). Visitors still
+      download the shared MUI/app chunks; splitting them further would bring it under 2.5 s.
+- [ ] **Accessibility leftovers (B-01 B6/B7)** — axe not yet run on Cookies, Licences, 404 or the welcome dialog;
+      tour not checked at 200 % text; empty states don't link to tour steps yet.
+- [ ] **Export as Markdown** — export is JSON only (`GET /account/export`); Markdown per note still to do.
+- [ ] **Mobile: tour and account actions** — the Flutter app reads `onboarding` but has no tour, change-password,
+      export or delete-account screens yet (web has them). Fold into A-02 MA10/MA11.
+- [ ] **Link previews on the live site** — `og:image` and `robots.txt`/`sitemap.xml` checked locally only; check
+      on niwa-delta.vercel.app after this deploys.
 - [ ] **Flaky `shell.test.tsx` › "hides the tree pane on non-tree destinations"** — fails about 1 run in 3 on
       the Linux laptop (~1.1 s, likely a timing-sensitive wait); untouched code. Seen 2026-11-04.
 
@@ -89,6 +93,13 @@ Product side is in `NIWA-PLAN-B-01.md`.
 - [ ] **AI (DeepSeek, M8)** — skipped for now (2026-11-04); mobile (`NIWA-PLAN-A-02.md`) comes first.
 
 ## Closed
+
+- [x] **Registration mode** — `render.yaml` sets `REGISTRATION_MODE=open`; `GET /auth/config` tells clients (2026-11-04).
+- [x] **Onboarding state** — `users.onboarding` + `PUT /account/onboarding` (2026-11-04).
+- [x] **Account deletion** — `POST /account/delete`, password-confirmed (2026-11-04).
+- [x] **B-01 B5 leftovers** — design pass finished, JetBrains Mono loaded, layout shift measured (2026-11-04).
+- [x] **Playwright on the laptop** — Chromium installed; full e2e suite green locally (2026-11-04).
+- [x] **Bundled fonts (Flutter)** — Inter, JetBrains Mono and the 庭 slice bundled with OFL texts (2026-11-04).
 
 - [x] **MA9 not committed** — committed as `7a39bc9` and pushed with `738aeb6` (2026-11-04).
 

@@ -33,6 +33,13 @@ export function createV1Router({ config, tokens, auth, authLimiter }: V1Deps): R
   router.post('/auth/logout', authCtl.logout);
   router.post('/auth/logout-all', protect, authCtl.logoutAll);
   router.get('/auth/me', protect, authCtl.me);
+  router.get('/auth/config', authCtl.config);
+
+  // Account (NIWA-PLAN-B-01 B4, B7). Password checks go through the strict limiter like login.
+  router.put('/account/onboarding', protect, authCtl.setOnboarding);
+  router.post('/account/password', authLimiter, protect, authCtl.changePassword);
+  router.get('/account/export', protect, authCtl.exportData);
+  router.post('/account/delete', authLimiter, protect, authCtl.deleteAccount);
 
   router.get('/workspace', protect, system.workspace);
 

@@ -77,7 +77,7 @@ export function buildRegistry(): OpenAPIRegistry {
   // ---- Auth (specs §12.1) ----
   add('post', '/auth/register', {
     tag: 'Auth',
-    summary: 'Create the account (single-user; gated by REGISTRATION_MODE)',
+    summary: 'Create an account (gated by REGISTRATION_MODE)',
     auth: false,
     body: auth.RegisterInput,
     response: auth.AuthResponse,
@@ -113,6 +113,37 @@ export function buildRegistry(): OpenAPIRegistry {
     response: null,
   });
   add('get', '/auth/me', { tag: 'Auth', summary: 'Current user', response: auth.MeResponse });
+  add('get', '/auth/config', {
+    tag: 'Auth',
+    summary: 'Whether this server accepts new accounts right now',
+    auth: false,
+    response: auth.AuthConfig,
+  });
+
+  // ---- Account (NIWA-PLAN-B-01 B4, B7) ----
+  add('put', '/account/onboarding', {
+    tag: 'Account',
+    summary: 'Record that the user finished or skipped the onboarding tour',
+    body: auth.OnboardingInput,
+    response: auth.MeResponse,
+  });
+  add('post', '/account/password', {
+    tag: 'Account',
+    summary: 'Change password; signs out every other session and returns a fresh one',
+    body: auth.ChangePasswordInput,
+    response: auth.AuthResponse,
+  });
+  add('get', '/account/export', {
+    tag: 'Account',
+    summary: 'Download everything this account owns as JSON',
+    response: auth.AccountExport,
+  });
+  add('post', '/account/delete', {
+    tag: 'Account',
+    summary: 'Permanently delete the account, its workspace, items, schedule, images and sessions',
+    body: auth.DeleteAccountInput,
+    response: null,
+  });
 
   // ---- Workspace ----
   add('get', '/workspace', {

@@ -69,6 +69,7 @@ export function TreePane({
     <Box
       component="aside"
       aria-label={`${label} tree`}
+      data-tour="tree"
       sx={{
         width: fullWidth ? '100%' : TREE_WIDTH,
         flexShrink: 0,

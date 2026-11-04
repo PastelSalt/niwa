@@ -3,6 +3,7 @@ import LightModeOutlined from '@mui/icons-material/LightModeOutlined';
 import SettingsBrightnessOutlined from '@mui/icons-material/SettingsBrightnessOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
@@ -14,13 +15,17 @@ import { useColorScheme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { useAuth } from '../../auth/AuthProvider.tsx';
+import { site } from '../../public/site.ts';
 import { TrashSection } from '../items/TrashSection.tsx';
+import { useOnboarding } from '../onboarding/OnboardingProvider.tsx';
+import { ChangePassword, DeleteAccount, ExportData } from './AccountActions.tsx';
 
 const SECTIONS = [
   { key: 'appearance', label: 'Appearance' },
   { key: 'account', label: 'Account' },
   { key: 'ai', label: 'AI' },
   { key: 'trash', label: 'Trash' },
+  { key: 'help', label: 'Help' },
 ] as const;
 type SectionKey = (typeof SECTIONS)[number]['key'];
 
@@ -51,7 +56,7 @@ function Section({
 function AppearanceSection() {
   const { mode, setMode } = useColorScheme();
   return (
-    <Section title="Theme" description="Light and dark are both first-class. System follows your device.">
+    <Section title="Theme" description="Choose light or dark, or let NIWA follow your device.">
       <ToggleButtonGroup
         exclusive
         value={mode ?? 'system'}
@@ -91,20 +96,47 @@ function AccountSection() {
           {new Date(user.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}
         </Typography>
       </Stack>
-      <Button variant="outlined" color="error" onClick={() => void logout()}>
+      <Button variant="outlined" onClick={() => void logout()}>
         Log out
       </Button>
     </Section>
   );
 }
 
-function ComingSoon({ title, milestone, text }: { title: string; milestone: string; text: string }) {
+function HelpSection() {
+  const { startTour } = useOnboarding();
+  return (
+    <Section
+      title="Tour"
+      description="A one-minute walk through capture, the tree, the three lenses and search."
+    >
+      <Button variant="outlined" onClick={startTour}>
+        Replay the tour
+      </Button>
+    </Section>
+  );
+}
+
+function ComingSoon({ title, text }: { title: string; text: string }) {
   return (
     <Section title={title} description={text}>
       <Typography variant="body2" color="text.secondary">
-        Arrives in {milestone}.
+        Not available yet.
       </Typography>
     </Section>
+  );
+}
+
+/** Credit under every section (NIWA-PLAN-B-01 B1.P2); legal links join it with B3. */
+function About() {
+  return (
+    <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
+      {site.name} — designed and built solo by{' '}
+      <Link href={site.makerUrl} target="_blank" rel="noopener">
+        {site.maker}
+      </Link>
+      .
+    </Typography>
   );
 }
 
@@ -116,11 +148,23 @@ export function SettingsPage() {
 
   const body: Record<SectionKey, ReactNode> = {
     appearance: <AppearanceSection />,
-    account: <AccountSection />,
+    account: (
+      <Stack spacing={3}>
+        <AccountSection />
+        <Section title="Password">
+          <ChangePassword />
+        </Section>
+        <Section title="Your data">
+          <ExportData />
+        </Section>
+        <Section title="Delete account">
+          <DeleteAccount />
+        </Section>
+      </Stack>
+    ),
     ai: (
       <ComingSoon
         title="DeepSeek AI"
-        milestone="M8"
         text="Summaries, child breakdowns and tag suggestions — only when you ask, only for the item you choose."
       />
     ),
@@ -129,6 +173,7 @@ export function SettingsPage() {
         <TrashSection />
       </Section>
     ),
+    help: <HelpSection />,
   };
 
   return (
@@ -137,13 +182,20 @@ export function SettingsPage() {
         value={current}
         onChange={(_, key: SectionKey) => navigate(`/settings/${key}`)}
         variant="scrollable"
-        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+        // Four tabs fit a 360 px phone once MUI's 90 px minimum width is lifted.
+        sx={{
+          mb: 3,
+          borderBottom: 1,
+          borderColor: 'divider',
+          '& .MuiTab-root': { minWidth: { xs: 0, sm: 90 }, px: { xs: 1.5, sm: 2 } },
+        }}
       >
         {SECTIONS.map((s) => (
           <Tab key={s.key} value={s.key} label={s.label} />
         ))}
       </Tabs>
       {body[current]}
+      <About />
     </Box>
   );
 }

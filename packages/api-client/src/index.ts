@@ -2,7 +2,10 @@ import {
   CSRF_HEADER,
   CSRF_HEADER_VALUE,
   NATIVE_CLIENT_HEADER,
+  type AccountExport,
+  type AuthConfig,
   type AuthResponse,
+  type ChangePasswordInput,
   type CaptureInput,
   type CreateItemInput,
   type CreateLinkInput,
@@ -21,6 +24,7 @@ import {
   type ListItemsQuery,
   type LoginInput,
   type MoveItemInput,
+  type OnboardingInput,
   type PublicUser,
   type RegisterInput,
   type RestoreResponse,
@@ -58,6 +62,19 @@ export interface ApiClientOptions {
   client?: ClientKind;
   refreshTokenStore?: RefreshTokenStore;
   fetch?: typeof fetch;
+}
+
+/**
+ * Message for an error response without NIWA's JSON envelope — i.e. it came from a proxy or host, not the
+ * API. 502–504 there almost always mean the free-tier Render service is still starting (OPS §5); the
+ * wording matches the mobile app (`flutter_app/lib/core/api/error_message.dart`).
+ */
+function fallbackMessage(status: number): string {
+  if (status >= 502 && status <= 504) {
+    return 'The NIWA server is waking up — this can take up to a minute. Try again shortly.';
+  }
+  if (status >= 500) return `The NIWA server is unavailable right now (HTTP ${status}). Try again shortly.`;
+  return `Request failed (HTTP ${status}).`;
 }
 
 export class ApiError extends Error {
@@ -139,10 +156,7 @@ export function createApiClient(options: ApiClientOptions) {
         res.status,
         env ?? {
           code: res.status >= 500 ? 'UPSTREAM_ERROR' : 'INTERNAL_ERROR',
-          message:
-            res.status >= 500
-              ? `The NIWA server is unavailable right now (HTTP ${res.status}). Try again shortly.`
-              : `Request failed (HTTP ${res.status}).`,
+          message: fallbackMessage(res.status),
         },
       );
     }
@@ -192,7 +206,8 @@ export function createApiClient(options: ApiClientOptions) {
     try {
       return await send<T>(path, opts, token);
     } catch (err) {
-      if (!(err instanceof ApiError) || err.status !== 401) throw err;
+      // A wrong password on an account action is also a 401, but the session is fine: don't refresh/retry.
+      if (!(err instanceof ApiError) || err.status !== 401 || err.code === 'INVALID_CREDENTIALS') throw err;
       token = (await refresh())?.accessToken;
       if (!token) throw err;
       return send<T>(path, opts, token);
@@ -230,6 +245,30 @@ export function createApiClient(options: ApiClientOptions) {
         }
       },
       me: () => request<{ user: PublicUser }>('/auth/me'),
+      config: () => send<AuthConfig>('/auth/config', {}),
+    },
+
+    /** Account self-service (NIWA-PLAN-B-01 B4, B7). */
+    account: {
+      /** Also updates the session's user, so `onSessionChange` listeners see the new state. */
+      async setOnboarding(input: OnboardingInput) {
+        const { user } = await request<{ user: PublicUser }>('/account/onboarding', {
+          method: 'PUT',
+          body: input,
+        });
+        const current = session;
+        if (current) setSession({ ...current, user });
+        return user;
+      },
+      async changePassword(input: ChangePasswordInput) {
+        return acceptAuth(await request<AuthResponse>('/account/password', { method: 'POST', body: input }));
+      },
+      export: () => request<AccountExport>('/account/export'),
+      async delete(password: string) {
+        await request<void>('/account/delete', { method: 'POST', body: { password } });
+        await options.refreshTokenStore?.set(null);
+        setSession(null);
+      },
     },
 
     workspace: {

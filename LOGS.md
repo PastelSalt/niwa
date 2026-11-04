@@ -693,3 +693,105 @@
     - B-01 now B0–B7.
   - `GAPS.md`: hosting-accounts item updated (the Vercel project exists).
 - **Verified:** every repo path cited in the docs exists; `prettier --check` passes. Docs only; no code changed.
+
+### 2026-11-04 — B-01 B1 + B2: public shell and landing page
+- **Plan ref:** NIWA-PLAN-B-01 B1.P1, B1.P2, B1.P4, B2 (partial)
+- **Actions:**
+  - `web_app/src/public/`:
+    - `HomeRoute`: `/` shows the landing page to visitors and sends signed-in users to `/knowledge`.
+    - `PublicLayout`: header with Log in and Create account; footer crediting Moeko Works (https://moekoworks.vercel.app/).
+    - `LandingPage`, its own lazy chunk, with these sections:
+      - hero with a labelled example tree from specs §3.1;
+      - the three lenses;
+      - Inbox and Search;
+      - privacy stance;
+      - maker.
+    - `site.ts`.
+  - Router: `/` moved out of the auth guard. `AppShell` renders `<meta name="robots" content="noindex">`.
+  - `index.html`: real title and description, plus Open Graph and Twitter text tags. `public/robots.txt` and `public/sitemap.xml` added.
+  - Sign-up subtitle on web and mobile is now "Your own private garden — notes, tasks and plans in one tree."
+  - e2e: smoke starts at the landing page; the accessibility audit covers it.
+  - `.claude/launch.json`: added `niwa-memory-npx`, since pnpm isn't on PATH on the laptop.
+- **Truth check:** every landing claim matches shipped code. Search narrows by lens only, so the copy says that and doesn't mention type or tag filters. No numbers, testimonials or prices.
+- **Verified:**
+  - Web unit tests 46/46 pass (4 new); typecheck, lint and `format:check` clean; `flutter analyze` on auth clean.
+  - In the preview (in-memory API):
+    - The landing page renders at desktop and 375 px in light and dark, with no horizontal scroll.
+    - Sign-up leads to `/knowledge`, and `/` redirects there once signed in.
+    - The app screens carry `noindex`; `robots.txt` and `sitemap.xml` are served.
+  - e2e not run locally: the Playwright browser isn't installed.
+- **Next:**
+  - B3 legal pages, after the B0 answers (contact email, jurisdiction, licence).
+  - B1.P3 registration-mode endpoint (backend).
+  - Real screenshots.
+  - B7 onboarding.
+
+### 2026-11-04 — B-01 B5: visual polish (first pass)
+- **Plan ref:** NIWA-PLAN-B-01 B5
+- **Actions:**
+  - **Fonts:**
+    - Inter (variable, Latin and Latin Extended) is self-hosted from `@fontsource-variable/inter@5.3.0`. For 庭, a single 10 KB Noto Sans JP slice is copied into the repo with its OFL licence; the full package was removed because it's an 82 MB install.
+    - Both are registered through `MuiCssBaseline` in `web_app/src/app/fonts.ts`, since the pure-MUI lint rule bans stylesheet imports.
+    - The theme font is now `"Inter Variable"` followed by the token list.
+  - **Icons:** 192, 512, maskable 512 and Apple touch 180 PNGs; `manifest.webmanifest`; `theme-color` per colour scheme. Sources and `generate.sh` are in `web_app/assets/icons/`.
+  - **Errors:** `@niwa/api-client` shows "The NIWA server is waking up — this can take up to a minute. Try again shortly." for 502–504 responses without the JSON envelope, the same as mobile. Test added.
+  - **Design pass findings, all fixed:**
+    - Settings tabs were cut off on phones ("Tra…"); lifted MUI's tab minimum width at xs.
+    - The Scheduler day title was truncated on phones; it now uses short weekday and month names like the week title.
+    - Settings › AI showed "Arrives in M8"; it now says "Not available yet."
+    - Theme copy rewritten.
+    - Settings gets an About line crediting Moeko Works.
+  - **Reviewed with no issues:** landing, Knowledge, Focus, Scheduler month and day, Inbox, Settings — at desktop and 375 px, light and dark.
+- **Verified:**
+  - Web 46/46, api-client 7/7 and tokens 8/8 tests pass; typecheck, lint and `format:check` clean.
+  - In the preview, `document.fonts` shows `Inter Variable 100–900` and `Noto Sans JP 400` loaded; manifest and Apple icon return 200.
+  - e2e not run (no Playwright browser on the laptop).
+- **Next:**
+  - Rest of the design pass: editor toolbar, Search, item detail, tablet width.
+  - Measure layout shift (B6).
+  - Bundle fonts in Flutter.
+
+### 2026-11-04 — B-01: account self-service, onboarding tour, policy pages, quality pass
+- **Plan ref:** NIWA-PLAN-B-01 B1.P3, B2.P2, B3.P4–P5, B4, B5, B6, B7. The owner approved backend work, the Playwright download, and commit and push.
+- **Backend and contracts:**
+  - `GET /auth/config` returns `{ registrationOpen }`.
+  - `users.onboarding` plus `PUT /account/onboarding`.
+  - `POST /account/password`: needs the current password, revokes every session and returns a fresh one.
+  - `GET /account/export`: JSON download, this account only.
+  - `POST /account/delete`: password-confirmed. It removes the user, workspace, items, links, schedule, attachments (Cloudinary, best effort) and sessions.
+  - New Zod schemas, OpenAPI regenerated; `render.yaml` sets `REGISTRATION_MODE=open`.
+- **api-client:**
+  - New `auth.config` and `account.*` methods.
+  - A wrong-password 401 (`INVALID_CREDENTIALS`) no longer triggers a refresh-and-retry. A test caught this: the retry would have deleted the account on the second attempt.
+- **Web:**
+  - Sign-up is hidden when the server is closed.
+  - Visitors on unknown URLs get a public 404.
+  - `/cookies` page; `/licenses` page generated at build time by `licenses.plugin.ts` (148 packages).
+  - Settings › Account gets change password, export and delete. Settings › Help gets "Replay the tour", and the account menu gets "Take the tour".
+  - **B7 tour:**
+    - A welcome dialog appears once per account, with Take the tour / Skip and opt-in example notes.
+    - Seven steps anchored to `data-tour` elements, using MUI Popper with `auto` placement. Tall targets get a centred card.
+    - Esc skips, focus moves in and back, and finishing or skipping is saved on the account.
+  - JetBrains Mono loaded for code.
+  - Landing has a "See it" section with two real screenshots (example content made for them) and a 1200×630 `og:image`.
+  - CLS fix: the landing placeholder reserves height so the footer doesn't jump.
+- **Flutter:**
+  - Inter (400–700), JetBrains Mono and the 庭 Noto slice are bundled as TTF (converted from @fontsource 5.3.x) with their OFL texts in `LicenseRegistry`.
+  - Settings › Account › Open-source licences.
+  - `User.onboarding` model, fixtures and fake server updated.
+- **Design pass, second round:** note editor, Search, item detail, tablet (820 px) and phone, in light and dark. Found and fixed: the tour card was off-screen or covering its target.
+- **Measured** (production build, `vite preview`, landing `/`):
+  - Desktop: LCP 0.8 s, CLS 0.000.
+  - Phone with 4× CPU and ~4G throttling: LCP 3.3 s, CLS 0.000.
+  - Before the fix, CLS was 0.106 on desktop and 0.135 on the phone. In both cases about 340 KB of JS was transferred (uncompressed preview), plus 57 KB of fonts.
+- **Verified:**
+  - Backend 91, contracts 8, api-client 7, web 55 unit tests pass. Flutter: 409 tests pass and `flutter analyze` is clean.
+  - Typecheck, lint, `format:check` and `openapi:check` clean.
+  - Playwright full suite green locally (desktop and phone), including the new `account.spec.ts`. The specs needed a `skipWelcome` step after sign-up, and the landing's logo link label was fixed for axe.
+- **Still open** (`GAPS.md`):
+  - Privacy, Terms, EULA and `LICENSE`, waiting on the owner's B0 answers.
+  - Password reset (needs email).
+  - Mobile tour and account screens.
+  - Markdown export.
+  - Phone LCP.
+  - axe on the remaining public pages.

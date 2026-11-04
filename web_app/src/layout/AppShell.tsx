@@ -10,6 +10,7 @@ import { Outlet, useLocation } from 'react-router';
 import { NotifierProvider } from '../components/Notifier.tsx';
 import { CaptureProvider, useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
 import { ItemDialogsProvider } from '../features/items/ItemDialogs.tsx';
+import { OnboardingProvider } from '../features/onboarding/OnboardingProvider.tsx';
 import { useSelectedItemId } from '../features/items/useSelectedItemId.ts';
 import { DetailPanel } from './DetailPanel.tsx';
 import { destinationForPath, type Destination } from './destinations.tsx';
@@ -25,9 +26,13 @@ import { useGlobalShortcuts } from './useGlobalShortcuts.ts';
 export function AppShell() {
   return (
     <NotifierProvider>
+      {/* Signed-in screens are private; React hoists this into <head>. robots.txt disallows them too. */}
+      <meta name="robots" content="noindex" />
       <ItemDialogsProvider>
         <CaptureProvider>
-          <ShellLayout />
+          <OnboardingProvider>
+            <ShellLayout />
+          </OnboardingProvider>
         </CaptureProvider>
       </ItemDialogsProvider>
     </NotifierProvider>

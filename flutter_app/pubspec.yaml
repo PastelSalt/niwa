@@ -92,6 +92,30 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
+  # Brand fonts (NIWA-PLAN-B-01 B5): Latin slices of Inter and JetBrains Mono plus the one Noto Sans JP
+  # slice holding the wordmark's 庭, converted from @fontsource 5.3.x (OFL — see assets/fonts/*-OFL.txt).
+  # Other scripts fall back to the platform font.
+  assets:
+    - assets/fonts/Inter-OFL.txt
+    - assets/fonts/JetBrainsMono-OFL.txt
+    - assets/fonts/NotoSansJP-OFL.txt
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-400.ttf
+        - asset: assets/fonts/Inter-500.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-700.ttf
+          weight: 700
+    - family: Noto Sans JP
+      fonts:
+        - asset: assets/fonts/NotoSansJP-wordmark-400.ttf
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-400.ttf
+
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a

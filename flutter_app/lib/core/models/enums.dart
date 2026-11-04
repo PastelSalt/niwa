@@ -99,3 +99,6 @@ extension ScheduleKindWire on ScheduleKind {
 extension RecurrenceWire on Recurrence {
   String get wire => _wire(_$RecurrenceEnumMap, this);
 }
+
+@JsonEnum(alwaysCreate: true)
+enum OnboardingStatus { completed, skipped, unknown }

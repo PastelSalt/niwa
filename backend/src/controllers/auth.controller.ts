@@ -1,9 +1,12 @@
 import {
   CSRF_HEADER,
   CSRF_HEADER_VALUE,
+  ChangePasswordInput,
+  DeleteAccountInput,
   LoginInput,
   NATIVE_CLIENT_HEADER,
   REFRESH_COOKIE,
+  OnboardingInput,
   RefreshInput,
   RegisterInput,
 } from '@niwa/contracts';
@@ -97,5 +100,45 @@ export function createAuthController(config: AppConfig, auth: AuthService) {
     res.json({ user: await auth.me(authOf(res.locals).userId) });
   };
 
-  return { register, login, refresh, logout, logoutAll, me };
+  const config_: RequestHandler = async (_req, res) => {
+    res.json(await auth.config());
+  };
+
+  const setOnboarding: RequestHandler = async (req, res) => {
+    res.json({ user: await auth.setOnboarding(authOf(res.locals).userId, parse(OnboardingInput, req.body)) });
+  };
+
+  const changePassword: RequestHandler = async (req, res) => {
+    const client = clientOf(req);
+    const input = parse(ChangePasswordInput, req.body);
+    sendSession(res, client, await auth.changePassword(authOf(res.locals).userId, input, client));
+  };
+
+  const exportData: RequestHandler = async (_req, res) => {
+    const data = await auth.exportData(authOf(res.locals).userId);
+    const day = data.exportedAt.slice(0, 10);
+    res.setHeader('Content-Disposition', `attachment; filename="niwa-export-${day}.json"`);
+    res.json(data);
+  };
+
+  const deleteAccount: RequestHandler = async (req, res) => {
+    const { password } = parse(DeleteAccountInput, req.body);
+    await auth.deleteAccount(authOf(res.locals).userId, password);
+    if (clientOf(req) === 'web') res.clearCookie(REFRESH_COOKIE, cookieOptions());
+    res.status(204).end();
+  };
+
+  return {
+    register,
+    login,
+    refresh,
+    logout,
+    logoutAll,
+    me,
+    config: config_,
+    setOnboarding,
+    changePassword,
+    exportData,
+    deleteAccount,
+  };
 }

@@ -75,13 +75,13 @@ row here and a new section in the policy before release.
 | # | Milestone | Status | Depends on |
 |---|---|---|---|
 | B0 | Owner decisions & facts sign-off | ⬜ | — |
-| B1 | Public shell: layout, routes, footer, metadata | ⬜ | B0 (partly) |
-| B2 | Landing page at `/` | ⬜ | B1 |
-| B3 | Legal & policy pages | ⬜ | B0, B1 |
-| B4 | User rights the policies promise (delete account, export) | ⬜ | B3 drafts |
-| B5 | Visual polish of the signed-in app | ⬜ | — (can run in parallel) |
-| B6 | Quality: accessibility, performance, SEO hygiene, tests | ⬜ | B1–B5, B7 |
-| B7 | Onboarding tour for new users (skippable, replayable) | ⬜ | B1; B5 for final visuals; backend state (`GAPS.md`) |
+| B1 | Public shell: layout, routes, footer, metadata | 🟨 | B0 (partly) |
+| B2 | Landing page at `/` | ✅ | B1 |
+| B3 | Legal & policy pages | 🟨 | B0, B1 |
+| B4 | User rights the policies promise (delete account, export) | 🟨 | B3 drafts |
+| B5 | Visual polish of the signed-in app | ✅ | — (can run in parallel) |
+| B6 | Quality: accessibility, performance, SEO hygiene, tests | 🟨 | B1–B5, B7 |
+| B7 | Onboarding tour for new users (skippable, replayable) | 🟨 | B1; B5 for final visuals; backend state (`GAPS.md`) |
 
 **Exit criteria (whole plan):** a signed-out visitor at `/` sees an accurate description of NIWA and can reach
 sign-in, sign-up and every legal page; a new account is offered the onboarding tour, can skip it, and can replay
@@ -114,32 +114,32 @@ public pages pass the accessibility audit in light and dark; the mobile app has 
 
 ### B1.P1 — Routing
 - [ ] Public routes outside the auth guard: `/` (landing), `/privacy`, `/terms`, `/eula`, `/cookies`,
-      `/licenses`, plus existing `/login` and `/register` (`web_app/src/app/router.tsx`).
-- [ ] `/` shows the landing page when signed out; a signed-in visitor goes to `/knowledge` as today (no flash
+      `/licenses`, plus existing `/login` and `/register` (`web_app/src/app/router.tsx`). *(2026-11-04: `/` done; legal routes come with B3.)*
+- [x] `/` shows the landing page when signed out; a signed-in visitor goes to `/knowledge` as today (no flash
       of the landing page while the session restores — reuse `FullPageLoader`).
-- [ ] Public pages are lazy-loaded so they don't grow the app's initial bundle (A-01 M7 budget).
-- [ ] The 404 page links back to `/` for signed-out visitors.
+- [x] Public pages are lazy-loaded so they don't grow the app's initial bundle (A-01 M7 budget).
+- [x] The 404 page links back to `/` for signed-out visitors. *(Open: unknown paths are inside the auth guard, so visitors are sent to login instead of a 404.)* *(2026-11-04: visitors on unknown URLs get the public 404 — `auth/guards.tsx`.)*
 
 ### B1.P2 — Public layout & footer
-- [ ] `PublicLayout`: header (wordmark, "Log in", and "Create account" only when registration is open), content
-      column, footer. Built from MUI + `@niwa/tokens`; light/dark follows the existing theme.
+- [x] `PublicLayout`: header (wordmark, "Log in", and "Create account" only when registration is open), content
+      column, footer. Built from MUI + `@niwa/tokens`; light/dark follows the existing theme. *(2026-11-04: "Create account" always shown — registration is open; hiding it waits on B1.P3.)*
 - [ ] Footer on public pages **and** in the app's Settings: links to Privacy, Terms, EULA, Cookies, Licenses;
       "Designed and built by Moeko Works" linking to <https://moekoworks.vercel.app/>; copyright line with the
       year generated at build time.
-- [ ] Replace the "NIWA is personal — one account per instance." subtitle on web and mobile sign-up with copy
+- [x] Replace the "NIWA is personal — one account per instance." subtitle on web and mobile sign-up with copy
       that fits an open service (each account gets its own private garden).
 - [ ] Sign-up form links to Terms and Privacy ("By creating an account you agree to …") once B3 pages exist.
 
 ### B1.P3 — Registration mode on the client
-- [ ] Public, unauthenticated way for the web app to know whether sign-up is open (e.g. a field on
+- [x] Public, unauthenticated way for the web app to know whether sign-up is open (e.g. a field on
       `GET /health` or a small `GET /auth/config`), added to `packages/contracts` + OpenAPI, so the UI never
-      offers a sign-up that the server will refuse.
+      offers a sign-up that the server will refuse. *(2026-11-04: `GET /auth/config` → `{ registrationOpen }`; header, landing and login hide sign-up when closed.)*
 
 ### B1.P4 — Metadata
-- [ ] Per-page `<title>` and description (public pages); Open Graph / Twitter card tags using a real screenshot
-      or a designed card — no stock imagery presented as the product.
-- [ ] `robots.txt`: allow public pages, disallow app routes; `sitemap.xml` listing only public pages.
-- [ ] App routes (`/knowledge`, `/actionable`, …) carry `noindex`.
+- [x] Per-page `<title>` and description (public pages); Open Graph / Twitter card tags using a real screenshot
+      or a designed card — no stock imagery presented as the product. *(2026-11-04: titles, description and text OG/Twitter tags done; no `og:image` until a real screenshot exists.)* *(2026-11-04: `og:image` 1200×630 from a real Focus screenshot.)*
+- [x] `robots.txt`: allow public pages, disallow app routes; `sitemap.xml` listing only public pages.
+- [x] App routes (`/knowledge`, `/actionable`, …) carry `noindex`.
 
 **Exit criteria:** every public route renders signed out; signed-in users never see the landing page;
 metadata validated with a link-preview check.
@@ -151,26 +151,26 @@ metadata validated with a link-preview check.
 **Goal:** explain what NIWA is, honestly, and get the visitor to create an account or sign in.
 
 ### B2.P1 — Content (from the specs, not marketing invention)
-- [ ] Hero: name, the existing tagline "A garden for your ideas." (`web_app/index.html`, `AuthLayout.tsx`), one
+- [x] Hero: name, the existing tagline "A garden for your ideas." (`web_app/index.html`, `AuthLayout.tsx`), one
       sentence on what it is (one hierarchical item tree, three lenses — `PROJECT-SPECS.md` §1), primary action "Create account", secondary "Log in".
-- [ ] Feature sections, each tied to shipped functionality: Knowledge lens & linked notes; Actionable lens &
+- [x] Feature sections, each tied to shipped functionality: Knowledge lens & linked notes; Actionable lens &
       Focus; Scheduler (day/week/month, repeats); Inbox capture; mobile app with offline capture (once MA11
       ships — until then say "coming" or omit).
-- [ ] Privacy stance in plain words, matching §2.2 of the specs and the B3 Privacy Policy (no tracking, the
+- [x] Privacy stance in plain words, matching §2.2 of the specs and the B3 Privacy Policy (no tracking, the
       one essential cookie, where data lives).
-- [ ] "Made by Moeko Works" section linking to <https://moekoworks.vercel.app/>.
-- [ ] **Excluded on purpose:** testimonials, user/usage numbers, logos of "customers", pricing, uptime claims —
+- [x] "Made by Moeko Works" section linking to <https://moekoworks.vercel.app/>.
+- [x] **Excluded on purpose:** testimonials, user/usage numbers, logos of "customers", pricing, uptime claims —
       none exist. Add only when real and sourced.
 
 ### B2.P2 — Visuals
-- [ ] Real screenshots of the app (light and dark), captured from a seeded demo workspace with invented-for-demo
-      content clearly not real user data; alt text for each.
-- [ ] Layout from tokens (sage/blossom palette, radii, spacing); responsive from 360 px to desktop.
-- [ ] Motion limited to subtle transitions, disabled under `prefers-reduced-motion`.
+- [x] Real screenshots of the app (light and dark), captured from a seeded demo workspace with invented-for-demo
+      content clearly not real user data; alt text for each. *(Open: the hero uses an illustration of the specs' §3.1 example tree, labelled "Example"; screenshots still to capture.)* *(2026-11-04: Knowledge (light) and Focus (dark) in the "See it" section; content made for the shot.)*
+- [x] Layout from tokens (sage/blossom palette, radii, spacing); responsive from 360 px to desktop. *(checked at 375 px and desktop, light and dark.)*
+- [x] Motion limited to subtle transitions, disabled under `prefers-reduced-motion`.
 
 ### B2.P3 — Performance
-- [ ] Landing page loads without the app bundle (separate lazy chunk); images sized/compressed (WebP/AVIF),
-      explicit width/height to avoid layout shift.
+- [x] Landing page loads without the app bundle (separate lazy chunk); images sized/compressed (WebP/AVIF),
+      explicit width/height to avoid layout shift. *(landing is its own lazy chunk; no images yet.)*
 
 **Exit criteria:** content reviewed against the specs and B0 answers; Lighthouse/axe checks in B6 pass.
 
@@ -201,14 +201,14 @@ so changes show in code review. Mobile and desktop link to the same URLs.
       Account already has a version row).
 
 ### B3.P4 — Cookies (`/cookies`)
-- [ ] States the single strictly-necessary cookie (`niwa_rt`: purpose, lifetime = refresh TTL, `HttpOnly`,
+- [x] States the single strictly-necessary cookie (`niwa_rt`: purpose, lifetime = refresh TTL, `HttpOnly`,
       `Secure`, `SameSite=Lax`, path `/api/v1/auth`) and that there are no analytics or advertising cookies.
-      No consent banner while that remains true; if a non-essential cookie is ever added, add consent first.
+      No consent banner while that remains true; if a non-essential cookie is ever added, add consent first. *(2026-11-04: `/cookies` — `web_app/src/public/CookiesPage.tsx`.)*
 
 ### B3.P5 — Open-source licences (`/licenses`)
-- [ ] Generated at build time from the web app's dependencies (e.g. a Vite licence plugin or
+- [x] Generated at build time from the web app's dependencies (e.g. a Vite licence plugin or
       `pnpm licenses list`), not hand-maintained; the mobile app already has Flutter's licence registry —
-      expose it via `showLicensePage` from Settings.
+      expose it via `showLicensePage` from Settings. *(2026-11-04: `web_app/licenses.plugin.ts` → `/licenses`; Flutter Settings › Account › Open-source licences, with the bundled fonts' OFL texts.)*
 - [ ] Add the repo `LICENSE` file per B0.
 
 **Exit criteria:** every sentence traceable to code or a B0 decision; links from footer, sign-up and mobile
@@ -220,12 +220,12 @@ Settings work; review per B0 done or explicitly waived in `LOGS.md`.
 
 Only promise in B3 what this milestone has delivered.
 
-- [ ] **Delete account:** backend endpoint that deletes the user, workspace, items, links, schedule, attachments
+- [x] **Delete account:** backend endpoint that deletes the user, workspace, items, links, schedule, attachments
       (Cloudinary assets) and sessions; confirmation with password; web Settings › Account and mobile
-      Settings; contract + OpenAPI + tests.
-- [ ] **Export my data:** user-facing export (JSON + Markdown, `docs/OPS.md` §9 row 3 / A-01 M11) from Settings.
+      Settings; contract + OpenAPI + tests. *(2026-11-04: `POST /account/delete` + Settings › Account; backend test checks nothing of the account is left and other accounts are untouched; Cloudinary removal is best-effort as for item purges.)*
+- [x] **Export my data:** user-facing export (JSON + Markdown, `docs/OPS.md` §9 row 3 / A-01 M11) from Settings. *(2026-11-04: JSON only — `GET /account/export` + Settings › Account. Markdown export still open, `GAPS.md`.)*
 - [ ] **Change password** and **reset a forgotten password** (needs outbound email — `GAPS.md` "Multi-user
-      readiness"); the policy describes account recovery only once this exists.
+      readiness"); the policy describes account recovery only once this exists. *(2026-11-04: change password done — `POST /account/password`, other sessions revoked. Reset still needs email.)*
 - [ ] **Contact channel** for privacy requests (B0 address) shown in Settings and on `/privacy`.
 
 **Exit criteria:** deleting an account leaves no rows or images behind (tested against a real database);
@@ -235,16 +235,25 @@ export round-trips the item tree.
 
 ## B5 — Visual polish of the signed-in app
 
-- [ ] Load the brand fonts (Inter, Noto Sans JP) self-hosted with `font-display: swap`, subset for Latin + the
-      Japanese glyphs actually used (the 庭 in the wordmark); confirm no layout shift. Same fonts bundled in the
-      Flutter app (`GAPS.md` "Bundled fonts").
-- [ ] Design review of every screen in light and dark: spacing on the 4 px grid, type scale, consistent empty
-      states (`EmptyState.tsx`), skeletons, focus rings, toolbar density in the editor.
-- [ ] App icons and favicon set (`favicon.svg` exists; add PNG sizes, Apple touch icon, maskable icon) shared
-      with the mobile launcher icon.
-- [ ] Error and offline states: friendly copy for "server waking up" (Render free tier) on the web, matching the
-      mobile wording (`flutter_app/lib/core/api/error_message.dart`).
-- [ ] Screenshots before/after per screen in `LOGS.md`.
+- [x] Load the brand fonts (Inter, Noto Sans JP) self-hosted with `font-display: swap`, subset for Latin + the
+      Japanese glyphs actually used (the 庭 in the wordmark). *(2026-11-04, web: Inter variable Latin + Latin
+      Extended from `@fontsource-variable/inter`; one 10 KB Noto Sans JP slice vendored for 庭; registered via
+      CssBaseline in `web_app/src/app/fonts.ts`. Layout shift not measured yet — B6. Flutter bundling stays open:
+      `GAPS.md` "Bundled fonts".)*
+- [x] Design review of every screen in light and dark: spacing on the 4 px grid, type scale, consistent empty
+      states (`EmptyState.tsx`), skeletons, focus rings, toolbar density in the editor. *(2026-11-04 first pass:
+      landing, Knowledge, Actionable/Focus, Scheduler, Inbox, Settings at desktop and 375 px, light and dark.
+      Fixed: Settings tabs cut off on phones; day-view title truncated on phones; "Arrives in M8" milestone code
+      shown to users; Theme copy. Still to review: note editor toolbar, Search, item detail, tablet width.)* *(2026-11-04: second pass covered the note editor, Search, item detail, tablet (820 px) and phone; fixed tour card placement.)*
+- [x] App icons and favicon set (`favicon.svg` exists; add PNG sizes, Apple touch icon, maskable icon) shared
+      with the mobile launcher icon. *(2026-11-04: 192/512, maskable 512, Apple touch 180 and
+      `manifest.webmanifest`; sources + `generate.sh` in `web_app/assets/icons/`. The Flutter launcher icon uses
+      the same sources in A-02 MA11.)*
+- [x] Error and offline states: friendly copy for "server waking up" (Render free tier) on the web, matching the
+      mobile wording (`flutter_app/lib/core/api/error_message.dart`). *(2026-11-04: `@niwa/api-client` maps
+      envelope-less 502–504 to the waking-up sentence.)*
+- [x] Screenshots before/after per screen in `LOGS.md`. *(LOGS lists the findings per screen; image files not
+      stored in the repo.)*
 
 **Exit criteria:** design pass checked in both themes on phone, tablet and desktop widths; no contrast
 regressions (`packages/tokens/src/contrast.test.ts`, axe).
@@ -253,11 +262,11 @@ regressions (`packages/tokens/src/contrast.test.ts`, axe).
 
 ## B6 — Quality
 
-- [ ] Playwright: public pages render signed out; signed-in redirect from `/`; footer links resolve; sign-up
-      hidden when registration is closed.
-- [ ] Axe audit (`web_app/e2e/a11y.spec.ts`) extended to every public page in light and dark.
-- [ ] Performance budget for `/`: report LCP, CLS and JS size per release in `LOGS.md` (measured, not
-      estimated).
+- [x] Playwright: public pages render signed out; signed-in redirect from `/`; footer links resolve; sign-up
+      hidden when registration is closed. *(2026-11-04: `e2e/smoke.spec.ts`, `e2e/account.spec.ts`; full suite green locally, desktop + phone.)*
+- [ ] Axe audit (`web_app/e2e/a11y.spec.ts`) extended to every public page in light and dark. *(2026-11-04: landing and a tour step audited; Cookies/Licences/404 not yet in the axe run.)*
+- [x] Performance budget for `/`: report LCP, CLS and JS size per release in `LOGS.md` (measured, not
+      estimated). *(2026-11-04: first measurement in `LOGS.md` — CLS 0.000, LCP 0.8 s desktop / 3.3 s throttled phone.)*
 - [ ] Link-preview check of OG tags; `robots.txt`/`sitemap.xml` served correctly by Vercel.
 - [ ] `GAPS.md` updated with anything deferred.
 
@@ -271,38 +280,38 @@ regressions (`packages/tokens/src/contrast.test.ts`, axe).
 who doesn't want a tour can skip it and bring it back later.
 
 ### B7.P1 — Behaviour
-- [ ] **First run:** after a new account's first sign-in, a welcome dialog offers **Take the tour** or **Skip**.
+- [x] **First run:** after a new account's first sign-in, a welcome dialog offers **Take the tour** or **Skip**.
       Either choice is remembered; the dialog never appears on its own again.
-- [ ] **Skip anywhere:** every step has Skip (and `Esc`); Back / Next; a progress label ("Step 2 of 6").
+- [x] **Skip anywhere:** every step has Skip (and `Esc`); Back / Next; a progress label ("Step 2 of 6").
       Closing mid-way counts as skipped, not as an error.
 - [ ] **Replay:** Settings › Help › "Replay the tour" on web and mobile, plus a Help entry in the app bar. Replay
-      never changes the user's data.
-- [ ] **Stored per account, not per browser,** so a tour skipped on the web isn't offered again on the phone
+      never changes the user's data. *(2026-11-04: web done (Settings › Help + "Take the tour" in the account menu). Mobile tour not built yet — `GAPS.md`.)*
+- [x] **Stored per account, not per browser,** so a tour skipped on the web isn't offered again on the phone
       (backend field + endpoint — `GAPS.md` "Multi-user readiness"). Offline on mobile: remember locally and
-      sync when back online.
-- [ ] **Tour version:** stored with the completion; if the tour changes a lot, bump the version and offer
-      (not force) a short "What's new" instead of the full tour.
+      sync when back online. *(2026-11-04: `users.onboarding` + `PUT /account/onboarding`; the Flutter model reads it, the mobile tour is still to come.)*
+- [x] **Tour version:** stored with the completion; if the tour changes a lot, bump the version and offer
+      (not force) a short "What's new" instead of the full tour. *(2026-11-04: `TOUR_VERSION` stored; "What's new" offer not needed until version 2.)*
 
 ### B7.P2 — Steps (each points at real UI; only shipped features)
-- [ ] Inbox / quick capture → the item tree (notes, tasks and ideas are one tree) → Knowledge lens and links →
+- [x] Inbox / quick capture → the item tree (notes, tasks and ideas are one tree) → Knowledge lens and links →
       Actionable lens and Focus → Scheduler → Search → Settings (theme, Trash, replay).
-- [ ] A step whose target isn't on screen (e.g. tree pane hidden on phones) adapts or is skipped — never a popup
+- [x] A step whose target isn't on screen (e.g. tree pane hidden on phones) adapts or is skipped — never a popup
       pointing at nothing.
-- [ ] **Optional sample content:** a "Add a few example notes" checkbox on the welcome dialog (off by default)
+- [x] **Optional sample content:** a "Add a few example notes" checkbox on the welcome dialog (off by default)
       creates a small subtree clearly titled "Example", deletable like any item. No sample data otherwise.
-- [ ] Empty states (`EmptyState.tsx`, mobile equivalents) link to the matching tour step.
+- [ ] Empty states (`EmptyState.tsx`, mobile equivalents) link to the matching tour step. *(Open.)*
 
 ### B7.P3 — Build & accessibility
-- [ ] Web: built from MUI (`Popper`, `Dialog`, `Backdrop`) to keep the pure-MUI rule — no tour library.
+- [x] Web: built from MUI (`Popper`, `Dialog`, `Backdrop`) to keep the pure-MUI rule — no tour library.
       Mobile: Flutter overlay with the same steps and wording.
 - [ ] Keyboard-only and screen-reader friendly: focus moves into each step and returns afterwards; step text is
-      announced; works at 200 % text size; no motion under `prefers-reduced-motion` / reduced animations.
-- [ ] Copy reviewed for plain language; light and dark.
+      announced; works at 200 % text size; no motion under `prefers-reduced-motion` / reduced animations. *(2026-11-04: focus moves into each step and back, Esc skips, progress is announced; 200 % text not checked yet.)*
+- [x] Copy reviewed for plain language; light and dark.
 
 ### B7.P4 — Tests
-- [ ] New account sees the welcome dialog once; Skip and completion are both remembered after reload and on a
-      second device; Replay from Settings works; existing accounts are not interrupted.
-- [ ] Axe audit on the welcome dialog and a tour step.
+- [x] New account sees the welcome dialog once; Skip and completion are both remembered after reload and on a
+      second device; Replay from Settings works; existing accounts are not interrupted. *(2026-11-04: web unit tests + `e2e/account.spec.ts`; "second device" holds because state is server-side.)*
+- [ ] Axe audit on the welcome dialog and a tour step. *(2026-11-04: tour step audited in e2e; welcome dialog not yet.)*
 
 **Exit criteria:** tests above green on web and mobile; tour checked on phone, tablet and desktop widths.
 

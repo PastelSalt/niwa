@@ -10,6 +10,8 @@ export interface UserDoc {
   aiKeyIv: string | null;
   aiKeyAuthTag: string | null;
   aiEnabled: boolean;
+  /** First-run tour (NIWA-PLAN-B-01 B7); null until finished or skipped. */
+  onboarding: { status: 'completed' | 'skipped'; version: number; at: Date } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +25,17 @@ const userSchema = new Schema<UserDoc>(
     aiKeyIv: { type: String, default: null },
     aiKeyAuthTag: { type: String, default: null },
     aiEnabled: { type: Boolean, default: false },
+    onboarding: {
+      type: new Schema(
+        {
+          status: { type: String, enum: ['completed', 'skipped'], required: true },
+          version: { type: Number, required: true },
+          at: { type: Date, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
   },
   { timestamps: true, versionKey: false },
 );

@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { TEST_USER, uniqueEmail } from './fixtures.ts';
+import { skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
 
 /**
  * Automated accessibility audit (WCAG 2.1 A/AA rules in axe-core) of every main screen, in both
@@ -116,6 +116,10 @@ for (const scheme of ['light', 'dark'] as const) {
     test.setTimeout(120_000);
     await page.emulateMedia({ colorScheme: scheme });
 
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1, name: 'A garden for your ideas.' })).toBeVisible();
+    await audit(page, 'landing');
+
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
     await audit(page, 'login');
@@ -125,6 +129,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.getByLabel('Password', { exact: true }).fill(TEST_USER.password);
     await page.getByLabel('Confirm password').fill(TEST_USER.password);
     await page.getByRole('button', { name: 'Create account' }).click();
+    await skipWelcome(page);
     await expect(page).toHaveURL(/\/knowledge$/);
     const ids = await seed(page);
 
