@@ -77,7 +77,8 @@ export function DateField({ value, onChange, clearable = true, label, slotProps,
         label={label}
         value={shown}
         error={error || rest.error}
-        placeholder="e.g. 4 Nov 2026"
+        // Only while typing: an always-on example would read like a value.
+        placeholder={focused ? 'e.g. 4 Nov 2026' : undefined}
         onFocus={() => {
           setFocused(true);
           setDraft(value ? formatDateValue(value) : '');

@@ -1,3 +1,7 @@
+import AutoStoriesOutlined from '@mui/icons-material/AutoStoriesOutlined';
+import SchoolOutlined from '@mui/icons-material/SchoolOutlined';
+import SpaOutlined from '@mui/icons-material/SpaOutlined';
+import WorkOutlineRounded from '@mui/icons-material/WorkOutlineRounded';
 import AddRounded from '@mui/icons-material/AddRounded';
 import ArchiveOutlined from '@mui/icons-material/ArchiveOutlined';
 import MoreHorizRounded from '@mui/icons-material/MoreHorizRounded';
@@ -7,7 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import type { ItemNature, ItemSummary } from '@niwa/contracts';
+import { ROOT_CONTAINERS, type ItemNature, type ItemSummary } from '@niwa/contracts';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { useEffect, useMemo, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from 'react';
@@ -35,7 +39,19 @@ import { useItemActions } from '../features/items/useItemActions.ts';
 import { useSelectedItemId } from '../features/items/useSelectedItemId.ts';
 import { usePersistentState } from '../lib/usePersistentState.ts';
 
-export const TREE_WIDTH = 300;
+/** Fixed tree pane width, wider on large screens (B-02 decision): 280 px, 320 px from 1440 px. */
+export const TREE_WIDTH = { base: 280, wide: 320 } as const;
+const WIDE_SCREEN = '@media (min-width: 1440px)';
+
+/** The four root containers read as spaces, not notes (B-02 V2). */
+const ROOT_ICON: Record<(typeof ROOT_CONTAINERS)[number], typeof AutoStoriesOutlined> = {
+  Knowledge: AutoStoriesOutlined,
+  Projects: WorkOutlineRounded,
+  College: SchoolOutlined,
+  Personal: SpaOutlined,
+};
+const isRootContainer = (item: ItemSummary): item is ItemSummary & { title: keyof typeof ROOT_ICON } =>
+  item.parentId === null && (ROOT_CONTAINERS as readonly string[]).includes(item.title);
 const DRAG_TYPE = 'application/x-niwa-item';
 
 /** Lens-scoped item tree — CONCEPT.md §2. One tree, filtered per lens with dimmed context ancestors. */
@@ -74,7 +90,8 @@ export function TreePane({
       aria-label={`${label} tree`}
       data-tour="tree"
       sx={{
-        width: fullWidth ? '100%' : TREE_WIDTH,
+        width: fullWidth ? '100%' : TREE_WIDTH.base,
+        [WIDE_SCREEN]: { width: fullWidth ? '100%' : TREE_WIDTH.wide },
         flexShrink: 0,
         borderRight: fullWidth ? 0 : 1,
         borderColor: 'divider',
@@ -138,7 +155,16 @@ export function TreePane({
               if (item) open(item);
             }}
             expansionTrigger="iconContainer"
-            itemChildrenIndentation={14}
+            itemChildrenIndentation={12}
+            sx={{
+              // Indentation guides: a hairline down each open group, under the parent's chevron.
+              '& .MuiTreeItem-groupTransition': {
+                ml: '13px',
+                borderLeft: 1,
+                borderColor: 'divider',
+              },
+              '& .MuiTreeItem-content': { borderRadius: 1, minHeight: 36 },
+            }}
           >
             <TreeNodes
               parentId={null}
@@ -240,6 +266,8 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
   };
 
   const stop = (e: MouseEvent) => e.stopPropagation();
+  const root = isRootContainer(item);
+  const RootIcon = root ? ROOT_ICON[item.title] : null;
 
   return (
     <Box
@@ -267,10 +295,11 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
         void actions.move(m);
       }}
       sx={(theme) => ({
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         gap: 1,
-        py: 0.5,
+        py: 0.75,
         minWidth: 0,
         borderRadius: 1,
         opacity: dimmed ? 0.55 : 1,
@@ -282,18 +311,26 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
               : 'none',
         bgcolor:
           drop === 'inside' ? theme.alpha((theme.vars ?? theme).palette.primary.main, 0.16) : 'transparent',
+        // Row actions float over the end of the row on hover/focus, so titles use the full width otherwise.
         '& .node-actions': { opacity: 0 },
         '&:hover .node-actions, &:focus-within .node-actions': { opacity: 1 },
+        // Keyboard focus sits on the tree item, an ancestor of this label.
+        '.Mui-focused & .node-actions': { opacity: 1 },
       })}
     >
-      <ItemTypeIcon type={item.type} completed={item.status === 'completed'} fontSize="small" />
+      {RootIcon ? (
+        <RootIcon fontSize="small" sx={{ color: 'primary.main' }} />
+      ) : (
+        <ItemTypeIcon type={item.type} completed={item.status === 'completed'} fontSize="small" />
+      )}
       <Typography
-        variant="body2"
+        variant="body1"
         noWrap
         title={dimmed ? `${item.title} — shown for context` : item.title}
         sx={{
           flex: 1,
           minWidth: 0,
+          fontWeight: root ? 600 : 400,
           fontStyle: item.archivedAt ? 'italic' : 'normal',
           textDecoration:
             item.status === 'completed' && item.nature === 'actionable' ? 'line-through' : 'none',
@@ -315,7 +352,20 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
           }}
         />
       )}
-      <Box className="node-actions" sx={{ display: 'flex', flexShrink: 0 }}>
+      <Box
+        className="node-actions"
+        sx={(theme) => ({
+          position: 'absolute',
+          right: 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          pl: 2,
+          borderRadius: 1,
+          // Fade in from the row colour so the title runs under it softly.
+          background: `linear-gradient(to right, transparent, ${(theme.vars ?? theme).palette.background.paper} 16px)`,
+        })}
+      >
         <IconButton
           size="small"
           aria-label={`Add child to ${item.title}`}

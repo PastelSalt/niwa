@@ -30,11 +30,13 @@ interface TopBarProps {
   title: string;
   compact: boolean;
   searchRef: RefObject<HTMLInputElement | null>;
+  /** The screen shows its own name, so the title is for screen readers only. */
+  titleHidden?: boolean;
   detailOpen: boolean;
   onToggleDetail: () => void;
 }
 
-export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }: TopBarProps) {
+export function TopBar({ title, titleHidden, compact, searchRef, detailOpen, onToggleDetail }: TopBarProps) {
   const { user, logout } = useAuth();
   const capture = useQuickCapture();
   const onboarding = useOnboarding();
@@ -52,12 +54,13 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
     <AppBar position="sticky" sx={{ bgcolor: 'background.default', borderBottom: 1, borderColor: 'divider' }}>
       <Toolbar variant="dense" sx={{ gap: { xs: 1, md: 1.5 }, minHeight: 56, px: { xs: 1.5, sm: 2 } }}>
         {compact && <Wordmark size="small" />}
-        {/* On phones the bottom nav already shows where you are; keep the h1 for screen readers. */}
+        {/* One visible name per screen: phones have the bottom nav, and some screens name themselves.
+            The h1 stays for screen readers either way. */}
         <Typography
           variant="subtitle1"
           component="h1"
           noWrap
-          sx={compact ? visuallyHidden : { fontWeight: 600, flexShrink: 0 }}
+          sx={compact || titleHidden ? visuallyHidden : { fontWeight: 600, flexShrink: 0 }}
         >
           {title}
         </Typography>

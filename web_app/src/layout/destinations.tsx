@@ -18,6 +18,11 @@ export interface Destination {
   showsTree: boolean;
   /** Shown in the phone BottomNavigation (Settings lives in the account menu). */
   inBottomNav: boolean;
+  /**
+   * The screen already names itself (tree header, page heading), so the top bar's title is for screen
+   * readers only — one visible name per screen (B-02 V2).
+   */
+  namedOnScreen: boolean;
 }
 
 export const DESTINATIONS: readonly Destination[] = [
@@ -29,6 +34,7 @@ export const DESTINATIONS: readonly Destination[] = [
     shortcut: 'k',
     showsTree: true,
     inBottomNav: true,
+    namedOnScreen: true,
   },
   {
     key: 'actionable',
@@ -38,6 +44,7 @@ export const DESTINATIONS: readonly Destination[] = [
     shortcut: 'a',
     showsTree: true,
     inBottomNav: true,
+    namedOnScreen: true,
   },
   {
     key: 'scheduler',
@@ -47,6 +54,7 @@ export const DESTINATIONS: readonly Destination[] = [
     shortcut: 's',
     showsTree: false,
     inBottomNav: true,
+    namedOnScreen: false,
   },
   {
     key: 'inbox',
@@ -56,6 +64,7 @@ export const DESTINATIONS: readonly Destination[] = [
     shortcut: 'i',
     showsTree: false,
     inBottomNav: true,
+    namedOnScreen: true,
   },
   {
     key: 'search',
@@ -64,6 +73,7 @@ export const DESTINATIONS: readonly Destination[] = [
     icon: <SearchOutlined />,
     showsTree: false,
     inBottomNav: true,
+    namedOnScreen: false,
   },
   {
     key: 'settings',
@@ -72,6 +82,7 @@ export const DESTINATIONS: readonly Destination[] = [
     icon: <SettingsOutlined />,
     showsTree: false,
     inBottomNav: false,
+    namedOnScreen: false,
   },
 ];
 

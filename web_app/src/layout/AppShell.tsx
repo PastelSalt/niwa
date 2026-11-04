@@ -76,6 +76,7 @@ function ShellLayout() {
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <TopBar
           title={destination?.label ?? 'niwa'}
+          titleHidden={destination?.namedOnScreen}
           compact={isPhone}
           searchRef={searchRef}
           detailOpen={detailOpen}
