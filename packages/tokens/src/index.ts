@@ -190,6 +190,14 @@ export const contentWidth = {
 } as const;
 export type ContentWidth = keyof typeof contentWidth;
 
+/**
+ * Shell layout thresholds in px (V7): below `twoPane` the app is single-pane with a bottom nav (phones);
+ * from `twoPane` it has the rail, tree pane and content (tablets); from `docked` the Details panel docks.
+ * At `docked` the content column is ≥ 600 px (rail 76 + tree 280 + Details 320), which still holds a ~70
+ * character line, so the docked panel never squeezes a note below a comfortable reading measure.
+ */
+export const layout = { twoPane: 720, docked: 1280 } as const;
+
 /** Named gaps in MUI spacing units (1 = 8 px); halves keep everything on the 4 px grid. */
 export const gaps = {
   /** Between elements inside a row (icon ↔ text, chip ↔ chip). */

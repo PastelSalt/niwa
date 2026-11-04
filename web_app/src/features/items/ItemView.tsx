@@ -13,11 +13,10 @@ import Link from '@mui/material/Link';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
 import { ApiError } from '@niwa/api-client';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router';
+import { useShellLayout } from '../../layout/useLayout.ts';
 import { SectionHeader } from '../../components/SectionHeader.tsx';
 import { Page } from '../../components/Page.tsx';
 import { DueChip, HintChip, PriorityChip, StatusChip, TagChip } from './chips.tsx';
@@ -53,9 +52,8 @@ export function ItemView({ id }: { id: string }) {
   const update = useUpdateItem();
   const notify = useNotify();
   const actions = useItemActions();
-  const theme = useTheme();
   // No side detail panel on phones — show the fields inline.
-  const isPhone = useMediaQuery(theme.breakpoints.down('md'));
+  const isPhone = useShellLayout() === 'single';
   const [filing, setFiling] = useState(false);
 
   if (isLoading) {
