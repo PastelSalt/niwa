@@ -10,6 +10,8 @@ Disallow: /inbox
 Disallow: /search
 Disallow: /settings
 Disallow: /items
+# The landing page's interactive example (an iframe, not a page of its own).
+Disallow: /playground
 Disallow: /api/
 
 Sitemap: https://niwa-delta.vercel.app/sitemap.xml

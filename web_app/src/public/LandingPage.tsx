@@ -1,10 +1,6 @@
-import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined';
 import CalendarMonthOutlined from '@mui/icons-material/CalendarMonthOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
-import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
-import FolderOutlined from '@mui/icons-material/FolderOutlined';
 import InboxOutlined from '@mui/icons-material/InboxOutlined';
-import LightbulbOutlined from '@mui/icons-material/LightbulbOutlined';
 import LockOutlined from '@mui/icons-material/LockOutlined';
 import MenuBookOutlined from '@mui/icons-material/MenuBookOutlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
@@ -18,6 +14,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
+import { Playground } from './Playground.tsx';
 import { site, useDocumentTitle } from './site.ts';
 import { useRegistrationOpen } from './useRegistrationOpen.ts';
 
@@ -76,123 +73,35 @@ function Hero() {
   return (
     <Box component="section" aria-labelledby="hero-title" sx={{ py: { xs: 7, md: 11 } }}>
       <Container maxWidth="lg">
-        <Box
-          sx={{
-            display: 'grid',
-            gap: { xs: 5, md: 8 },
-            gridTemplateColumns: { xs: '1fr', md: '1.1fr 1fr' },
-            alignItems: 'center',
-          }}
-        >
-          <Box>
-            <Typography id="hero-title" variant="h1" component="h1">
-              {site.tagline}
-            </Typography>
-            <Typography
-              variant="lead"
-              color="text.secondary"
-              sx={{ mt: 2.5, maxWidth: (t) => t.niwa.width.narrow }}
-            >
-              NIWA keeps your notes, ideas, tasks and schedule in one tree. Plant an idea, grow it into a
-              project, and look at it through three lenses — without copying anything between apps.
-            </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 4 }}>
-              {registrationOpen && (
-                <Button component={RouterLink} to="/register" variant="contained" size="large">
-                  Create account
-                </Button>
-              )}
-              <Button
-                component={RouterLink}
-                to="/login"
-                variant={registrationOpen ? 'outlined' : 'contained'}
-                size="large"
-              >
-                Log in
+        <Box sx={{ maxWidth: (t) => t.niwa.width.reading }}>
+          <Typography id="hero-title" variant="h1" component="h1">
+            {site.tagline}
+          </Typography>
+          <Typography variant="lead" color="text.secondary" sx={{ mt: 2.5 }}>
+            NIWA keeps your notes, ideas, tasks and schedule in one tree. Plant an idea, grow it into a
+            project, and look at it through three lenses — without copying anything between apps.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 4 }}>
+            {registrationOpen && (
+              <Button component={RouterLink} to="/register" variant="contained" size="large">
+                Create account
               </Button>
-            </Stack>
-          </Box>
-          <ExampleTree />
+            )}
+            <Button
+              component={RouterLink}
+              to="/login"
+              variant={registrationOpen ? 'outlined' : 'contained'}
+              size="large"
+            >
+              Log in
+            </Button>
+          </Stack>
+        </Box>
+        <Box sx={{ mt: { xs: 5, md: 7 } }}>
+          <Playground />
         </Box>
       </Container>
     </Box>
-  );
-}
-
-type ExampleRow = { depth: number; title: string; icon: ReactNode; color: string; note?: string };
-
-/** An illustration of the item tree using the specs' own example (§3.1) — not real user data. */
-function ExampleTree() {
-  const rows: ExampleRow[] = [
-    { depth: 0, title: 'College', icon: <FolderOutlined />, color: 'text.secondary' },
-    { depth: 1, title: 'CS 301', icon: <AccountTreeOutlined />, color: 'itemType.project' },
-    {
-      depth: 2,
-      title: 'Week 1 lecture notes',
-      icon: <DescriptionOutlined />,
-      color: 'itemType.note',
-      note: 'Knowledge',
-    },
-    {
-      depth: 2,
-      title: 'Problem set 1',
-      icon: <TaskAltOutlined />,
-      color: 'itemType.task',
-      note: 'Actionable · Scheduler',
-    },
-    {
-      depth: 2,
-      title: 'Idea: study group',
-      icon: <LightbulbOutlined />,
-      color: 'itemType.idea',
-      note: 'Knowledge',
-    },
-  ];
-  return (
-    <Paper
-      variant="outlined"
-      role="img"
-      aria-label="Example item tree: a College folder holding the CS 301 project, with lecture notes, a problem set task and an idea inside it."
-      sx={{ p: { xs: 2, sm: 3 } }}
-    >
-      <Typography variant="overline" color="text.secondary" aria-hidden>
-        Example
-      </Typography>
-      <Stack spacing={0.5} sx={{ mt: 1 }} aria-hidden>
-        {rows.map((r) => (
-          <Stack
-            key={r.title}
-            direction="row"
-            spacing={1.25}
-            sx={{
-              alignItems: 'center',
-              pl: r.depth * 3,
-              py: 0.75,
-              borderRadius: 1,
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
-          >
-            <Box
-              sx={(t) => ({ color: r.color, display: 'flex', '& svg': { fontSize: t.niwa.iconSize.row } })}
-            >
-              {r.icon}
-            </Box>
-            <Typography sx={{ flex: 1, minWidth: 0 }} noWrap>
-              {r.title}
-            </Typography>
-            {r.note && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: { xs: 'none', sm: 'block' } }}
-              >
-                {r.note}
-              </Typography>
-            )}
-          </Stack>
-        ))}
-      </Stack>
-    </Paper>
   );
 }
 

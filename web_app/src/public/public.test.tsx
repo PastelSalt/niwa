@@ -15,6 +15,18 @@ describe('landing page', () => {
     }
   });
 
+  it('offers a lazy, labelled playground with its own customise panel (B-02 V11)', async () => {
+    renderApp('/');
+    const region = await screen.findByRole('region', { name: 'Interactive example' });
+    const frame = region.querySelector('iframe')!;
+    expect(frame).toHaveAttribute('src', '/playground');
+    expect(frame).toHaveAttribute('loading', 'lazy');
+    expect(frame.title).toMatch(/example garden/);
+    const panel = screen.getByRole('region', { name: 'Make it yours' });
+    expect(within(panel).getAllByRole('radio')).toHaveLength(5);
+    expect(within(panel).getByText(/saved to your account after you sign up/)).toBeInTheDocument();
+  });
+
   it('sends signed-in users to Knowledge', async () => {
     const { router } = renderApp('/', { 'POST /auth/refresh': authOk });
     await waitFor(() => expect(router.state.location.pathname).toBe('/knowledge'));
