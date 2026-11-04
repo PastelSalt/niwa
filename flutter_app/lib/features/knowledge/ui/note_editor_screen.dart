@@ -5,6 +5,7 @@ import 'package:dart_quill_delta/dart_quill_delta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart' show ImageSource;
 import 'package:niwa/core/api/error_message.dart';
 import 'package:niwa/core/api/providers.dart';
 import 'package:niwa/core/models/models.dart';
@@ -14,6 +15,7 @@ import 'package:niwa/core/theme/tokens.g.dart';
 import 'package:niwa/core/ui/snackbars.dart';
 import 'package:niwa/core/ui/state_views.dart';
 import 'package:niwa/features/items/data/item_providers.dart';
+import 'package:niwa/features/knowledge/data/image_upload.dart';
 import 'package:niwa/features/knowledge/data/link_providers.dart';
 import 'package:niwa/features/knowledge/data/note_autosave.dart';
 import 'package:niwa/features/knowledge/domain/pm_delta.dart';
@@ -129,6 +131,94 @@ class _EditorState extends ConsumerState<_Editor> {
     unawaited(_insertLink());
   }
 
+  bool _uploading = false;
+
+  /// Camera or gallery → alt text → signed upload → image block at the
+  /// cursor, with the web's attributes so both editors see the same node.
+  Future<void> _insertImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.of(context).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from photos'),
+              onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+    final snackbars = _container.read(snackbarsProvider);
+    final PickedImage? picked;
+    try {
+      picked = await _container.read(imagePickerProvider).pick(source);
+    } on Object {
+      snackbars.show("Couldn't open the camera or photos.");
+      return;
+    }
+    if (picked == null || !mounted) return;
+    try {
+      checkImage(picked);
+    } on UploadError catch (e) {
+      snackbars.show(e.message);
+      return;
+    }
+    final alt = await _askAlt(altFromName(picked.name));
+    if (alt == null || !mounted) return;
+    final at = _controller.selection.baseOffset.clamp(
+      0,
+      _controller.document.length - 1,
+    );
+    setState(() => _uploading = true);
+    try {
+      final up = await uploadImage(
+        uploads: _container.read(uploadsRepositoryProvider),
+        cloudinary: _container.read(cloudinaryDioProvider),
+        itemId: widget.item.id,
+        image: picked,
+      );
+      if (!mounted) return;
+      _controller.replaceText(
+        at,
+        0,
+        BlockEmbed(
+          NiwaEmbed.image,
+          jsonEncode({
+            'src': up.src,
+            'alt': alt.isEmpty ? null : alt,
+            'title': null,
+            'width': null,
+            'height': null,
+            'attachmentId': up.attachment.id,
+          }),
+        ),
+        TextSelection.collapsed(offset: at + 1),
+      );
+    } on UploadError catch (e) {
+      snackbars.show(e.message);
+    } on Object catch (e) {
+      snackbars.show(messageOf(e));
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  /// Alt text for screen readers; null = cancelled.
+  Future<String?> _askAlt(String suggested) => showDialog<String>(
+    context: context,
+    builder: (_) => _AltTextDialog(suggested: suggested),
+  );
+
   Future<void> _insertLink() async {
     final target = await showLinkPicker(context, excludeId: widget.item.id);
     if (target == null || !mounted) return;
@@ -241,6 +331,8 @@ class _EditorState extends ConsumerState<_Editor> {
     final online = ref.watch(networkStatusProvider);
     final archived = widget.item.archivedAt != null;
     final conflict = _autosave.conflict;
+    final imagesEnabled =
+        ref.watch(uploadConfigProvider).value?.enabled ?? false;
     _controller.readOnly = archived || !online || conflict != null;
 
     return PopScope(
@@ -260,6 +352,12 @@ class _EditorState extends ConsumerState<_Editor> {
                 tooltip: 'Link to an item',
                 icon: const Icon(Icons.link),
                 onPressed: _insertLink,
+              ),
+            if (!_controller.readOnly && imagesEnabled)
+              IconButton(
+                tooltip: _uploading ? 'Uploading image…' : 'Add an image',
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                onPressed: _uploading ? null : _insertImage,
               ),
           ],
         ),
@@ -313,7 +411,10 @@ class _EditorState extends ConsumerState<_Editor> {
                   showSuperscript: false,
                 ),
               ),
-            const Divider(height: 1),
+            if (_uploading)
+              const LinearProgressIndicator(semanticsLabel: 'Uploading image')
+            else
+              const Divider(height: 1),
             Expanded(
               child: QuillEditor(
                 controller: _controller,
@@ -363,4 +464,49 @@ class _SaveStatusLabel extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Owns its text controller, so it lives as long as the dialog (including
+/// the closing animation).
+class _AltTextDialog extends StatefulWidget {
+  const new({required this.suggested});
+
+  final String suggested;
+
+  @override
+  State<_AltTextDialog> createState() => _AltTextDialogState();
+}
+
+class _AltTextDialogState extends State<_AltTextDialog> {
+  late final _controller = TextEditingController(text: widget.suggested);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Describe the image'),
+    content: TextField(
+      controller: _controller,
+      autofocus: true,
+      maxLength: 120,
+      decoration: const InputDecoration(
+        labelText: 'Alt text',
+        helperText: 'Read aloud by screen readers.',
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+        child: const Text('Upload'),
+      ),
+    ],
+  );
 }

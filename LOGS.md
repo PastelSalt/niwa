@@ -595,3 +595,39 @@
   - Deleted the merged local branch `mobile/a02-ma0-ma8`.
   - Graphify: workspace "Kyle's workspace" (`kyle-s-workspace-d9e680`); `PastelSalt/niwa` indexed at `05ed969`.
 - **Verified:** CI (3m39s) and the first Flutter workflow run (7m37s) passed on `05ed969`. GAPS "Flutter CI first run" closed.
+
+### 2026-11-04 — Mobile MA9 Settings, Trash & images (+ backend sign out everywhere)
+- **Plan ref:** A-02 MA9 (done in code; live Cloudinary + device check pending)
+- **Actions:**
+  - **Backend + contract:**
+    - `POST /auth/logout-all` (protected): revokes every refresh session of the user (`refreshSessionRepo.revokeAllForUser`, `tokenService.revokeAllForUser`, `authService.logoutAll`, controller clears the web cookie).
+    - Index `{ userId, revokedAt }` on refresh sessions; OpenAPI path added.
+    - Test: web cookie and phone token both rejected afterwards; 401 without a signed-in user.
+  - **Flutter settings:**
+    - `ApiClient.logoutEverywhere` / `SessionController.logoutEverywhere` must reach the server; if offline, nothing changes and the error is shown.
+    - Settings › Account: "Sign out everywhere" with a confirmation that mentions the ≤ 15-min access-token window; version row (`core/util/app_version.dart`, package_info_plus).
+    - Drift v4 adds a `preferences` table that logout doesn't wipe; `ThemeModeController` loads and saves the theme there.
+  - **Trash:** `settings/ui/trash_section.dart` (port of `TrashSection`, same copy): roots only, restore (with "to the Inbox (its parent is gone)"), delete permanently with confirmation.
+  - **Images:**
+    - `knowledge/data/image_upload.dart`: `ImagePickerPort` (image_picker, downscaled), `cloudinaryDioProvider`, `uploadConfigProvider`, `checkImage`, `deliveryUrl`, `phoneImageUrl` (adds `w_…,c_limit` after the stored transformation; recognises transformation segments), `altFromName`, `uploadImage` (sign → multipart → confirm).
+    - Editor: "Add an image" (camera or photos) → alt-text dialog → upload with a progress bar → `niwaImage` block with the web's attrs (`src`, `alt`, `title`, `width`, `height`, `attachmentId`); hidden when uploads are off.
+    - Image embeds load a screen-sized URL with `cacheWidth`.
+    - iOS camera and photo-library usage strings.
+  - **Tests:**
+    - `settings_trash_images_test.dart` (11): URL and alt helpers, size/type checks, the exact signed multipart fields, a Cloudinary error, the editor image flow saving the web node, uploads off, Trash restore/purge, theme across restart and logout, sign out everywhere offline/online, version, schema v4.
+    - The migration test now covers v1 → v4.
+    - `FakeWorkspace`: Trash, purge, uploads config/sign, attachments.
+- **Found and fixed:** the alt-text dialog disposed its controller while the dialog was still closing; the dialog now owns it.
+- **Verified:**
+  - `flutter test` 403 pass; `flutter analyze` no issues; `dart format` clean; generated code fresh.
+  - Backend 86, web 42, packages pass; `openapi:check`, lint, format:check pass.
+  - No APK build or device run (owner will say when).
+- **Next:** MA10 quality — accessibility pass (TalkBack/VoiceOver labels, text scaling), golden tests, large-tree performance; then MA11 release.
+
+### 2026-11-04 — Scripted deploys (Render + Vercel); MA9 on hold
+- **Actions:**
+  - `scripts/deploy/render.sh`: validates `render.yaml` with the Render CLI if installed, finds `niwa-api` via the API, sets the `sync:false` secrets from `deploy.env`, triggers a deploy, waits, and checks `/api/v1/health`. `--env-only` and `--deploy-only` modes.
+  - `scripts/deploy/vercel.sh`: creates or updates the `niwa` project via the API (Vite, root `web_app`, filtered frozen install, corepack, Git link when the GitHub app allows), sets `VITE_*`, points the `/api` rewrite at the Render URL, then links and deploys to production with `npx vercel@65.11.0`.
+  - `scripts/deploy/deploy.env.example` (the real file is git-ignored); `.vercelignore`; `render.yaml` pins `NODE_VERSION=24` (corepack).
+  - OPS §12 documents it. GAPS "On hold" records the uncommitted MA9 and the owner's MongoDB connection trouble, which blocks the backend deploy.
+- **Verified:** both scripts pass `bash -n`; a copy of the tracked files minus `.vercelignore` paths installs (`--frozen-lockfile --filter @niwa/web...`) and builds like Vercel will. Nothing was deployed: no tokens yet, Render Blueprint not created, MongoDB unreachable.

@@ -84,6 +84,11 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
       return tokens.revokeRefresh(refreshToken);
     },
 
+    /** Sign out on every device (A-02 MA9). */
+    async logoutAll(userId: string): Promise<void> {
+      await tokens.revokeAllForUser(userId);
+    },
+
     async me(userId: string) {
       const user = await userRepo.findById(userId);
       if (!user) throw unauthorized();

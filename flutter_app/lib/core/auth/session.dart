@@ -129,6 +129,12 @@ class SessionController extends Notifier<SessionState> {
     await _wiping;
   }
 
+  /// Throws when the server can't be reached (nothing is signed out then).
+  Future<void> logoutEverywhere() async {
+    await _api.logoutEverywhere();
+    await _wiping;
+  }
+
   @visibleForTesting
   Future<void> onResume() async {
     final session = _api.session;

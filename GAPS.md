@@ -16,8 +16,17 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 - [ ] **Trash auto-purge switch** — the 30-day purge always runs; no Settings toggle (DATA_MODEL.md §5).
 - [ ] **Keyboard creation in the week grid** — creating by drag is pointer-only; keyboard users use **New**.
 
+### On hold (owner, 2026-11-04)
+- [ ] **MA9 not committed yet** — Settings/Trash/images and `POST /auth/logout-all` are in the working tree,
+      tested (Flutter 403, backend 86); held by the owner before commit and MA10.
+- [ ] **MongoDB connection trouble** — the owner can't currently connect to MongoDB. This **blocks the backend
+      deploy**: `backend/src/server.ts` awaits `connectDb()` before `listen()`, so Render's health check would
+      fail. Fix the Atlas connection (IP access list `0.0.0.0/0` for Render, user/password, SRV string), then
+      run `scripts/deploy/render.sh`.
+
 ### Carried from earlier milestones
 - [ ] **Hosting accounts** (M1/M2) — Atlas, Render, Vercel not created yet; `vercel.json` Render hostname is a placeholder.
+      Deploys are scripted (`scripts/deploy/`, OPS §12); waiting on the MongoDB connection (see On hold).
       Vercel root directory is now `web_app` (renamed from `frontend`).
 - [ ] **Month drag on touch** (M5) — native drag-and-drop doesn't work on touch; use the dialog.
 - [ ] **Overlapping all-day events in week view** (M5) — stack rather than span.
@@ -35,13 +44,17 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 - [ ] **Airplane-mode run on a device** (MA5 exit) — covered by `test/offline_test.dart` only.
 - [ ] **Schedule + links in the offline cache** — join with MA7 / MA6.
 - [ ] **Manual web → phone → web note round-trip** (MA6 exit) — automated round-trip only so far.
-- [ ] **Image upload from the phone** — images display; inserting new ones is MA9.
+- [ ] **Images between phone and web** (MA9 exit) — same node shape and tested against fakes; needs a live
+      Cloudinary account (see "Cloudinary against a live account") and a device.
+- [ ] **Image disk cache** — phone images use Flutter's in-memory cache only; re-downloaded after a restart.
 - [ ] **Locked shapes** — multi-paragraph list items, quotes with lists, code blocks with a language,
       ordered lists not starting at 1 and custom link attrs are view-only on mobile.
 - [ ] **Reminders on a device** — permission prompt, delivery after reboot and DST not yet seen on a phone.
 - [ ] **Tapping a reminder** — opens the app but not yet the entry's day (payload is set; handler not wired).
 - [ ] **Share-to-NIWA and a Capture shortcut/tile** (MA8 stretch) — not built.
 - [ ] **Agenda view** (MA7 proposal) — not built; the tab opens on the day view.
+- [ ] **Sign out everywhere delay** — other devices keep their access token until it expires (≤ 15 min);
+      only refresh is revoked. Fine for now; a token denylist would close it.
 - [ ] **Offline editing** — edits are refused offline (only capture queues); a full outbox needs conflict UX (A-02 "later").
 
 ### Web

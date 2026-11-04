@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
-import type { Types } from 'mongoose';
+import { Types } from 'mongoose';
 import type { AppConfig } from '../config/env.ts';
 import { unauthorized } from '../lib/errors.ts';
 import type { RefreshSessionDoc } from '../models/refreshSession.model.ts';
@@ -76,6 +76,12 @@ export function createTokenService(config: AppConfig) {
       }
       const next = await issueRefresh(consumed.userId, consumed.client, consumed.familyId);
       return { userId: consumed.userId, client: consumed.client, ...next };
+    },
+
+    /** Revokes every refresh session of the user. Access tokens already issued stay valid until
+     * they expire (≤ ACCESS_TOKEN_TTL_SECONDS); no new ones can be minted. */
+    revokeAllForUser(userId: string): Promise<number> {
+      return refreshSessionRepo.revokeAllForUser(new Types.ObjectId(userId), new Date());
     },
 
     async revokeRefresh(token: string): Promise<void> {

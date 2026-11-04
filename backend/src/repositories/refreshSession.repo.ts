@@ -30,6 +30,15 @@ export const refreshSessionRepo = {
     return RefreshSessionModel.findOne({ tokenHash }).lean<RefreshSessionDoc>().exec();
   },
 
+  /** Every live session of a user, on every device ("sign out everywhere"). */
+  async revokeAllForUser(userId: Types.ObjectId, now: Date): Promise<number> {
+    const res = await RefreshSessionModel.updateMany(
+      { userId, revokedAt: null },
+      { $set: { revokedAt: now } },
+    ).exec();
+    return res.modifiedCount;
+  },
+
   async revokeFamily(familyId: string, now: Date): Promise<void> {
     await RefreshSessionModel.updateMany({ familyId, revokedAt: null }, { $set: { revokedAt: now } }).exec();
   },

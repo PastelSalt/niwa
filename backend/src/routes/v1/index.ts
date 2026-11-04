@@ -31,6 +31,7 @@ export function createV1Router({ config, tokens, auth, authLimiter }: V1Deps): R
   // the strict limiter would lock out normal page reloads.
   router.post('/auth/refresh', authCtl.refresh);
   router.post('/auth/logout', authCtl.logout);
+  router.post('/auth/logout-all', protect, authCtl.logoutAll);
   router.get('/auth/me', protect, authCtl.me);
 
   router.get('/workspace', protect, system.workspace);

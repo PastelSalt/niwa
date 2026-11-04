@@ -18,6 +18,10 @@ services:
         - package.json
         - render.yaml
     envVars:
+      # Node 24: has corepack (used by buildCommand) and runs .ts natively. Without this Render may pick
+      # the newest Node from engines ">=24", which has no corepack.
+      - key: NODE_VERSION
+        value: '24'
       - key: NODE_ENV
         value: production
       - key: APP_ENV

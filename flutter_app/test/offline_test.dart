@@ -65,12 +65,15 @@ void main() {
     });
 
     test('a fresh database has every table', () async {
-      expect(db.schemaVersion, 3);
+      expect(db.schemaVersion, 4);
       final tables = await db
           .customSelect("SELECT name FROM sqlite_master WHERE type='table'")
           .map((r) => r.read<String>('name'))
           .get();
-      expect(tables, containsAll(['cache_entries', 'outbox', 'reminders']));
+      expect(
+        tables,
+        containsAll(['cache_entries', 'outbox', 'reminders', 'preferences']),
+      );
     });
   });
 

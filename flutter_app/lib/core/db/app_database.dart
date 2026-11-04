@@ -50,15 +50,24 @@ class Reminders extends Table {
   Set<Column<Object>> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [CacheEntries, Outbox, Reminders])
+/// Device preferences (theme…). Not account data, so logout keeps them.
+class Preferences extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {key};
+}
+
+@DriftDatabase(tables: [CacheEntries, Outbox, Reminders, Preferences])
 class AppDatabase extends _$AppDatabase {
   new([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'niwa'));
 
   /// v1: cache + outbox (MA5). v2: reminders (MA7). v3: capture details and
-  /// suggested parent in the outbox (MA8).
+  /// suggested parent in the outbox (MA8). v4: device preferences (MA9).
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -71,6 +80,7 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(outbox, outbox.body);
         await m.addColumn(outbox, outbox.suggestedParentId);
       }
+      if (from < 4) await m.createTable(preferences);
     },
   );
 
@@ -141,6 +151,16 @@ class AppDatabase extends _$AppDatabase {
       : into(reminders).insertOnConflictUpdate(
           RemindersCompanion.insert(key: key, minutesBefore: minutesBefore),
         );
+
+  // ---- Preferences (kept on logout) ----
+
+  Future<String?> preference(String key) async => (await (select(
+    preferences,
+  )..where((t) => t.key.equals(key))).getSingleOrNull())?.value;
+
+  Future<void> setPreference(String key, String value) => into(
+    preferences,
+  ).insertOnConflictUpdate(PreferencesCompanion.insert(key: key, value: value));
 
   /// Everything goes on logout: the next user must not see this one's data.
   Future<void> wipe() => transaction(() async {

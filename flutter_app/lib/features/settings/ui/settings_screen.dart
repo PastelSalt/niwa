@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:niwa/core/api/error_message.dart';
 import 'package:niwa/core/auth/session.dart';
 import 'package:niwa/core/theme/theme_mode.dart';
+import 'package:niwa/core/ui/snackbars.dart';
 import 'package:niwa/core/ui/state_views.dart';
+import 'package:niwa/core/util/app_version.dart';
 import 'package:niwa/features/auth/ui/logout.dart';
+import 'package:niwa/features/settings/ui/trash_section.dart';
 
 /// Settings sections, same keys as the web (`/settings/:section`).
 enum SettingsSection {
@@ -59,9 +63,7 @@ class SettingsScreen extends ConsumerWidget {
             SettingsSection.ai => const _Later(
               'AI features are switched off for now.',
             ),
-            SettingsSection.trash => const _Later(
-              'Trash arrives in a later update.',
-            ),
+            SettingsSection.trash => const TrashSection(),
           },
         ],
       ),
@@ -108,8 +110,51 @@ class _Account extends ConsumerWidget {
           title: const Text('Log out'),
           onTap: () => confirmAndLogout(context, ref),
         ),
+        ListTile(
+          leading: const Icon(Icons.devices_other),
+          title: const Text('Sign out everywhere'),
+          subtitle: const Text('Every phone and browser signed in to NIWA'),
+          onTap: () => _signOutEverywhere(context, ref),
+        ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: const Text('NIWA for mobile'),
+          subtitle: Text(
+            'Version ${ref.watch(appVersionProvider).value ?? '…'}',
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _signOutEverywhere(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign out everywhere?'),
+        content: const Text(
+          'Every device signed in to your account will need to log in again. '
+          'Other devices may stay signed in for up to 15 minutes.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sign out everywhere'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(sessionProvider.notifier).logoutEverywhere();
+    } on Object catch (e) {
+      ref.read(snackbarsProvider).show(messageOf(e));
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +12,10 @@ import 'package:niwa/core/api/refresh_token_store.dart';
 import 'package:niwa/core/db/app_database.dart';
 import 'package:niwa/core/db/db_providers.dart';
 import 'package:niwa/core/net/network_status.dart';
+import 'package:niwa/core/util/app_version.dart';
 import 'package:niwa/core/util/time_zone.dart';
 import 'package:niwa/features/capture/data/capture_queue.dart';
+import 'package:niwa/features/knowledge/data/image_upload.dart';
 import 'package:niwa/features/scheduler/data/reminders.dart';
 
 import 'fake_server.dart';
@@ -26,6 +29,8 @@ Future<void> pumpApp(
   AppDatabase? db,
   Stream<List<ConnectivityResult>>? connectivity,
   FakeNotifications? notifications,
+  ImagePickerPort? imagePicker,
+  Dio? cloudinary,
 }) async {
   server.workspace ??= FakeWorkspace();
   // Each pump gets its own in-memory database; that's intended here.
@@ -44,6 +49,11 @@ Future<void> pumpApp(
           notifications ?? FakeNotifications(),
         ),
         deviceTimeZoneProvider.overrideWith((ref) async => 'Asia/Manila'),
+        appVersionProvider.overrideWith((ref) async => '1.0.0 (1)'),
+        if (imagePicker != null)
+          imagePickerProvider.overrideWithValue(imagePicker),
+        if (cloudinary != null)
+          cloudinaryDioProvider.overrideWithValue(cloudinary),
         connectivityChangesProvider.overrideWithValue(
           connectivity ?? const Stream.empty(),
         ),
@@ -76,6 +86,8 @@ Future<void> pumpSignedIn(
   AppDatabase? db,
   Stream<List<ConnectivityResult>>? connectivity,
   FakeNotifications? notifications,
+  ImagePickerPort? imagePicker,
+  Dio? cloudinary,
 }) async {
   await pumpApp(
     tester,
@@ -83,6 +95,8 @@ Future<void> pumpSignedIn(
     db: db,
     connectivity: connectivity,
     notifications: notifications,
+    imagePicker: imagePicker,
+    cloudinary: cloudinary,
   );
   await tester.enterText(
     find.widgetWithText(TextFormField, 'Email'),

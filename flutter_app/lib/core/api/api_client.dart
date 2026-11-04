@@ -274,6 +274,14 @@ class ApiClient {
     }
   }
 
+  /// Signs out on every device: revokes all of the user's refresh sessions,
+  /// then this one locally. Unlike [logout] it must reach the server — if it
+  /// can't, nothing changes and the error is thrown.
+  Future<void> logoutEverywhere() async {
+    await request('POST', '/auth/logout-all');
+    await _signOutLocally();
+  }
+
   Future<User> me() async {
     final body = await request('GET', '/auth/me');
     return User.fromJson((body! as Json)['user'] as Json);

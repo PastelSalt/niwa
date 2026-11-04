@@ -245,6 +245,32 @@ Branching: `main` = production. Work on feature branches → PR → merge. Verce
 
 ---
 
+## 12. Scripted deploy (`scripts/deploy/`)
+
+Both scripts read `scripts/deploy/deploy.env` (git-ignored; template `deploy.env.example`) and never print its
+values. They talk to each service's API with your token, plus the Vercel CLI (`npx vercel@65.11.0`).
+
+**One-time, by hand**
+1. Tokens: Render → Account settings → API keys; Vercel → Account settings → Tokens. Put both in `deploy.env`
+   with `MONGODB_URI` (and Cloudinary keys if you want image uploads).
+2. Render Blueprint: open `https://dashboard.render.com/blueprint/new?repo=https://github.com/PastelSalt/niwa`
+   and apply `render.yaml` (creates `niwa-api` + `niwa-cache`; Render has no API to create a Blueprint).
+3. Optional: install the Vercel GitHub app on `PastelSalt/niwa` so pushes to `main` deploy the web app.
+
+**Every deploy**
+
+```bash
+bash scripts/deploy/render.sh            # secrets → deploy → wait → /api/v1/health
+bash scripts/deploy/vercel.sh https://<service>.onrender.com   # project, env, /api rewrite, prod deploy
+bash scripts/deploy/render.sh --env-only  # after adding the Vercel origin to CORS_ORIGINS
+```
+
+- `render.sh` fails with `update_failed` if the API can't reach MongoDB: the server connects before listening.
+- `vercel.sh` creates the `niwa` project (Vite, root `web_app`, `pnpm install --frozen-lockfile --filter
+  @niwa/web...`, corepack on) if it doesn't exist, else re-applies those settings. If the Render URL isn't the
+  default `niwa-api.onrender.com`, it rewrites `web_app/vercel.json` — commit that change.
+- `.vercelignore` keeps CLI uploads small (no `flutter_app/`); workspace members stay so the lockfile matches.
+
 ## Open questions for owner
 
 - [ ] Long-term backup copies: nightly archives live 14 days as encrypted workflow artifacts — add a bucket (e.g. Cloudflare R2 / B2) for weekly copies, or move to Atlas M10?

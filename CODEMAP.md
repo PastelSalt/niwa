@@ -30,6 +30,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ .prettierrc.json / .prettierignore   ✅
 ├─ .nvmrc                    ✅ 24
 ├─ .gitignore / .gitattributes / .editorconfig   ✅
+├─ scripts/deploy/          ✅ render.sh, vercel.sh, deploy.env.example (OPS §12)
 ├─ render.yaml               ✅ Render Blueprint: web `niwa-api` + Key Value `niwa-cache`
 ├─ .github/workflows/ci.yml  ✅ check: lint → format → typecheck → openapi:check → test → build · e2e job
 ├─ .github/workflows/backup.yml ✅ nightly portable dump → `age`-encrypted artifact (14 days); needs BACKUP_* secrets (OPS §9)
@@ -42,7 +43,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ backend/                  ✅ NIWA API → Render
 ├─ web_app/                  ✅ web client → Vercel
 ├─ desktop_app/              🔜 M9 Electron Forge (README placeholder; after mobile)
-└─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); scaffolded (MA1.P1), token theme (MA1.P2), contract models (MA1.P3), CI, API + session + auth screens (MA2), app shell + routes (MA3), item tree + Focus (MA4), offline cache + capture queue (MA5), notes editor (MA6), scheduler + reminders (MA7), inbox filing + search (MA8): lib/{app,core,features}
+└─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); scaffolded (MA1.P1), token theme (MA1.P2), contract models (MA1.P3), CI, API + session + auth screens (MA2), app shell + routes (MA3), item tree + Focus (MA4), offline cache + capture queue (MA5), notes editor (MA6), scheduler + reminders (MA7), inbox filing + search (MA8), settings/trash/images (MA9): lib/{app,core,features}
 ```
 
 Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa.git` (renamed from `niwa-site` 2026-11-04; pushed).

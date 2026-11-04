@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:niwa/core/theme/niwa_colors.dart';
 import 'package:niwa/core/theme/tokens.g.dart';
 import 'package:niwa/features/items/data/item_providers.dart';
+import 'package:niwa/features/knowledge/data/image_upload.dart';
 import 'package:niwa/features/knowledge/domain/pm_delta.dart';
 import 'package:niwa/features/knowledge/domain/prosemirror_text.dart';
 
@@ -167,18 +168,26 @@ class _ImageEmbed extends EmbedBuilder {
   Widget build(BuildContext context, EmbedContext embedContext) {
     final attrs = jsonDecode(_data(embedContext)! as String) as Map;
     final alt = attrs['alt'] as String?;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(NiwaTokens.radius),
-        child: Image.network(
-          attrs['src'] as String,
-          semanticLabel: alt,
-          errorBuilder: (context, _, _) => Container(
-            height: 120,
-            alignment: Alignment.center,
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: Text(alt == null || alt.isEmpty ? 'Image' : alt),
+        child: LayoutBuilder(
+          builder: (context, c) => Image.network(
+            // Sized for this screen; the stored src stays as the web wrote it.
+            phoneImageUrl(
+              attrs['src'] as String,
+              c.maxWidth.isFinite ? c.maxWidth * dpr : 1080,
+            ),
+            cacheWidth: c.maxWidth.isFinite ? (c.maxWidth * dpr).round() : null,
+            semanticLabel: alt,
+            errorBuilder: (context, _, _) => Container(
+              height: 120,
+              alignment: Alignment.center,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: Text(alt == null || alt.isEmpty ? 'Image' : alt),
+            ),
           ),
         ),
       ),

@@ -34,7 +34,7 @@ Same rules as A-01:
 | MA6 | Notes editor (flutter_quill) | ✅ (code; manual round-trip pending) | MA4 |
 | MA7 | Scheduler | ✅ (code; device run pending) | MA4 |
 | MA8 | Inbox, capture & search | ✅ (code; stretch items open) | MA4 (MA5 for offline capture) |
-| MA9 | Settings, Trash & images | ⬜ | MA6 |
+| MA9 | Settings, Trash & images | ✅ (code; live Cloudinary + device pending) | MA6 |
 | MA10 | Quality: accessibility, tests, performance | ⬜ | MA4–MA9 |
 | MA11 | Release (Android first, then iOS) | ⬜ | MA10 |
 
@@ -281,12 +281,13 @@ _Status 2026-11-04: pass as widget tests (`test/inbox_search_test.dart`). Stretc
 
 ## MA9 — Settings, Trash & images
 
-- [ ] Settings: appearance (system/light/dark), account (email, sign out, sign out everywhere), about/version
-- [ ] Trash: list, restore, delete permanently (confirm)
-- [ ] Images in notes: pick from camera/gallery → `POST /uploads/sign` → direct upload to Cloudinary (Dio multipart) → `POST /attachments`; alt-text prompt; disabled when `/uploads/config` says off
-- [ ] Image display with `f_auto,q_auto` + width transformation for phone screens; cached
+- [x] Settings: appearance (system/light/dark, saved on the device and kept on logout — Drift v4 `preferences`), account (email, sign out, **sign out everywhere** — new `POST /auth/logout-all`), about/version (package_info_plus)
+- [x] Trash: list (roots), restore (with the Inbox notice), delete permanently (confirm) — web copy
+- [x] Images in notes: pick from camera/gallery (image_picker, downscaled to 2560 px) → `POST /uploads/sign` → direct upload to Cloudinary (Dio multipart) → `POST /attachments`; alt-text prompt; hidden when `/uploads/config` says off; same image node attrs as the web
+- [x] Image display with `f_auto,q_auto` + `w_…,c_limit` for the phone's width (360-px steps) and `cacheWidth`; in-memory image cache only (no disk cache yet)
 
 **Exit criteria:** an image added on mobile shows on web and vice versa; orphan rules unchanged (server-side).
+_Status 2026-11-04: node shape matches the web fixture and the upload flow is tested against fakes; needs a live Cloudinary account and a device to check both directions._
 
 ---
 

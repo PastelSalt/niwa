@@ -11,6 +11,10 @@ typedef Json = Map<String, dynamic>;
 class FakeWorkspace {
   final items = <String, Json>{};
 
+  /// Whether `/uploads/config` reports Cloudinary as configured.
+  bool uploadsEnabled = true;
+  final attachments = <Json>[];
+
   /// Capture clientId → item id.
   final captured = <String, String>{};
   int _ids = 0;
@@ -251,6 +255,55 @@ class FakeWorkspace {
                 _summary(i),
           ],
         });
+      case ('GET', ['trash']):
+        // Deleted roots only (their descendants come back with them).
+        return _json(200, {
+          'items': [
+            for (final i in items.values)
+              if (i['deletedAt'] != null &&
+                  (i['parentId'] == null ||
+                      items[i['parentId']]?['deletedAt'] == null))
+                _summary(i),
+          ],
+        });
+      case ('DELETE', ['items', final id, 'permanent']):
+        final batch = [id, ..._descendants(id)]..forEach(items.remove);
+        return _json(200, {'ok': true, 'affected': batch.length});
+      case ('GET', ['uploads', 'config']):
+        return _json(200, {
+          'enabled': uploadsEnabled,
+          'maxBytes': 10485760,
+          'allowedMime': ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+        });
+      case ('POST', ['uploads', 'sign']):
+        if (!uploadsEnabled) {
+          return _error(503, 'NOT_CONFIGURED', 'Image uploads are off.');
+        }
+        return _json(200, {
+          'cloudName': 'demo',
+          'apiKey': '123456789012345',
+          'timestamp': 1793700000,
+          'signature': 'sig-${body['itemId']}',
+          'folder': 'niwa/ws',
+          'publicId': 'img${attachments.length + 1}',
+          'tags': 'niwa-pending',
+          'allowedFormats': 'png,jpg,webp,gif',
+          'uploadUrl': 'https://api.cloudinary.com/v1_1/demo/image/upload',
+        });
+      case ('POST', ['attachments']):
+        final a = {
+          'id': 'att${attachments.length + 1}',
+          'itemId': body['itemId'],
+          // Cloudinary's public_id already includes the folder.
+          'cloudinaryPublicId': body['publicId'],
+          'secureUrl':
+              'https://res.cloudinary.com/demo/image/upload/v1/${body['publicId']}.png',
+          'mime': 'image/png',
+          'size': 2048,
+          'createdAt': _ts(),
+        };
+        attachments.add(a);
+        return _json(201, {'attachment': a});
       case ('GET', ['inbox']):
         // Newest first, like the backend.
         return _json(200, {

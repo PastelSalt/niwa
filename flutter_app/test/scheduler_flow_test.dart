@@ -288,37 +288,42 @@ void main() {
     );
   });
 
-  test('schema v1 → v3 keeps the outbox, adds reminders and details', () async {
-    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-    final dir = Directory.systemTemp.createTempSync('niwa_db');
-    addTearDown(() => dir.deleteSync(recursive: true));
-    final file = File('${dir.path}/niwa.sqlite');
+  test(
+    'schema v1 → v4 keeps the outbox; adds reminders, details, prefs',
+    () async {
+      driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+      final dir = Directory.systemTemp.createTempSync('niwa_db');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final file = File('${dir.path}/niwa.sqlite');
 
-    // A database exactly as MA5 (schema v1) left it, with a pending capture.
-    sqlite3.open(file.path)
-      ..execute(
-        'CREATE TABLE cache_entries (key TEXT NOT NULL PRIMARY KEY, '
-        'json TEXT NOT NULL, saved_at INTEGER NOT NULL);',
-      )
-      ..execute(
-        'CREATE TABLE outbox (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, '
-        'client_id TEXT NOT NULL UNIQUE, title TEXT NOT NULL, '
-        'type TEXT NOT NULL, created_at INTEGER NOT NULL, '
-        'attempts INTEGER NOT NULL DEFAULT 0, failed_message TEXT NULL);',
-      )
-      ..execute(
-        'INSERT INTO outbox (client_id, title, type, created_at) '
-        "VALUES ('c1', 'Kept across the upgrade', 'idea', 0);",
-      )
-      ..execute('PRAGMA user_version = 1;')
-      ..close();
+      // A database exactly as MA5 (schema v1) left it, with a pending capture.
+      sqlite3.open(file.path)
+        ..execute(
+          'CREATE TABLE cache_entries (key TEXT NOT NULL PRIMARY KEY, '
+          'json TEXT NOT NULL, saved_at INTEGER NOT NULL);',
+        )
+        ..execute(
+          'CREATE TABLE outbox (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, '
+          'client_id TEXT NOT NULL UNIQUE, title TEXT NOT NULL, '
+          'type TEXT NOT NULL, created_at INTEGER NOT NULL, '
+          'attempts INTEGER NOT NULL DEFAULT 0, failed_message TEXT NULL);',
+        )
+        ..execute(
+          'INSERT INTO outbox (client_id, title, type, created_at) '
+          "VALUES ('c1', 'Kept across the upgrade', 'idea', 0);",
+        )
+        ..execute('PRAGMA user_version = 1;')
+        ..close();
 
-    final db = AppDatabase(NativeDatabase(file));
-    addTearDown(db.close);
-    final kept = (await db.outboxEntries()).single;
-    expect(kept.title, 'Kept across the upgrade');
-    expect((kept.body, kept.suggestedParentId), (null, null)); // v3 columns
-    await db.setReminder('entry:e1', 10);
-    expect(await db.allReminders(), {'entry:e1': 10});
-  });
+      final db = AppDatabase(NativeDatabase(file));
+      addTearDown(db.close);
+      final kept = (await db.outboxEntries()).single;
+      expect(kept.title, 'Kept across the upgrade');
+      expect((kept.body, kept.suggestedParentId), (null, null)); // v3 columns
+      await db.setReminder('entry:e1', 10);
+      expect(await db.allReminders(), {'entry:e1': 10});
+      await db.setPreference('themeMode', 'dark'); // v4 table exists
+      expect(await db.preference('themeMode'), 'dark');
+    },
+  );
 }

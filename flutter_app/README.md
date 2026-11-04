@@ -13,7 +13,8 @@ Scaffolded (plan A-02 MA1.P1): Android + iOS, bundle id `works.moeko.niwa`, Andr
 CI in `.github/workflows/flutter.yml` (MA1.P4). MA2–MA5 are written: API client, session, login/register, the app shell,
 the item tree (Knowledge and Actionable lenses, item view, fields, structure changes, Focus), and offline
 support (on-device cache, offline banner, capture queue), the notes editor (MA6), the Scheduler (MA7) and
-Inbox filing, capture details and search (MA8). Next: Settings, Trash and images (MA9).
+Inbox filing, capture details and search (MA8), and Settings, Trash and note images (MA9).
+Next: quality pass (MA10), then release (MA11).
 
 ## Layout
 

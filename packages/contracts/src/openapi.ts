@@ -107,6 +107,11 @@ export function buildRegistry(): OpenAPIRegistry {
     body: auth.RefreshInput,
     response: null,
   });
+  add('post', '/auth/logout-all', {
+    tag: 'Auth',
+    summary: 'Sign out everywhere: revoke every refresh session of the current user',
+    response: null,
+  });
   add('get', '/auth/me', { tag: 'Auth', summary: 'Current user', response: auth.MeResponse });
 
   // ---- Workspace ----

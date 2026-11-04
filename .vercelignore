@@ -1,0 +1,11 @@
+# Vercel CLI uploads (scripts/deploy/vercel.sh): only what the web build needs. Workspace members
+# (backend/, desktop_app/) stay, so pnpm's frozen lockfile still matches.
+flutter_app/
+docs/
+scripts/
+**/node_modules/
+**/dist/
+web_app/test-results/
+web_app/playwright-report/
+*.md
+!web_app/**/*.md

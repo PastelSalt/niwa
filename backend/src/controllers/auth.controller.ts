@@ -86,9 +86,16 @@ export function createAuthController(config: AppConfig, auth: AuthService) {
     res.status(204).end();
   };
 
+  /** Revokes every session of the signed-in user; clears this browser's cookie too. */
+  const logoutAll: RequestHandler = async (req, res) => {
+    await auth.logoutAll(authOf(res.locals).userId);
+    if (clientOf(req) === 'web') res.clearCookie(REFRESH_COOKIE, cookieOptions());
+    res.status(204).end();
+  };
+
   const me: RequestHandler = async (_req, res) => {
     res.json({ user: await auth.me(authOf(res.locals).userId) });
   };
 
-  return { register, login, refresh, logout, me };
+  return { register, login, refresh, logout, logoutAll, me };
 }

@@ -154,6 +154,32 @@ describe('refresh (web cookie)', () => {
   });
 });
 
+describe('sign out everywhere', () => {
+  it('revokes the session on every device; access tokens just run out', async () => {
+    const app = buildApp();
+    const reg = await request(app).post('/api/v1/auth/register').send(creds).expect(201);
+    const webCookie = refreshCookie(reg.headers['set-cookie'])!;
+    const phone = (
+      await request(app).post('/api/v1/auth/login').set('x-client', 'mobile').send(creds).expect(200)
+    ).body as { accessToken: string; refreshToken: string };
+
+    await request(app).post('/api/v1/auth/logout-all').expect(401); // needs a signed-in user
+    const out = await request(app)
+      .post('/api/v1/auth/logout-all')
+      .set('Authorization', `Bearer ${phone.accessToken}`)
+      .set('x-client', 'mobile')
+      .expect(204);
+    expect(out.headers['set-cookie']).toBeUndefined();
+
+    await request(app).post('/api/v1/auth/refresh').set(csrf).set('Cookie', webCookie).expect(401);
+    await request(app)
+      .post('/api/v1/auth/refresh')
+      .set('x-client', 'mobile')
+      .send({ refreshToken: phone.refreshToken })
+      .expect(401);
+  });
+});
+
 describe('refresh (native client)', () => {
   it('returns and accepts the refresh token in the body, no cookie', async () => {
     const app = buildApp();

@@ -30,6 +30,8 @@ const refreshSessionSchema = new Schema<RefreshSessionDoc>(
 
 // Mongo TTL: drop rows once expired.
 refreshSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+// "Sign out everywhere" revokes by user.
+refreshSessionSchema.index({ userId: 1, revokedAt: 1 });
 
 export const RefreshSessionModel = model<RefreshSessionDoc>(
   'RefreshSession',
