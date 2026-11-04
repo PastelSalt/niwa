@@ -53,3 +53,6 @@ backups/
 
 # Deploy secrets (scripts/deploy/deploy.env.example is the template)
 scripts/deploy/deploy.env
+
+# Visual audit screenshots (web_app/scripts/visual-audit.mjs)
+web_app/.visual-audit/

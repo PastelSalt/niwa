@@ -14,6 +14,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { Link as RouterLink } from 'react-router';
+import { Page } from '../../components/Page.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { useNotify } from '../../components/Notifier.tsx';
@@ -38,7 +39,7 @@ export function ReviewQueue() {
   const { data, isLoading, error } = useReview(today);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 860 }}>
+    <Page width="list">
       <Typography variant="h5" component="h2" sx={{ mb: 0.5 }}>
         Review queue
       </Typography>
@@ -63,7 +64,7 @@ export function ReviewQueue() {
           </List>
         </Paper>
       )}
-    </Box>
+    </Page>
   );
 }
 

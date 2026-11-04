@@ -16,7 +16,7 @@ export function LegalPage({
   useDocumentTitle(`${title} — ${site.name}`);
   return (
     <Container maxWidth="md" sx={{ py: { xs: 5, md: 8 } }}>
-      <Typography variant="h3" component="h1" sx={{ fontSize: { xs: '2rem', md: '2.5rem' } }}>
+      <Typography variant="h1" component="h1">
         {title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 4 }}>
@@ -25,11 +25,11 @@ export function LegalPage({
       <Typography
         component="div"
         sx={{
-          maxWidth: 720,
+          maxWidth: (t) => t.niwa.width.reading,
           '& h2': { typography: 'h6', mt: 4, mb: 1 },
           '& p, & li': { color: 'text.secondary', lineHeight: 1.7 },
           '& ul': { pl: 3 },
-          '& code': { fontFamily: 'monospace', fontSize: '0.9em' },
+          '& code': { fontFamily: (t) => t.niwa.monoFamily, fontSize: '0.9em' },
         }}
       >
         {children}

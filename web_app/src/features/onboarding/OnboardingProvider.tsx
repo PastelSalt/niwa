@@ -184,7 +184,7 @@ function TourOverlay({
       onKeyDown={(e) => {
         if (e.key === 'Escape') onSkip();
       }}
-      sx={{ p: 2.5, maxWidth: 340, m: 1.5, border: 1, borderColor: 'divider' }}
+      sx={{ p: 2.5, maxWidth: (t) => t.niwa.width.card, m: 1.5, border: 1, borderColor: 'divider' }}
     >
       <Typography variant="caption" color="text.secondary" aria-live="polite">
         Step {index + 1} of {TOUR_STEPS.length}

@@ -25,6 +25,7 @@ import { useTheme } from '@mui/material/styles';
 import { ApiError } from '@niwa/api-client';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router';
+import { Page } from '../../components/Page.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { useNotify } from '../../components/Notifier.tsx';
@@ -66,11 +67,11 @@ export function ItemView({ id }: { id: string }) {
 
   if (isLoading) {
     return (
-      <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 860 }}>
+      <Page width="reading">
         <Skeleton width={180} />
         <Skeleton width="60%" height={48} />
         <Skeleton width="40%" />
-      </Box>
+      </Page>
     );
   }
   if (error instanceof ApiError && error.status === 404) {
@@ -106,7 +107,7 @@ export function ItemView({ id }: { id: string }) {
     );
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 860 }}>
+    <Page width="reading">
       <Breadcrumbs aria-label="Path" sx={{ mb: 1, '& ol': { flexWrap: 'wrap' } }}>
         {path.map((a) => (
           <Link
@@ -129,9 +130,10 @@ export function ItemView({ id }: { id: string }) {
         <ItemTypeIcon
           type={item.type}
           completed={item.status === 'completed'}
-          sx={{ fontSize: 32, mt: 0.75 }}
+          fontSize="feature"
+          sx={{ mt: 0.5 }}
         />
-        <EditableTitle value={item.title} onCommit={rename} sx={{ typography: 'h4', fontWeight: 600 }} />
+        <EditableTitle value={item.title} onCommit={rename} sx={{ typography: 'h2' }} />
       </Stack>
 
       <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', mt: 1.5, mb: 4 }}>
@@ -263,6 +265,6 @@ export function ItemView({ id }: { id: string }) {
       <Box sx={{ mt: 4 }}>
         <LinksPanel itemId={item.id} />
       </Box>
-    </Box>
+    </Page>
   );
 }

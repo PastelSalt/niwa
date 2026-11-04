@@ -176,7 +176,7 @@ export function MonthView({
                           py: 0.125,
                           mb: 0.25,
                           borderRadius: 0.75,
-                          fontSize: 12,
+                          typography: 'caption',
                           lineHeight: 1.5,
                           textAlign: 'left',
                           ...(e.isAllDay
@@ -201,7 +201,9 @@ export function MonthView({
                         >
                           {l.title}
                         </Box>
-                        {e.seriesId && <RepeatRounded sx={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }} />}
+                        {e.seriesId && (
+                          <RepeatRounded sx={{ fontSize: '1em', opacity: 0.7, flexShrink: 0 }} />
+                        )}
                       </ButtonBase>
                     );
                   })}
@@ -209,7 +211,7 @@ export function MonthView({
                     <ButtonBase
                       onClick={() => onShowDay(day)}
                       sx={{
-                        fontSize: 12,
+                        typography: 'caption',
                         color: 'text.secondary',
                         px: 0.5,
                         borderRadius: 0.75,

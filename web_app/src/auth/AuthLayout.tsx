@@ -25,7 +25,7 @@ export function AuthLayout({
         py: 6,
       }}
     >
-      <Box sx={{ width: '100%', maxWidth: 400 }}>
+      <Box sx={{ width: '100%', maxWidth: (t) => t.niwa.width.narrow }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Wordmark size="large" />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>

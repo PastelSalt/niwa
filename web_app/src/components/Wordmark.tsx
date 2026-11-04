@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 /** `niwa` lowercase wordmark with the optional 庭 (specs §1). */
+// Brand mark sizes (not text roles), so they stay here rather than in the type scale.
 export function Wordmark({ size = 'medium' }: { size?: 'small' | 'medium' | 'large' }) {
   const fontSize = { small: 18, medium: 22, large: 34 }[size];
   return (

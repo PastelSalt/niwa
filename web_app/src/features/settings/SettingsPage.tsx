@@ -14,6 +14,7 @@ import Typography from '@mui/material/Typography';
 import { useColorScheme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { Navigate, Link as RouterLink, useNavigate, useParams } from 'react-router';
+import { Page } from '../../components/Page.tsx';
 import { useAuth } from '../../auth/AuthProvider.tsx';
 import { LEGAL_LINKS } from '../../public/PublicLayout.tsx';
 import { site } from '../../public/site.ts';
@@ -195,7 +196,7 @@ export function SettingsPage() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 760 }}>
+    <Page width="form">
       <Tabs
         value={current}
         onChange={(_, key: SectionKey) => navigate(`/settings/${key}`)}
@@ -214,6 +215,6 @@ export function SettingsPage() {
       </Tabs>
       {body[current]}
       <About />
-    </Box>
+    </Page>
   );
 }

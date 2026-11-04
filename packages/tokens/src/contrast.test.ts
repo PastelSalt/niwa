@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { palettes, typeColors, type ColorMode } from './index.ts';
+import {
+  palettes,
+  priorityColors,
+  statusColors,
+  themes,
+  typeColors,
+  typeScaleFor,
+  fonts,
+  type ColorMode,
+  type FontId,
+} from './index.ts';
 
 /** WCAG 2.x relative luminance / contrast ratio. */
 function luminance(hex: string): number {
@@ -52,5 +62,31 @@ describe.each(modes)('%s palette', (mode) => {
     for (const c of fills) {
       expect(Math.max(contrast('#FFFFFF', c), contrast('#1A1D1B', c))).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+describe.each(Object.entries(themes))('theme %s', (_id, theme) => {
+  it.each(modes)('status and priority roles reach 3:1 as dots, icons and chip borders (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const bg of [p.background, p.surface]) {
+      for (const c of [...Object.values(statusColors(p)), ...Object.values(priorityColors(p))])
+        expect(contrast(c, bg)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it.each(modes)('text stays AA on every surface (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const bg of [p.background, p.surface]) {
+      expect(contrast(p.textPrimary, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.textSecondary, bg)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+describe('type scale', () => {
+  it.each(Object.keys(fonts) as FontId[])('%s: nothing readable under 12 px; body is 15 px', (font) => {
+    const scale = typeScaleFor(font);
+    expect(scale.body.size).toBe(15);
+    for (const step of Object.values(scale)) expect(step.size).toBeGreaterThanOrEqual(12);
   });
 });

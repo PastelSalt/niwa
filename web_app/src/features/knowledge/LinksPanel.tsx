@@ -127,7 +127,7 @@ export function LinksPanel({ itemId }: { itemId: string }) {
             );
           }}
           renderInput={(params) => <TextField {...params} label="Add related item" />}
-          sx={{ maxWidth: 420 }}
+          sx={{ maxWidth: (t) => t.niwa.width.narrow }}
         />
       </Box>
 

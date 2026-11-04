@@ -159,7 +159,7 @@ function CaptureDialog({ onClose }: { onClose: () => void }) {
             >
               {TYPES.map((t) => (
                 <ToggleButton key={t} value={t} aria-label={TYPE_LABEL[t]} sx={{ gap: 0.5, px: 1 }}>
-                  <ItemTypeIcon type={t} sx={{ fontSize: 16 }} />
+                  <ItemTypeIcon type={t} fontSize="inline" />
                   {TYPE_LABEL[t]}
                 </ToggleButton>
               ))}

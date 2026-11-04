@@ -70,7 +70,7 @@ export function NavRail() {
               })}
             >
               <DestIcon d={d} />
-              <Typography component="span" sx={{ fontSize: 11, fontWeight: 600 }}>
+              <Typography component="span" variant="caption" sx={{ fontWeight: 600 }}>
                 {d.label}
               </Typography>
             </ButtonBase>

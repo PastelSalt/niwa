@@ -21,6 +21,7 @@ import type { ItemNature } from '@niwa/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router';
+import { Page } from '../../components/Page.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useAuth } from '../../auth/AuthProvider.tsx';
 import { EmptyState } from '../../components/EmptyState.tsx';
@@ -119,7 +120,7 @@ export function SearchPage() {
   const terms = q.split(/\s+/);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 900 }}>
+    <Page width="list">
       <TextField
         autoFocus
         value={draft}
@@ -235,6 +236,6 @@ export function SearchPage() {
           </Paper>
         </>
       )}
-    </Box>
+    </Page>
   );
 }

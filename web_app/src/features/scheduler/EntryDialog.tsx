@@ -308,7 +308,7 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
                     borderRadius: '50%',
                     border: 2,
                     borderColor: f.color === null ? 'text.primary' : 'divider',
-                    fontSize: 11,
+                    typography: 'caption',
                   }}
                 >
                   A
@@ -332,7 +332,7 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
                       outlineColor: 'text.primary',
                     }}
                   >
-                    {f.color === c.hex && <CheckRounded sx={{ fontSize: 16 }} />}
+                    {f.color === c.hex && <CheckRounded fontSize="inline" />}
                   </ButtonBase>
                 </Tooltip>
               ))}

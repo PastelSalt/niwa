@@ -1,10 +1,10 @@
 import AutoStoriesOutlined from '@mui/icons-material/AutoStoriesOutlined';
 import EventRepeatOutlined from '@mui/icons-material/EventRepeatOutlined';
-import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { Link as RouterLink } from 'react-router';
+import { Page } from '../../components/Page.tsx';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { todayLocal } from '../items/itemMeta.tsx';
 import { useReview } from './queries.ts';
@@ -13,7 +13,7 @@ import { useReview } from './queries.ts';
 export function KnowledgeHome() {
   const { data: due = [] } = useReview(todayLocal());
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 860 }}>
+    <Page width="list">
       {due.length > 0 && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <EventRepeatOutlined color="secondary" />
@@ -35,6 +35,6 @@ export function KnowledgeHome() {
           </Button>
         }
       />
-    </Box>
+    </Page>
   );
 }

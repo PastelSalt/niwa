@@ -7,6 +7,7 @@ import { useTheme } from '@mui/material/styles';
 import type { ItemNature } from '@niwa/contracts';
 import { Suspense, useCallback, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
+import { useUserAppearance } from '../app/appearance.tsx';
 import { NotifierProvider } from '../components/Notifier.tsx';
 import { CaptureProvider, useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
 import { ItemDialogsProvider } from '../features/items/ItemDialogs.tsx';
@@ -24,6 +25,8 @@ import { useGlobalShortcuts } from './useGlobalShortcuts.ts';
  * ≥ lg everything docked · md–lg detail as overlay · < md bottom nav; the tree becomes the main view.
  */
 export function AppShell() {
+  // The user's theme and font apply inside the app only; public pages keep the defaults (B-02 V1.P4).
+  useUserAppearance();
   return (
     <NotifierProvider>
       {/* Signed-in screens are private; React hoists this into <head>. robots.txt disallows them too. */}

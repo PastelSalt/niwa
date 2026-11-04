@@ -1,13 +1,12 @@
 import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider } from '@mui/material/styles';
 import { createApiClient } from '@niwa/api-client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { vi } from 'vitest';
+import { AppearanceProvider } from '../app/appearance.tsx';
 import { routes } from '../app/router.tsx';
-import { theme } from '../app/theme.ts';
 import { AuthProvider } from '../auth/AuthProvider.tsx';
 
 export const testUser = {
@@ -71,14 +70,14 @@ export function renderApp(path: string, handlers: Record<string, Handler> = {}) 
   const router = createMemoryRouter(routes, { initialEntries: [path] });
 
   const utils = render(
-    <ThemeProvider theme={theme} defaultMode="light" noSsr>
+    <AppearanceProvider defaultMode="light">
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
         <AuthProvider api={api}>
           <RouterProvider router={router} />
         </AuthProvider>
       </QueryClientProvider>
-    </ThemeProvider>,
+    </AppearanceProvider>,
   );
   return { ...utils, router, fetch, api, unhandled };
 }

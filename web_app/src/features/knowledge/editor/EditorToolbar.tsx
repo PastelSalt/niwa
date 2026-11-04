@@ -78,7 +78,7 @@ export function EditorToolbar({
   );
   const chain = () => editor.chain().focus();
   const heading = (level: 1 | 2 | 3) => (
-    <Typography component="span" sx={{ fontSize: 13, fontWeight: 700, lineHeight: 1 }}>
+    <Typography component="span" sx={{ typography: 'body2', fontWeight: 700, lineHeight: 1 }}>
       H{level}
     </Typography>
   );

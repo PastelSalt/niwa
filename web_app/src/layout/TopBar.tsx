@@ -66,6 +66,7 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
           role="search"
           data-tour="search"
           onSubmit={submitSearch}
+          // A control's width, not a content width.
           sx={{ flex: 1, maxWidth: 480, mx: 'auto' }}
         >
           <InputBase
@@ -124,7 +125,7 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
                 height: 30,
                 bgcolor: 'secondary.main',
                 color: 'secondary.contrastText',
-                fontSize: 14,
+                typography: 'button',
               }}
             >
               {user?.email.charAt(0).toUpperCase()}
@@ -182,10 +183,11 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
   );
 }
 
+// Strings, not numbers: in `sx`, `width: 1` means 100%.
 const visuallyHidden = {
   position: 'absolute',
-  width: 1,
-  height: 1,
+  width: '1px',
+  height: '1px',
   overflow: 'hidden',
   clip: 'rect(0 0 0 0)',
   whiteSpace: 'nowrap',

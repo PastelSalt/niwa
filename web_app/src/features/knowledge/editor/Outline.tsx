@@ -102,7 +102,7 @@ export function Outline({ editor, onPromote, onCopyLink }: OutlineProps) {
                 aria-label={`Actions for heading ${h.text}`}
                 onClick={(e) => setMenu({ anchor: e.currentTarget, heading: h })}
               >
-                <MoreHorizRounded sx={{ fontSize: 16 }} />
+                <MoreHorizRounded fontSize="inline" />
               </IconButton>
             </Box>
           ))}

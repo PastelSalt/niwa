@@ -322,7 +322,7 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
           }}
           sx={{ p: 0.25 }}
         >
-          <AddRounded sx={{ fontSize: 16 }} />
+          <AddRounded fontSize="inline" />
         </IconButton>
         <IconButton
           size="small"
@@ -333,7 +333,7 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
           }}
           sx={{ p: 0.25 }}
         >
-          <MoreHorizRounded sx={{ fontSize: 16 }} />
+          <MoreHorizRounded fontSize="inline" />
         </IconButton>
       </Box>
       {menuAnchor && (

@@ -1,39 +1,32 @@
+import ExpandMoreRounded from '@mui/icons-material/ExpandMoreRounded';
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
-import Chip from '@mui/material/Chip';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
-import Paper from '@mui/material/Paper';
+import ButtonBase from '@mui/material/ButtonBase';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import type { FocusResponse, ItemSummary } from '@niwa/contracts';
 import { useMemo, useState } from 'react';
-import { Link as RouterLink } from 'react-router';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { useNotify } from '../../components/Notifier.tsx';
-import { formatDay, PRIORITY_LABEL, STATUS_LABEL, todayLocal } from '../items/itemMeta.tsx';
+import { Page } from '../../components/Page.tsx';
+import { usePersistentState } from '../../lib/usePersistentState.ts';
+import { DueChip, PriorityChip, StatusChip } from '../items/chips.tsx';
+import { formatDay, todayLocal } from '../items/itemMeta.tsx';
+import { ItemRow, ItemRowList } from '../items/ItemRow.tsx';
 import { useFocus, useTree, useUpdateItem } from '../items/queries.ts';
 import { ancestorsOf, buildTree, type TreeModel } from '../items/treeModel.ts';
+import { dedupeFocus, FOCUS_SECTIONS } from './focusSections.ts';
 
-const SECTIONS: { key: keyof FocusResponse; title: string; empty: string }[] = [
-  { key: 'overdue', title: 'Overdue', empty: 'Nothing overdue.' },
-  { key: 'inProgress', title: 'In progress', empty: 'Nothing in progress.' },
-  { key: 'highPriority', title: 'High priority', empty: 'No high-priority work open.' },
-  { key: 'upcoming', title: 'Upcoming (7 days)', empty: 'Nothing due this week.' },
-  { key: 'recentlyUpdated', title: 'Recently updated', empty: 'No recent changes.' },
-];
-
-/** Cross-project focus — specs §2.1 #3, §4.2. */
+/** Cross-project focus — specs §2.1 #3, §4.2. Each task once, in its most urgent section (B-02 V3). */
 export function FocusView() {
   const today = todayLocal();
-  const { data, isLoading, error } = useFocus(today);
+  const { data: raw, isLoading, error } = useFocus(today);
   const { data: treeItems } = useTree();
   const model = useMemo(() => buildTree(treeItems ?? []), [treeItems]);
+  const data = useMemo(() => (raw ? dedupeFocus(raw) : undefined), [raw]);
+  const [collapsed, setCollapsed] = usePersistentState<string[]>('niwa.focus.collapsed', []);
 
   if (error)
     return (
@@ -45,7 +38,7 @@ export function FocusView() {
   const empty = data && Object.values(data).every((list) => list.length === 0);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 960 }}>
+    <Page width="list">
       <Typography variant="h5" component="h2" sx={{ mb: 0.5 }}>
         Focus
       </Typography>
@@ -65,37 +58,61 @@ export function FocusView() {
 
       {data &&
         !empty &&
-        SECTIONS.map((s) => (
-          <Box key={s.key} component="section" aria-label={s.title} sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" component="h3" sx={{ mb: 1 }}>
-              {s.title}{' '}
-              <Typography component="span" variant="caption" color="text.secondary">
-                {data[s.key].length}
+        FOCUS_SECTIONS.filter((s) => data[s.key].length > 0).map((s) => {
+          const open = !collapsed.includes(s.key);
+          const listId = `focus-${s.key}`;
+          return (
+            <Box key={s.key} component="section" aria-label={s.title} sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" component="h3" sx={{ mb: 1 }}>
+                <ButtonBase
+                  aria-expanded={open}
+                  aria-controls={listId}
+                  onClick={() => setCollapsed((c) => (open ? [...c, s.key] : c.filter((k) => k !== s.key)))}
+                  sx={{ gap: 0.5, borderRadius: 1, pr: 1, typography: 'subtitle2' }}
+                >
+                  <ExpandMoreRounded
+                    fontSize="small"
+                    sx={(t) => ({
+                      transform: open ? 'none' : 'rotate(-90deg)',
+                      transition: t.transitions.create('transform'),
+                    })}
+                  />
+                  {s.title}
+                  <Typography component="span" variant="caption" color="text.secondary">
+                    {data[s.key].length}
+                  </Typography>
+                </ButtonBase>
               </Typography>
-            </Typography>
-            {data[s.key].length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                {s.empty}
-              </Typography>
-            ) : (
-              <Paper variant="outlined">
-                <List dense disablePadding>
-                  {data[s.key].map((item) => (
-                    <FocusRow key={item.id} item={item} model={model} today={today} />
-                  ))}
-                </List>
-              </Paper>
-            )}
-          </Box>
-        ))}
-    </Box>
+              {open && (
+                <Box id={listId}>
+                  <ItemRowList label={s.title}>
+                    {data[s.key].map((item) => (
+                      <FocusRow key={item.id} item={item} model={model} today={today} section={s.key} />
+                    ))}
+                  </ItemRowList>
+                </Box>
+              )}
+            </Box>
+          );
+        })}
+    </Page>
   );
 }
 
-function FocusRow({ item, model, today }: { item: ItemSummary; model: TreeModel; today: string }) {
+function FocusRow({
+  item,
+  model,
+  today,
+  section,
+}: {
+  item: ItemSummary;
+  model: TreeModel;
+  today: string;
+  section: keyof FocusResponse;
+}) {
   const update = useUpdateItem();
   const notify = useNotify();
-  // Optimistic: the checkbox flips immediately; the server result (or an error) settles it.
+  // Optimistic: the control flips immediately; the server result (or an error) settles it.
   const [optimistic, setOptimistic] = useState<boolean | null>(null);
   const serverDone = item.status === 'completed';
   // Hold the optimistic value until the refreshed list agrees (avoids a flicker back).
@@ -104,7 +121,6 @@ function FocusRow({ item, model, today }: { item: ItemSummary; model: TreeModel;
   const path = ancestorsOf(model, item.id)
     .map((a) => a.title)
     .join(' › ');
-  const overdue = !!item.dueAt && item.dueAt < today && !done;
 
   const toggle = () => {
     const next = !done;
@@ -122,44 +138,22 @@ function FocusRow({ item, model, today }: { item: ItemSummary; model: TreeModel;
   };
 
   return (
-    <ListItem
-      disablePadding
-      divider
-      secondaryAction={
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {item.priority !== 'none' && item.priority !== 'low' && (
-            <Chip size="small" variant="outlined" label={PRIORITY_LABEL[item.priority]} />
+    <ItemRow
+      item={item}
+      to={`/actionable/${item.id}`}
+      done={done}
+      completion={{ done, onToggle: toggle }}
+      meta={path || 'Top level'}
+      chips={
+        <>
+          {/* The section already says "In progress". */}
+          {item.status !== 'not_started' && !done && section !== 'inProgress' && (
+            <StatusChip status={item.status} />
           )}
-          {item.dueAt && (
-            <Chip
-              size="small"
-              variant="outlined"
-              color={overdue ? 'error' : 'default'}
-              label={formatDay(item.dueAt)}
-            />
-          )}
-        </Box>
+          {item.priority !== 'low' && <PriorityChip priority={item.priority} />}
+          {item.dueAt && <DueChip due={item.dueAt} today={today} done={done} />}
+        </>
       }
-    >
-      <Checkbox
-        edge="start"
-        checked={done}
-        onChange={toggle}
-        sx={{ ml: 1 }}
-        slotProps={{ input: { 'aria-label': done ? `Reopen ${item.title}` : `Complete ${item.title}` } }}
-      />
-      <ListItemButton component={RouterLink} to={`/actionable/${item.id}`} sx={{ pr: 18 }}>
-        <ListItemText
-          primary={item.title}
-          secondary={[path, item.status !== 'not_started' ? STATUS_LABEL[item.status] : null]
-            .filter(Boolean)
-            .join(' · ')}
-          slotProps={{
-            primary: { sx: { textDecoration: done ? 'line-through' : 'none' } },
-            secondary: { noWrap: true },
-          }}
-        />
-      </ListItemButton>
-    </ListItem>
+    />
   );
 }

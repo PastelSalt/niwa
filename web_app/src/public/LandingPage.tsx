@@ -53,11 +53,15 @@ function Section({
   return (
     <Box component="section" aria-labelledby={id} sx={{ py: { xs: 6, md: 9 } }}>
       <Container maxWidth="lg">
-        <Typography id={id} variant="h4" component="h2" sx={{ maxWidth: 640 }}>
+        <Typography id={id} variant="h2" component="h2" sx={{ maxWidth: (t) => t.niwa.width.reading }}>
           {title}
         </Typography>
         {intro && (
-          <Typography color="text.secondary" sx={{ mt: 1.5, maxWidth: 640, fontSize: '1.05rem' }}>
+          <Typography
+            variant="lead"
+            color="text.secondary"
+            sx={{ mt: 1.5, maxWidth: (t) => t.niwa.width.reading }}
+          >
             {intro}
           </Typography>
         )}
@@ -81,15 +85,14 @@ function Hero() {
           }}
         >
           <Box>
-            <Typography
-              id="hero-title"
-              variant="h2"
-              component="h1"
-              sx={{ fontSize: { xs: '2.25rem', md: '3.25rem' }, letterSpacing: '-0.02em', lineHeight: 1.1 }}
-            >
+            <Typography id="hero-title" variant="h1" component="h1">
               {site.tagline}
             </Typography>
-            <Typography color="text.secondary" sx={{ mt: 2.5, fontSize: '1.15rem', maxWidth: 520 }}>
+            <Typography
+              variant="lead"
+              color="text.secondary"
+              sx={{ mt: 2.5, maxWidth: (t) => t.niwa.width.narrow }}
+            >
               NIWA keeps your notes, ideas, tasks and schedule in one tree. Plant an idea, grow it into a
               project, and look at it through three lenses — without copying anything between apps.
             </Typography>
@@ -169,7 +172,11 @@ function ExampleTree() {
               '&:hover': { bgcolor: 'action.hover' },
             }}
           >
-            <Box sx={{ color: r.color, display: 'flex', '& svg': { fontSize: 20 } }}>{r.icon}</Box>
+            <Box
+              sx={(t) => ({ color: r.color, display: 'flex', '& svg': { fontSize: t.niwa.iconSize.row } })}
+            >
+              {r.icon}
+            </Box>
             <Typography sx={{ flex: 1, minWidth: 0 }} noWrap>
               {r.title}
             </Typography>
@@ -192,14 +199,22 @@ function ExampleTree() {
 function FeatureCard({ icon, title, points }: { icon: ReactNode; title: string; points: string[] }) {
   return (
     <Paper variant="outlined" sx={{ p: 3, height: '100%' }}>
-      <Box sx={{ color: 'primary.main', display: 'flex', '& svg': { fontSize: 32 } }}>{icon}</Box>
+      <Box
+        sx={(t) => ({
+          color: 'primary.main',
+          display: 'flex',
+          '& svg': { fontSize: t.niwa.iconSize.feature },
+        })}
+      >
+        {icon}
+      </Box>
       <Typography variant="h6" component="h3" sx={{ mt: 1.5 }}>
         {title}
       </Typography>
       <Stack component="ul" spacing={1} sx={{ mt: 1.5, mb: 0, pl: 0, listStyle: 'none' }}>
         {points.map((p) => (
           <Stack component="li" key={p} direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
-            <CheckCircleOutlined sx={{ fontSize: 18, mt: '2px', color: 'primary.main' }} aria-hidden />
+            <CheckCircleOutlined fontSize="small" sx={{ mt: '1px', color: 'primary.main' }} aria-hidden />
             <Typography variant="body2" color="text.secondary">
               {p}
             </Typography>
@@ -334,10 +349,16 @@ function Privacy() {
   return (
     <Section id="privacy-title" title="Your garden stays yours">
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} sx={{ alignItems: 'flex-start' }}>
-        <Box sx={{ color: 'primary.main', display: 'flex', '& svg': { fontSize: 40 } }}>
+        <Box
+          sx={(t) => ({
+            color: 'primary.main',
+            display: 'flex',
+            '& svg': { fontSize: t.niwa.iconSize.emptyState },
+          })}
+        >
           <LockOutlined aria-hidden />
         </Box>
-        <Stack component="ul" spacing={1.25} sx={{ m: 0, pl: 2.5, maxWidth: 720 }}>
+        <Stack component="ul" spacing={1.25} sx={{ m: 0, pl: 2.5, maxWidth: (t) => t.niwa.width.reading }}>
           <Typography component="li">
             Every account has its own private workspace. Nothing is shared between accounts.
           </Typography>
@@ -363,7 +384,7 @@ function Maker() {
   return (
     <Box sx={{ bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider' }}>
       <Section id="maker-title" title="Made by one person">
-        <Typography color="text.secondary" sx={{ maxWidth: 640 }}>
+        <Typography color="text.secondary" sx={{ maxWidth: (t) => t.niwa.width.reading }}>
           NIWA is designed and developed solo by{' '}
           <Link href={site.makerUrl} target="_blank" rel="noopener">
             {site.maker}

@@ -231,7 +231,7 @@ export function TimeGridView({
                       px: 0.75,
                       mb: 0.25,
                       borderRadius: 0.75,
-                      fontSize: 12,
+                      typography: 'caption',
                       lineHeight: 1.6,
                       bgcolor: l.color,
                       color: l.textColor,
@@ -258,7 +258,7 @@ export function TimeGridView({
                 key={h}
                 variant="caption"
                 color="text.secondary"
-                sx={{ position: 'absolute', top: (h + 1) * HOUR_PX - 8, right: 8, fontSize: 11 }}
+                sx={{ position: 'absolute', top: (h + 1) * HOUR_PX - 8, right: 8 }}
               >
                 {formatTime(atMinutes(days[0]!, (h + 1) * 60)).replace(':00', '')}
               </Typography>
@@ -366,7 +366,7 @@ export function TimeGridView({
                           noWrap
                         >
                           {l.title}
-                          {e.seriesId && <RepeatRounded sx={{ fontSize: 12 }} />}
+                          {e.seriesId && <RepeatRounded sx={{ fontSize: '1em' }} />}
                         </Typography>
                         {/* Short blocks hide the time visually; keep it in the accessible name. */}
                         {height >= 34 ? (
