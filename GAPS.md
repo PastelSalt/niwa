@@ -35,12 +35,18 @@ devices; images (Cloudinary) confirmed working 2026-11-04. Next: nightly backup 
 - B7: tour at 200 % text; empty states linking to tour steps; the mobile tour (A-02 MA10).
 - Markdown export (also A-01 M11).
 
-**B-02 — web UI/UX refinement (current focus)** · plan ready 2026-11-04, nothing built yet
-- V0–V9: baseline script, design tokens, shell & tree, item rows, item page & editor, scheduler, states,
-  responsive pass (phone layout bugs: Focus chips overlap, Inbox titles squeezed, month view unreadable), public
-  pages, quality, **V10 personalisation** (pastel colour themes + font picker; default Garden + Fredoka, also on
-  public pages) and **V11 interactive landing page** (playground + customisation preview, no account needed).
-  All owner questions answered 2026-11-04; final theme colours to be shown for approval in V10.P2.
+**B-02 — web UI/UX refinement (current focus)** · V0–V11 built 2026-11-04 on `claude/laughing-ride-f01job`
+- **Owner:** approve the pastel theme values (Garden, Blossom, Lavender, Sky, Peach — `packages/tokens`) before
+  merge; Garden is now the default look everywhere, with pastel contained buttons.
+- **Owner:** manual pass on a real phone (V7 exit).
+- Landscape phone and 200 % browser zoom not checked (V7).
+- Axe runs not done here (the e2e needs the in-memory API, whose MongoDB binary couldn't be downloaded in this
+  environment): welcome dialog, 404, every dialog, each theme × mode, and the landing with the playground (V9,
+  V10.P5, V11.P4). The new `e2e/playground.spec.ts` passed locally against Vite alone.
+- Backend test for `PUT /account/preferences` written but not run here (same reason) — CI runs it.
+- Landing LCP on phones not re-measured (B-01 leftover 3.3 s, target 2.5 s) — needs the deployed site.
+- Image captions in notes: the editor has no caption node (alt text only) — declined for now (V4).
+- Mobile (A-02) doesn't read `preferences` yet.
 
 **Decisions only the owner can make**
 - Email provider for password reset/verification (skipped for now).

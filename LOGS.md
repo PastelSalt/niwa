@@ -926,3 +926,54 @@
     - Loaded lazily to keep the landing page fast; accessibility and tests included.
   - Open questions cleared.
 - **Verified:** docs only; nothing built.
+
+### 2026-11-04 — B-02 built: V0–V11 (web UI/UX refinement, pastel themes, interactive landing)
+- **Branch:** `claude/laughing-ride-f01job`, one commit per milestone (V0/V1/V3 rows, V5, V3, V4, V2, V6, V7, V8,
+  V10, V11, V10.P5).
+- **Environment note:** the in-memory API couldn't start here — its MongoDB binary download
+  (`fastdl.mongodb.org`) is blocked by this environment's network policy. So:
+  - the visual audit got a `--mock` mode (the playground's in-memory API serves `/api/v1` through Playwright);
+  - backend tests and the existing e2e suites were **not run here**; CI runs them. Unit tests, typecheck, lint,
+    format, `openapi:check`, `tokens:dart:check` and the build are green.
+- **V0 — baseline (before any change, worktree of `97b042d`, `--mock`, 24 screens × 1440/820/390/360 × light/dark):**
+  - overlap 44: Focus at 390/360 (chips over titles and paths); Month at 390/360 (entries colliding).
+  - squeezed 52: Inbox titles at 390/360 ("Buy pl…"); Month cells at 820; Week blocks at 820/390/360.
+  - page-scroll 16: Month and the event dialog at every width — the shared `visuallyHidden` helper used
+    `width: 1`, which `sx` reads as 100 %. Fixed (same bug in the top bar's hidden title).
+  - Script exits 1 on these, so it reproduces the audit's phone findings.
+- **V1:** type scale (15 px body, ≥ 12 px everywhere, per-font tuning, fluid title/display), content widths,
+  layout thresholds, gaps, icon sizes, motion, elevation, status/priority roles in `@niwa/tokens`;
+  `createNiwaTheme(themeId, fontId)`; literal font sizes and content widths replaced (exceptions commented:
+  wordmark sizes, the search field width, `em`-relative sizes in notes); a shared `<Page>` centres list screens.
+  Fredoka (`@fontsource-variable/fredoka` 5.3.0) is the default font.
+- **V2:** one visible name per screen; root containers get icons and weight; roomier tree rows with
+  indentation guides; row actions float over the row end so titles use the pane; tree 280 → 320 px from 1440.
+- **V3:** one `ItemRow` + quiet chips for Focus, Inbox, Inside, Search, Trash, Links, Backlinks, Recently edited;
+  Focus shows each task once (most urgent section) with collapsible headers; round completion control.
+- **V4:** header without repeated title or type chip; text-shaped editor placeholder and background preload;
+  note heading steps; pure-MUI `DateField` (Details, File dialog, entry dialog); friendly timestamps.
+- **V5:** phone month (dots + selected day's list), tinted light-mode blocks with a strong edge, calmer default
+  for uncoloured events, wrapped titles with time on hover, opens around "now", working-hours shading, weekend
+  tint, "New event"/"New time block", repeat in words, empty hint.
+- **V6:** Knowledge home lists recently edited notes; row skeletons everywhere; "Waking up the garden…" after
+  4 s on a cold server; one focus ring for all button-like controls.
+- **V7:** two panes from 720 px (tablets), Details docked from 1280 px; 44 px touch targets on touch screens.
+- **V8:** password show/hide; wordmark links home; landing screenshots retaken (`--landing-shots`).
+- **V10:** five pastel themes × light/dark (contrast-tested: 62 checks), fonts Fredoka/Inter/Atkinson Hyperlegible
+  Next/System; `preferences` on the account (contract → OpenAPI → backend → api-client); Settings › Appearance;
+  font loaded before switching; a browser's earlier light/dark is copied to the account once.
+  - Downloads measured per choice: each font fetches only its own Latin file + the 10 KB 庭 slice; System
+    fetches no text font.
+  - Theme values are a proposal: **owner approval needed before merge.**
+- **V11:** the landing hero leads into the real app in a lazy iframe (`/playground`) on an invented example
+  garden held in memory — no account, no network, nothing saved — plus a "Make it yours" panel (themes, fonts,
+  light/dark; preview only). `e2e/playground.spec.ts` passed locally against Vite: tick → leaves Focus, capture →
+  Inbox, lens switch, theme + dark preview, Start fresh, **0 `/api` requests** from the playground.
+- **After (same script, `--mock`, all 24 screens × 4 widths × 2 modes):** 0 findings (was 44 overlap, 52
+  squeezed, 16 page-scroll). Extra themes (Blossom, Lavender + Inter, Sky, Peach) on 5 screens × 1440/390 ×
+  light/dark: 0 findings.
+- **Bundle:** main chunk 596.8 KB → 572.7 KB (gzip 186.9 → 180.4 KB); playground boot 13.2 KB (gzip 5.1 KB);
+  Atkinson files 34 + 19 KB (fetched only when chosen).
+- **Tests:** web 61 → 80, tokens 8 → 62.
+- **Open:** see GAPS › B-02 (theme approval, real-phone pass, landscape/200 % zoom, axe runs in CI, phone LCP,
+  image captions declined, mobile preferences).
