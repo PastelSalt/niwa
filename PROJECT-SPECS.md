@@ -423,7 +423,7 @@ All React UI is built with **MUI only**:
 
 | Concern | Service | Notes |
 |---|---|---|
-| Source control | **GitHub** — `https://github.com/PastelSalt/niwa-site.git` | Single monorepo |
+| Source control | **GitHub** — `https://github.com/PastelSalt/niwa.git` | Single monorepo |
 | Backend API | **Render** (Web Service, Node) | Root dir `backend/`; health check `/api/v1/health` |
 | Frontend (web) | **Vercel** | Root dir `web_app/`; Vite static build |
 | Database | **MongoDB Atlas** (cloud) | Backend-only access; IP allowlist / Render egress |

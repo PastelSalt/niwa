@@ -587,3 +587,11 @@
   - A pending debounced keystroke could undo a tap on a recent search or Clear; both now cancel it.
 - **Verified:** `flutter test` 392 pass; `flutter analyze` no issues; `dart format` clean; generated code fresh; root format:check passes. No APK build or device run (owner will say when).
 - **Next:** MA9 Settings, Trash and images (persisted theme, Trash list/restore/purge, image upload from the phone).
+
+### 2026-11-04 — Repo rename, push, housekeeping
+- **Actions:**
+  - Fast-forwarded `main` to `05ed969` and pushed. GitHub repo renamed `niwa-site` → `niwa`; `origin` updated to `https://github.com/PastelSalt/niwa.git`.
+  - Docs that describe the current setup (CODEMAP, A-01, specs, OPS) now name `PastelSalt/niwa`; earlier LOGS entries keep the old name as history.
+  - Deleted the merged local branch `mobile/a02-ma0-ma8`.
+  - Graphify: workspace "Kyle's workspace" (`kyle-s-workspace-d9e680`); `PastelSalt/niwa` indexed at `05ed969`.
+- **Verified:** CI (3m39s) and the first Flutter workflow run (7m37s) passed on `05ed969`. GAPS "Flutter CI first run" closed.

@@ -29,7 +29,6 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 ### Mobile (A-02)
 - [ ] **First build + emulator run** — MA1 placeholder, MA2 register/login/logout/restart against `pnpm dev:memory`,
       and MA3 tabs have only run in widget tests; owner will say when to build.
-- [ ] **Flutter CI first run** — `.github/workflows/flutter.yml` runs on the next push touching `flutter_app/`.
 - [ ] **Shell golden tests** (MA3 exit) — font-dependent; generate on one fixed machine or in CI.
 - [ ] **Deep links on a device** — `niwa://open/…` intent filter / URL type not yet tried on Android or iOS.
 - [ ] **Bundled fonts** — Inter / Noto Sans JP not bundled; phones show the platform font.
@@ -54,4 +53,4 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 
 ## Closed
 
-_None yet._
+- [x] **Flutter CI first run** — passed on push of `05ed969` (2026-11-04): analyze, format, codegen freshness, tests and debug APK. LOGS 2026-11-04.

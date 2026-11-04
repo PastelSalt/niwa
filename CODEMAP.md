@@ -10,7 +10,7 @@
 ## 1. Repo root
 
 ```text
-niwa-site/
+niwa/   (local folder may still be named niwa-site)
 ├─ PROJECT-SPECS.md          ✅ concept source of truth
 ├─ NIWA-PLAN-A-01.md         ✅ milestones → phases → tasks (backend, web, desktop)
 ├─ NIWA-PLAN-A-02.md         ✅ mobile (Flutter) plan MA0–MA11 — current priority
@@ -45,7 +45,7 @@ niwa-site/
 └─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); scaffolded (MA1.P1), token theme (MA1.P2), contract models (MA1.P3), CI, API + session + auth screens (MA2), app shell + routes (MA3), item tree + Focus (MA4), offline cache + capture queue (MA5), notes editor (MA6), scheduler + reminders (MA7), inbox filing + search (MA8): lib/{app,core,features}
 ```
 
-Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa-site.git` (pushed).
+Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa.git` (renamed from `niwa-site` 2026-11-04; pushed).
 
 **No build step for TypeScript.** All code uses erasable-only TS syntax, so Node 24 runs `.ts` directly (backend, scripts, and workspace packages). Imports use explicit `.ts` extensions. `tsc` is typecheck-only. Frontend will be bundled by Vite.
 

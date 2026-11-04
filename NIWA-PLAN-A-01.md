@@ -4,7 +4,7 @@
 **Concept source:** `PROJECT-SPECS.md` (§ references below point there). If this plan contradicts the specs, the specs win.
 **Plan version:** A-01
 **Created:** 2026-11-03
-**Repo:** `https://github.com/PastelSalt/niwa-site.git` (remote `origin`, branch `main`)
+**Repo:** `https://github.com/PastelSalt/niwa.git` (remote `origin`, branch `main`)
 **Hosting:** backend → Render · frontend → Vercel · DB → MongoDB Atlas · images → Cloudinary · cache → Render Key Value (`PROJECT-SPECS.md` §11.8, `docs/OPS.md`)
 **Frontend rule:** pure MUI (`PROJECT-SPECS.md` §11.7)
 

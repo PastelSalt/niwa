@@ -11,7 +11,7 @@
 
 | Concern | Service | Plan / tier (start) |
 |---|---|---|
-| Source | GitHub — `PastelSalt/niwa-site` | — |
+| Source | GitHub — `PastelSalt/niwa` | — |
 | Backend API | Render Web Service (Node) | Free → Starter when cold starts annoy |
 | Cache / sessions / rate limits | Render Key Value (Redis-compatible) | Free |
 | Frontend | Vercel (Vite static build) | Hobby |

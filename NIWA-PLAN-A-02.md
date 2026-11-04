@@ -104,7 +104,7 @@ as the web app; graph and command palette are the documented exceptions (specs �
 - [x] JSON fixtures (`test/fixtures/<Schema>.json`, hand-written to the contract); round-trip tests (`fromJson` → `toJson`)
 
 ### MA1.P4 — CI
-- [x] `.github/workflows/flutter.yml` (written 2026-11-04; first run on push): on changes in `flutter_app/`, `packages/tokens/`, `packages/contracts/` → `flutter analyze`, `dart format --set-exit-if-changed`, `flutter test` (includes the contract check), tokens check, generated code up to date (`build_runner` + `git diff --exit-code`), `flutter build apk --debug`
+- [x] `.github/workflows/flutter.yml` (first run passed 2026-11-04, 7m37s, including the debug APK): on changes in `flutter_app/`, `packages/tokens/`, `packages/contracts/` → `flutter analyze`, `dart format --set-exit-if-changed`, `flutter test` (includes the contract check), tokens check, generated code up to date (`build_runner` + `git diff --exit-code`), `flutter build apk --debug`
 
 **Exit criteria:** app launches on the emulator showing a themed placeholder in light and dark; CI green.
 
