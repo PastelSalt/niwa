@@ -2,13 +2,17 @@
 
 **Role of this file:** milestone tracker for the **public face of the web app** — a landing page at `/` for
 signed-out visitors, the legal and policy pages a multi-person service needs, and a visual polish pass over the
-web UI. Product behaviour stays in `PROJECT-SPECS.md`; web/backend work in `NIWA-PLAN-A-01.md`; mobile in
+web UI — plus a skippable, replayable **onboarding tour** for new users. Product behaviour stays in `PROJECT-SPECS.md`; web/backend work in `NIWA-PLAN-A-01.md`; mobile in
 `NIWA-PLAN-A-02.md`. If this plan contradicts the specs, the specs win — except where §B0 records an owner
 decision that changes them.
 **Plan version:** B-01
 **Created:** 2026-11-04
 **Built by:** NIWA is designed and developed solo by **Moeko Works** — <https://moekoworks.vercel.app/>
 **Live web app:** <https://niwa-delta.vercel.app> (backend not deployed yet — `GAPS.md` "On hold")
+**Audience (owner decision, 2026-11-04):** NIWA is open to **everyone** — anyone can create an account. It
+started as a personal tool; it is not restricted to the owner. This supersedes the single-user stance in
+`PROJECT-SPECS.md` §1/§2.2 (each account still gets its own private workspace; there is no sharing between
+accounts). Backend work this needs is listed in `GAPS.md` "Multi-user readiness".
 **Frontend rule:** pure MUI (`PROJECT-SPECS.md` §11.7); colours only from `@niwa/tokens`.
 
 ---
@@ -22,7 +26,7 @@ decision that changes them.
   deployed code at that moment. No invented user counts, testimonials, ratings, uptime figures, certifications,
   partners or prices. If a feature or right (e.g. account deletion) isn't built yet, the page doesn't promise it.
 - **Legal pages are drafts until reviewed.** This plan structures them from facts in the code; it is not legal
-  advice. The owner decides whether a qualified person reviews them before registration is opened (§B0).
+  advice. The owner decides whether a qualified person reviews them before public launch (§B0).
 
 ---
 
@@ -30,8 +34,11 @@ decision that changes them.
 
 | Fact | Where |
 |---|---|
-| The app was designed as **single-user per instance**: one account, one workspace | `PROJECT-SPECS.md` §1, §2.2 |
-| Registration defaults to `first_user_only`; `open` and `closed` exist but nothing public explains the service to a second person | `backend/src/config/env.ts` (`REGISTRATION_MODE`), `render.yaml` |
+| The app was designed as **single-user per instance**: one account, one workspace (now superseded — see Audience) | `PROJECT-SPECS.md` §1, §2.2 |
+| Registration defaults to `first_user_only` (code default and `render.yaml`); `open` exists and is what the deployment will use | `backend/src/config/env.ts` (`REGISTRATION_MODE`), `render.yaml` |
+| Sign-up copy still says "NIWA is personal — one account per instance." on web and mobile | `web_app/src/auth/RegisterPage.tsx`, `flutter_app/lib/features/auth/ui/register_screen.dart` |
+| No onboarding: a new account lands on an empty Knowledge view; the user record has no onboarding state | `web_app/src/app/router.tsx`, `backend/src/models/user.model.ts` |
+| No password reset, password change, or email verification; no outbound email at all | `backend/src/routes/v1/index.ts`, `backend/package.json` |
 | Every data query is scoped by `workspaceId`, so several accounts on one instance stay separated | `docs/DATA_MODEL.md` §1 ("Ownership rule") |
 | `/` redirects straight to `/knowledge` behind the auth guard — there is **no landing page** | `web_app/src/app/router.tsx` |
 | There are **no** privacy, terms, EULA, cookie or licenses pages | `web_app/src/` |
@@ -73,11 +80,13 @@ row here and a new section in the policy before release.
 | B3 | Legal & policy pages | ⬜ | B0, B1 |
 | B4 | User rights the policies promise (delete account, export) | ⬜ | B3 drafts |
 | B5 | Visual polish of the signed-in app | ⬜ | — (can run in parallel) |
-| B6 | Quality: accessibility, performance, SEO hygiene, tests | ⬜ | B1–B5 |
+| B6 | Quality: accessibility, performance, SEO hygiene, tests | ⬜ | B1–B5, B7 |
+| B7 | Onboarding tour for new users (skippable, replayable) | ⬜ | B1; B5 for final visuals; backend state (`GAPS.md`) |
 
 **Exit criteria (whole plan):** a signed-out visitor at `/` sees an accurate description of NIWA and can reach
-sign-in, sign-up (when registration is open) and every legal page; every legal statement matches the code;
-public pages pass the axe audit in light and dark; the mobile app has a privacy-policy URL for MA11.
+sign-in, sign-up and every legal page; a new account is offered the onboarding tour, can skip it, and can replay
+it from Settings; every legal statement matches the code;
+public pages pass the accessibility audit in light and dark; the mobile app has a privacy-policy URL for MA11.
 
 ---
 
@@ -85,14 +94,14 @@ public pages pass the axe audit in light and dark; the mobile app has a privacy-
 
 **Goal:** settle what only the owner can decide, so pages state facts rather than guesses.
 
-- [ ] **Who may sign up:** keep `first_user_only` (personal instance) or open registration (`open`) — and if
-      open, invite-only or public. This decides whether the landing page shows "Create an account".
+- [x] **Who may sign up:** everyone — `REGISTRATION_MODE=open` in production (decided 2026-11-04). The landing
+      page and header show "Create account". `closed` stays available as an emergency switch (e.g. abuse).
 - [ ] **Operator identity on legal pages:** "Moeko Works" as the operator; the contact address users write to
       for privacy and support requests (a real, monitored email — not a placeholder).
 - [ ] **Jurisdiction / governing law** for the Terms, and the minimum age for accounts.
 - [ ] **Licence of the NIWA code:** proprietary ("all rights reserved") or an open-source licence — decides the
       `LICENSE` file, the EULA wording for the mobile/desktop apps, and the footer line.
-- [ ] **Review:** whether a qualified person reviews the legal pages before registration opens.
+- [ ] **Review:** whether a qualified person reviews the legal pages before public launch.
 - [ ] **Hosting regions** to disclose (Atlas cluster region, Render region, Vercel region) — read them off the
       dashboards once the backend is deployed.
 - [ ] Sign off the "Data the service actually handles" table above against the deployed code.
@@ -117,6 +126,8 @@ public pages pass the axe audit in light and dark; the mobile app has a privacy-
 - [ ] Footer on public pages **and** in the app's Settings: links to Privacy, Terms, EULA, Cookies, Licenses;
       "Designed and built by Moeko Works" linking to <https://moekoworks.vercel.app/>; copyright line with the
       year generated at build time.
+- [ ] Replace the "NIWA is personal — one account per instance." subtitle on web and mobile sign-up with copy
+      that fits an open service (each account gets its own private garden).
 - [ ] Sign-up form links to Terms and Privacy ("By creating an account you agree to …") once B3 pages exist.
 
 ### B1.P3 — Registration mode on the client
@@ -137,11 +148,11 @@ metadata validated with a link-preview check.
 
 ## B2 — Landing page at `/`
 
-**Goal:** explain what NIWA is, honestly, and get the visitor to sign in (or sign up when open).
+**Goal:** explain what NIWA is, honestly, and get the visitor to create an account or sign in.
 
 ### B2.P1 — Content (from the specs, not marketing invention)
 - [ ] Hero: name, the existing tagline "A garden for your ideas." (`web_app/index.html`, `AuthLayout.tsx`), one
-      sentence on what it is (one hierarchical item tree, three lenses — `PROJECT-SPECS.md` §1), primary action.
+      sentence on what it is (one hierarchical item tree, three lenses — `PROJECT-SPECS.md` §1), primary action "Create account", secondary "Log in".
 - [ ] Feature sections, each tied to shipped functionality: Knowledge lens & linked notes; Actionable lens &
       Focus; Scheduler (day/week/month, repeats); Inbox capture; mobile app with offline capture (once MA11
       ships — until then say "coming" or omit).
@@ -213,6 +224,8 @@ Only promise in B3 what this milestone has delivered.
       (Cloudinary assets) and sessions; confirmation with password; web Settings › Account and mobile
       Settings; contract + OpenAPI + tests.
 - [ ] **Export my data:** user-facing export (JSON + Markdown, `docs/OPS.md` §9 row 3 / A-01 M11) from Settings.
+- [ ] **Change password** and **reset a forgotten password** (needs outbound email — `GAPS.md` "Multi-user
+      readiness"); the policy describes account recovery only once this exists.
 - [ ] **Contact channel** for privacy requests (B0 address) shown in Settings and on `/privacy`.
 
 **Exit criteria:** deleting an account leaves no rows or images behind (tested against a real database);
@@ -252,11 +265,54 @@ regressions (`packages/tokens/src/contrast.test.ts`, axe).
 
 ---
 
+## B7 — Onboarding tour for new users
+
+**Goal:** a new account understands the item tree, the three lenses and capture within a minute — and anyone
+who doesn't want a tour can skip it and bring it back later.
+
+### B7.P1 — Behaviour
+- [ ] **First run:** after a new account's first sign-in, a welcome dialog offers **Take the tour** or **Skip**.
+      Either choice is remembered; the dialog never appears on its own again.
+- [ ] **Skip anywhere:** every step has Skip (and `Esc`); Back / Next; a progress label ("Step 2 of 6").
+      Closing mid-way counts as skipped, not as an error.
+- [ ] **Replay:** Settings › Help › "Replay the tour" on web and mobile, plus a Help entry in the app bar. Replay
+      never changes the user's data.
+- [ ] **Stored per account, not per browser,** so a tour skipped on the web isn't offered again on the phone
+      (backend field + endpoint — `GAPS.md` "Multi-user readiness"). Offline on mobile: remember locally and
+      sync when back online.
+- [ ] **Tour version:** stored with the completion; if the tour changes a lot, bump the version and offer
+      (not force) a short "What's new" instead of the full tour.
+
+### B7.P2 — Steps (each points at real UI; only shipped features)
+- [ ] Inbox / quick capture → the item tree (notes, tasks and ideas are one tree) → Knowledge lens and links →
+      Actionable lens and Focus → Scheduler → Search → Settings (theme, Trash, replay).
+- [ ] A step whose target isn't on screen (e.g. tree pane hidden on phones) adapts or is skipped — never a popup
+      pointing at nothing.
+- [ ] **Optional sample content:** a "Add a few example notes" checkbox on the welcome dialog (off by default)
+      creates a small subtree clearly titled "Example", deletable like any item. No sample data otherwise.
+- [ ] Empty states (`EmptyState.tsx`, mobile equivalents) link to the matching tour step.
+
+### B7.P3 — Build & accessibility
+- [ ] Web: built from MUI (`Popper`, `Dialog`, `Backdrop`) to keep the pure-MUI rule — no tour library.
+      Mobile: Flutter overlay with the same steps and wording.
+- [ ] Keyboard-only and screen-reader friendly: focus moves into each step and returns afterwards; step text is
+      announced; works at 200 % text size; no motion under `prefers-reduced-motion` / reduced animations.
+- [ ] Copy reviewed for plain language; light and dark.
+
+### B7.P4 — Tests
+- [ ] New account sees the welcome dialog once; Skip and completion are both remembered after reload and on a
+      second device; Replay from Settings works; existing accounts are not interrupted.
+- [ ] Axe audit on the welcome dialog and a tour step.
+
+**Exit criteria:** tests above green on web and mobile; tour checked on phone, tablet and desktop widths.
+
+---
+
 ## Open questions for owner
 
-1. Registration: stay personal (`first_user_only`) or open to others — and if open, invite-only or public? (B0)
+1. ~~Registration~~ — decided 2026-11-04: open to everyone (B0).
 2. Contact email for privacy/support, jurisdiction, minimum age. (B0)
 3. Code licence: proprietary or open source? (B0, B3.P3, B3.P5)
 4. Custom domain for the public site, or keep `niwa-delta.vercel.app`? (affects OG tags, cookie scope, store
    listings)
-5. Legal review before opening registration — yes or waived? (B0)
+5. Legal review before public launch — yes or waived? (B0)

@@ -3,7 +3,7 @@
 **Status:** Draft v0.1 — hosting decided, details proposed
 **Resolves:** `PROJECT-SPECS.md` §16 → `OPS.md` row (first pass; finalized in M7.P4 / M12.P1)
 **Parent doc:** `PROJECT-SPECS.md` §11.8 (wins on conflict)
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-04
 
 ---
 
@@ -84,7 +84,7 @@ Each app ships a committed `.env.example`; real `.env` files are git-ignored.
 | `JWT_ACCESS_SECRET` | ≥ 32 chars (secret); Render generates it |
 | `ACCESS_TOKEN_TTL_SECONDS` | `600` (allowed 300–900) |
 | `REFRESH_TOKEN_TTL_DAYS` | `14` (allowed 7–30). Refresh tokens are opaque random values stored as SHA-256 hashes — no signing secret needed |
-| `REGISTRATION_MODE` | `first_user_only` (default) \| `open` \| `closed` — single-user app, so only the first account can register by default |
+| `REGISTRATION_MODE` | `first_user_only` (code default) \| `open` \| `closed`. NIWA is open to everyone (2026-11-04), so production should use `open`; `closed` is the emergency switch. `render.yaml` still says `first_user_only` — `GAPS.md` "Multi-user readiness" |
 | `RATE_LIMIT_AUTH_MAX` | Login/register attempts per 15 min per IP. Default `20`; e2e raises it |
 | `RATE_LIMIT_GENERAL_MAX` | All `/api/v1` requests per minute per IP. Default `600` |
 | `CORS_ORIGINS` | Comma list, e.g. `http://localhost:5173,https://niwa.vercel.app` |
@@ -140,7 +140,7 @@ Rule: **nothing secret ever gets a `VITE_` prefix** — those are bundled into p
 | Output directory | `dist` |
 | Ignored build step | skip if no changes in `web_app/`, `packages/`, `pnpm-lock.yaml` |
 
-`web_app/vercel.json` (planned):
+`web_app/vercel.json` (`scripts/deploy/vercel.sh` fills in the real Render host):
 
 ```json
 {

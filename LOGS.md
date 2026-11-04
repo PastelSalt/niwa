@@ -653,3 +653,43 @@
   The plan opens with a table of the data the service actually handles, checked against the code, as input for the Privacy Policy. Credit: solo developed by Moeko Works (https://moekoworks.vercel.app/).
 - **Verified:** every file and section the plan cites exists. No code changed.
 - **Next:** the owner answers B0 (registration mode, contact email, jurisdiction, code licence, legal review).
+
+### 2026-11-04 — NIWA opened to everyone; onboarding tour planned
+- **Owner decision:** anyone can create an account. The single-user stance in the specs no longer applies; each account keeps its own private workspace.
+- **Plan B-01:**
+  - B0 records the decision.
+  - New milestone **B7**: an onboarding tour that you can skip, that's remembered per account, and that can be replayed from Settings and Help. It's built from MUI only and has optional example notes.
+  - B1 replaces the "one account per instance" sign-up copy.
+  - B4 adds password change/reset.
+- **GAPS:**
+  - New section "Multi-user readiness" lists the backend work, none of it coded yet:
+    - registration mode;
+    - onboarding state;
+    - email, password reset and verification;
+    - account deletion;
+    - per-account quotas;
+    - sign-up abuse;
+    - scale checks;
+    - admin tools.
+  - Closed the stale "MA9 not committed" item.
+- **Verified:** docs only; no code changed.
+
+### 2026-11-04 — Docs clean-up
+- **Actions:**
+  - `PROJECT-SPECS.md`:
+    - The status now reflects implementation progress, and the companion table lists A-02, B-01 and GAPS.
+    - §2, §2.1, §2.2, §14.3 and §17 now say NIWA is open to everyone, with one private workspace per account and no sharing.
+    - §16 notes which detail docs exist.
+  - `docs/OPS.md`: `REGISTRATION_MODE` row says production should use `open`; the `vercel.json` section is no longer marked "planned".
+  - `NIWA-PLAN-A-01.md`:
+    - M2 shows the live Vercel deploy.
+    - M10 shows MA0–MA9 done.
+    - The single-user note is marked superseded.
+  - `NIWA-PLAN-A-02.md`: MA11 privacy-policy task points at B-01 B3.P1.
+  - `CODEMAP.md`:
+    - plan statuses updated;
+    - `SCHEDULER.md` shown as written;
+    - `.vercelignore` added;
+    - B-01 now B0–B7.
+  - `GAPS.md`: hosting-accounts item updated (the Vercel project exists).
+- **Verified:** every repo path cited in the docs exists; `prettier --check` passes. Docs only; no code changed.

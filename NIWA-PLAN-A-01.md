@@ -37,7 +37,7 @@
 |---|---|---|---|
 | M0 | Contract & docs | 🟨 Owner review (docs + contract freeze) | — |
 | M1 | Foundation (backend skeleton + auth) | 🟨 Code ✅ · hosting accounts pending | M0 |
-| M2 | Web shell + auth | ✅ Local · Vercel pending | M1 |
+| M2 | Web shell + auth | ✅ Local · live on Vercel (niwa-delta.vercel.app; API not deployed yet) | M1 |
 | M3 | Item tree + Actionable base | ✅ Local | M2 |
 | M4 | Knowledge base | ✅ Local | M3 |
 | M5 | Scheduler | ✅ Local | M3 |
@@ -45,7 +45,7 @@
 | M7 | Cloudinary + polish (**MVP complete**) | 🟨 Local · large-tree perf pass + live Cloudinary check open | M4, M5, M6 |
 | M8 | AI (DeepSeek) | ⏸ Deferred by owner (2026-11-04) | M7 |
 | M9 | Desktop (Electron) → `desktop_app/` | ⬜ After mobile | M7 |
-| M10 | Mobile (Flutter) → `flutter_app/` | ➡ Moved to `NIWA-PLAN-A-02.md` (next priority) | M7 |
+| M10 | Mobile (Flutter) → `flutter_app/` | ➡ Moved to `NIWA-PLAN-A-02.md` (MA0–MA9 done) | M7 |
 | M11 | Graph + semantic search + export | ⬜ | M7 |
 | M12 | Release | ⬜ | M7 (+ any post-MVP shipped) |
 
@@ -128,7 +128,7 @@
 - [x] Refresh token via HttpOnly `SameSite=Lax` cookie on web (+ `X-Requested-With: niwa` CSRF guard); body token for `X-Client: desktop|mobile`
 - [x] Auth middleware on protected routes
 - [x] Create default workspace + root containers (Knowledge / Projects / College / Personal) on register
-- [x] `REGISTRATION_MODE` (default `first_user_only`) — enforces single-user
+- [x] `REGISTRATION_MODE` (default `first_user_only`) — enforces single-user *(2026-11-04: NIWA is now open to everyone; production moves to `open` — `NIWA-PLAN-B-01.md`, `GAPS.md`)*
 
 ### M1.P4 — Contract & tokens packages
 - [x] `contracts` package: Zod → OpenAPI generation script
@@ -213,7 +213,7 @@
 - [x] `GET /focus`, `GET /tags`, `POST /tags/rename` (merge)
 
 ### M3.P3 — Tree UI — ✅
-- [x] `@mui/x-tree-view` SimpleTreeView (full tree loaded once — single-user scale; no lazy loading needed)
+- [x] `@mui/x-tree-view` SimpleTreeView (full tree loaded once — per-account scale; no lazy loading needed)
 - [x] Create child at any depth (hover +, menu, Inside list); rename inline in the item view
 - [x] Drag to move/reorder (native HTML5 DnD: before / inside / after zones) — MUI X drag-reorder is Pro-only
 - [x] Keyboard: Alt+↑/↓ reorder, Tab/Shift+Tab indent/outdent, Del delete; item menu with Move to…

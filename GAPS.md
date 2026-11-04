@@ -17,15 +17,38 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 - [ ] **Keyboard creation in the week grid** — creating by drag is pointer-only; keyboard users use **New**.
 
 ### On hold (owner, 2026-11-04)
-- [ ] **MA9 not committed yet** — Settings/Trash/images and `POST /auth/logout-all` are in the working tree,
-      tested (Flutter 403, backend 86); held by the owner before commit and MA10.
 - [ ] **MongoDB connection trouble** — the owner can't currently connect to MongoDB. This **blocks the backend
       deploy**: `backend/src/server.ts` awaits `connectDb()` before `listen()`, so Render's health check would
       fail. Fix the Atlas connection (IP access list `0.0.0.0/0` for Render, user/password, SRV string), then
       run `scripts/deploy/render.sh`.
 
+### Multi-user readiness (owner, 2026-11-04 — NIWA is open to everyone; not coded yet)
+NIWA was built single-user per instance; the owner has opened it to anyone. Data is already separated per
+account (every query is scoped by `workspaceId`), but these backend items are still needed or worth doing.
+Product side is in `NIWA-PLAN-B-01.md`.
+- [ ] **Registration mode** — code default and `render.yaml` are `first_user_only`; set `REGISTRATION_MODE=open`
+      for production (keep `closed` as an emergency switch). Expose it unauthenticated so the UI knows
+      (B-01 B1.P3).
+- [ ] **Onboarding state** — no field on `users`; add e.g. `onboarding { status: completed|skipped, version, at }`
+      plus `GET`/`PATCH` on the current user, contract + OpenAPI + tests (B-01 B7).
+- [ ] **Outbound email** — none exists. Needed for password reset and (optionally) email verification; pick a
+      provider and add its secret to `render.yaml` as `sync: false`.
+- [ ] **Password reset / change** — no endpoints. Reset needs single-use, short-lived, hashed tokens and must
+      revoke all refresh sessions (reuse `revokeAllForUser`).
+- [ ] **Email verification** — accounts are usable without proving the address; decide whether to require it.
+- [ ] **Account deletion** — no endpoint; must remove user, workspace, items, links, schedule, attachments
+      (Cloudinary assets) and sessions (B-01 B4).
+- [ ] **Per-account limits** — rate limits are per IP only (`middleware/rateLimit.ts`); there's a per-image size
+      cap but no per-account quota on items, attachments or total Cloudinary storage. Free-tier Cloudinary and
+      Atlas (512 MB) are shared by all accounts, so one heavy account can fill them.
+- [ ] **Sign-up abuse** — register only has the auth IP limiter; consider a per-email cooldown and alerting on
+      bursts of new accounts.
+- [ ] **Scale checks** — indexes are workspace-scoped already; re-check `GET /tree`, search and the maintenance
+      job with many accounts (ties to "Performance pass on large trees").
+- [ ] **Admin basics** — no way for the operator to disable an abusive account other than editing the database.
+
 ### Carried from earlier milestones
-- [ ] **Hosting accounts** (M1/M2) — Atlas, Render, Vercel not created yet; `vercel.json` Render hostname is a placeholder.
+- [ ] **Hosting accounts** (M1/M2) — Vercel project `niwa` exists; Atlas and the Render service don't yet. `web_app/vercel.json` points at the default `niwa-api.onrender.com` until Render assigns the real host.
       Deploys are scripted (`scripts/deploy/`, OPS §12). **Web is live** at https://niwa-delta.vercel.app (2026-11-04);
       the backend waits on the MongoDB connection (see On hold), so sign-in and data calls fail until then.
       Vercel root directory is now `web_app` (renamed from `frontend`).
@@ -66,5 +89,7 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 - [ ] **AI (DeepSeek, M8)** — skipped for now (2026-11-04); mobile (`NIWA-PLAN-A-02.md`) comes first.
 
 ## Closed
+
+- [x] **MA9 not committed** — committed as `7a39bc9` and pushed with `738aeb6` (2026-11-04).
 
 - [x] **Flutter CI first run** — passed on push of `05ed969` (2026-11-04): analyze, format, codegen freshness, tests and debug APK. LOGS 2026-11-04.

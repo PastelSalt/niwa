@@ -3,18 +3,21 @@
 > **A garden for your ideas.**
 > Plant an idea. Grow a project. Let it bloom.
 
-**Status:** Concept ratified. Pre-implementation.
+**Status:** Concept ratified. In implementation — web/backend M0–M7 done (`NIWA-PLAN-A-01.md`), mobile MA0–MA9 done (`NIWA-PLAN-A-02.md`), public site planned (`NIWA-PLAN-B-01.md`).
 **Role of this file:** The **single source of truth for the concept**. If any other document (plan, codemap, code comments) disagrees with this file, this file wins — or this file gets updated first.
 **Supersedes:** the concept sections of `niwa-web`, `niwa-desktop`, `niwa-mobile` specs.
 **Owner:** Project owner
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-04 (open to everyone — §2, §2.2, §14.3, §17)
 
 **Companion docs (repo root):**
 
 | File | Purpose |
 |---|---|
 | `PROJECT-SPECS.md` | This file — concept, data model, decisions |
-| `NIWA-PLAN-A-01.md` | Milestones → phases → tasks (execution plan) |
+| `NIWA-PLAN-A-01.md` | Milestones → phases → tasks (backend, web, desktop) |
+| `NIWA-PLAN-A-02.md` | Mobile (Flutter) plan |
+| `NIWA-PLAN-B-01.md` | Public site: landing page, legal pages, onboarding, visual polish |
+| `GAPS.md` | Deferred / unverified items |
 | `CODEMAP.md` | Where everything lives in the codebase |
 | `LOGS.md` | Chronological log of actions taken |
 
@@ -41,7 +44,9 @@
 
 ## 2. What NIWA is
 
-A personal, single-user knowledge and project workspace where **everything is one hierarchical item tree**. You capture ideas, write notes, break work into tasks, and schedule your month — all against the same tree, viewed through **three lenses**.
+A personal knowledge and project workspace where **everything is one hierarchical item tree**. You capture ideas, write notes, break work into tasks, and schedule your month — all against the same tree, viewed through **three lenses**.
+
+**Who it's for (owner decision, 2026-11-04):** anyone. NIWA began as the owner's own tool; registration is open to everyone. Each account gets its **own private workspace** — there is no sharing or collaboration between accounts.
 
 > **One tree. Three bases. One scheduler.**
 
@@ -52,7 +57,7 @@ Every item can contain children at arbitrary logical depth. A single idea can gr
 1. **Unlimited logical nesting.** No imposed depth limit.
 2. **Frictionless capture.** Record before deciding how to organize.
 3. **Cross-project focus.** Surface important work across all projects without finishing one first.
-4. **Privacy by default.** Personal, single-user, self-contained.
+4. **Privacy by default.** Personal and self-contained: one private workspace per account, nothing shared.
 5. **Cross-platform consistency.** Same data and behavior on phone, web, and desktop.
 6. **Calm and approachable.** Serious capability without visual noise.
 
@@ -60,9 +65,9 @@ Every item can contain children at arbitrary logical depth. A single idea can gr
 
 | Exclusion | Reason |
 |---|---|
-| Team collaboration | Personal, single-user app by design |
+| Team collaboration | Personal app by design — many accounts, but each workspace belongs to one person |
 | External calendar import/sync | NIWA's scheduler is the only scheduler; no external data ingestion |
-| Real-time collaboration | No multi-user model |
+| Real-time collaboration | No shared workspaces |
 | Sharing / public workspaces | Data stays in your system |
 
 **One deliberate exception:** DeepSeek AI calls send note content to DeepSeek's API, triggered only by explicit user action, only for the targeted item, and only when AI is enabled (see §8).
@@ -509,7 +514,7 @@ All 13 recorded as **Accepted**.
 - Team collaboration
 - External calendar import or sync
 - Real-time collaboration
-- Multi-user workspaces
+- Multi-user workspaces (several people in one workspace) — separate accounts are fine
 - Sharing / public workspaces
 
 ---
@@ -540,7 +545,7 @@ Build **web first** as the reference implementation, then port to desktop and mo
 
 ## 16. Remaining gaps (to resolve in dedicated docs)
 
-These do not block milestone 1 but must be resolved before the milestone that needs them.
+These do not block milestone 1 but must be resolved before the milestone that needs them. `CONCEPT.md`, `DATA_MODEL.md`, `SCHEDULER.md` and `OPS.md` are written (`docs/`); `AI.md`, `GRAPH.md` and `NOTIFICATIONS.md` are not yet.
 
 | Doc | Must resolve | Needed by |
 |---|---|---|
@@ -565,6 +570,7 @@ This document supersedes the **concept and scope** sections of `niwa-web`, `niwa
 Changed from the original specs:
 
 - **Removed:** Tailwind, shadcn/ui, Lucide, CSS Modules, three separate auth paths, ICS calendar import, team collaboration, multi-workspace in MVP.
+- **Changed (2026-11-04):** single-user per instance → open registration; each account still has its own private workspace.
 - **Added:** MUI v9 as the single React UI layer, Cloudinary, DeepSeek AI, graph view, scheduler as a first-class base, fractional indexing, soft delete + cascade, explicit Inbox rule, shared pnpm workspace with `packages/ui`, `packages/tokens`, `packages/contracts`.
 
 ---

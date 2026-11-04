@@ -13,8 +13,8 @@
 niwa/   (local folder may still be named niwa-site)
 ├─ PROJECT-SPECS.md          ✅ concept source of truth
 ├─ NIWA-PLAN-A-01.md         ✅ milestones → phases → tasks (backend, web, desktop)
-├─ NIWA-PLAN-A-02.md         ✅ mobile (Flutter) plan MA0–MA11 — current priority
-├─ NIWA-PLAN-B-01.md         ⬜ public site plan — landing page, legal pages, visual polish (B0–B6)
+├─ NIWA-PLAN-A-02.md         🟨 mobile (Flutter) plan MA0–MA11 — MA0–MA9 done; MA10–MA11 next
+├─ NIWA-PLAN-B-01.md         ⬜ public site plan — landing page, legal pages, onboarding tour, visual polish (B0–B7)
 ├─ GAPS.md                   ✅ deferred / unverified items (add when skipping, tick when closed)
 ├─ CODEMAP.md                ✅ this file
 ├─ LOGS.md                   ✅ action log
@@ -22,7 +22,8 @@ niwa/   (local folder may still be named niwa-site)
 │  ├─ CONCEPT.md             ✅ draft — nav shell, lens visibility, capture/file, promotion, section links
 │  ├─ DATA_MODEL.md          ✅ draft — field additions, limits, type matrix, ordering, delete/restore, tags, attachments, search
 │  ├─ OPS.md                 ✅ services, envs, env vars, Render/Vercel/Atlas/Cloudinary, backups + restore drill, CI
-│  └─ SCHEDULER.md · AI.md · GRAPH.md   🔜 M5 / M8 / M11
+│  ├─ SCHEDULER.md           ✅ drag, recurrence edits, time zones, overlaps (M5)
+│  └─ AI.md · GRAPH.md       🔜 M8 / M11
 ├─ package.json              ✅ root scripts: dev, dev:memory (no Atlas), build, test, e2e, lint, typecheck, format, openapi; pnpm@12.15.0
 ├─ pnpm-workspace.yaml       ✅ backend, web_app, desktop_app, packages/* · allowBuilds policy
 ├─ pnpm-lock.yaml            ✅
@@ -32,6 +33,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ .nvmrc                    ✅ 24
 ├─ .gitignore / .gitattributes / .editorconfig   ✅
 ├─ scripts/deploy/          ✅ render.sh, vercel.sh, deploy.env.example (OPS §12)
+├─ .vercelignore             ✅ keeps Vercel CLI uploads small (no flutter_app/, docs/)
 ├─ render.yaml               ✅ Render Blueprint: web `niwa-api` + Key Value `niwa-cache`
 ├─ .github/workflows/ci.yml  ✅ check: lint → format → typecheck → openapi:check → test → build · e2e job
 ├─ .github/workflows/backup.yml ✅ nightly portable dump → `age`-encrypted artifact (14 days); needs BACKUP_* secrets (OPS §9)

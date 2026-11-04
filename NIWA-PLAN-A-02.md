@@ -217,7 +217,7 @@ _Status 2026-11-04: passes as `test/offline_test.dart` (tree + notes; schedule c
 - [x] `ProseMirrorDelta` converter in pure Dart: PM JSON → Delta and Delta → PM JSON (`lib/features/knowledge/domain/pm_delta.dart`)
 - [x] Supported: paragraph, heading 1–3 (**keeps `anchorId`** via a zero-width `niwaAnchor` embed — Quill drops unknown line attributes), bold, italic, strike, underline, inline code, link, bullet/ordered list (nested), blockquote, code block, hard break, horizontal rule, `niwaLink` (embed), image with `attachmentId` (embed)
 - [x] Anything else → a **locked block embed** that stores the original PM JSON and writes it back unchanged ("Edit on web or desktop"). Also locked: shapes Quill can't hold (multi-paragraph list items, quotes with lists, code blocks with a language, ordered lists not starting at 1, non-default link attrs, same-kind blocks right after each other)
-- [x] Golden round-trip tests on fixtures exported from the web editor (`web_app/.../editorFixtures.test.ts` → `flutter_app/test/fixtures/editor/`, checked in CI): `PM → Delta → Quill Document → Delta → PM` is identical for supported content and byte-identical for locked blocks
+- [x] Golden round-trip tests on fixtures exported from the web editor (`web_app/src/features/knowledge/editor/editorFixtures.test.ts` → `flutter_app/test/fixtures/editor/`, checked in CI): `PM → Delta → Quill Document → Delta → PM` is identical for supported content and byte-identical for locked blocks
 - [x] Heading anchors survive edits (same uniqueness rule as web `AnchorGuard`; an anchor deleted by accident is restored by heading text)
 
 ### MA6.P2 — Editor screen
@@ -318,7 +318,7 @@ _Status 2026-11-04: node shape matches the web fixture and the upload flow is te
 - [ ] App icon, splash, name; versioning from git tag
 - [ ] Release signing (upload key kept out of git; GitHub secret for CI)
 - [ ] `flutter build appbundle` in CI; Play Console internal testing track
-- [ ] Privacy policy / data safety form (single-user, own server)
+- [ ] Privacy policy / data safety form — policy URL from `NIWA-PLAN-B-01.md` B3.P1 (open registration, data on NIWA's hosted backend)
 
 ### MA11.P2 — iOS (after Android)
 - [ ] Mac or macOS CI runner; Apple developer account
