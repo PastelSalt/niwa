@@ -185,7 +185,10 @@ export function NoteEditor({ item }: { item: Item }) {
             },
             '& .niwa-flash': { bgcolor: theme.alpha((theme.vars ?? theme).palette.secondary.main, 0.25) },
             '& p': { m: 0 },
-            '& ul, & ol': { pl: 3, my: 0 },
+            // Only the bottom margin: the top comes from the block rhythm above (V4).
+            '& ul, & ol': { pl: 3, mb: 0 },
+            '& li + li': { mt: 0.5 },
+            '& li > p': { m: 0 },
             '& blockquote': {
               m: 0,
               pl: 2,

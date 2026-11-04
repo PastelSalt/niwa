@@ -21,6 +21,8 @@ import {
   type UpdateItemInput,
 } from '@niwa/contracts';
 import { useState } from 'react';
+import { DateField } from '../../components/DateField.tsx';
+import { exactTime, friendlyDate, timeAgo } from '../../lib/friendlyTime.ts';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import { ItemTypeIcon, PRIORITY_LABEL, STATUS_LABEL, TYPE_LABEL } from './itemMeta.tsx';
@@ -95,7 +97,7 @@ export function ItemFields({ item }: { item: Item }) {
               </MenuItem>
             ))}
           </TextField>
-          <DateField label="Due" value={item.dueAt} onCommit={(dueAt) => save({ dueAt })} />
+          <DateField size="small" label="Due" value={item.dueAt} onChange={(dueAt) => save({ dueAt })} />
           <EstimateField
             value={item.estimatedMinutes}
             onCommit={(estimatedMinutes) => save({ estimatedMinutes })}
@@ -104,7 +106,12 @@ export function ItemFields({ item }: { item: Item }) {
       )}
 
       {!actionable && (
-        <DateField label="Review on" value={item.reviewAt} onCommit={(reviewAt) => save({ reviewAt })} />
+        <DateField
+          size="small"
+          label="Review on"
+          value={item.reviewAt}
+          onChange={(reviewAt) => save({ reviewAt })}
+        />
       )}
 
       <Autocomplete
@@ -164,9 +171,21 @@ export function ItemFields({ item }: { item: Item }) {
       </Stack>
 
       <Typography variant="caption" color="text.secondary">
-        Created {new Date(item.createdAt).toLocaleString()} · Updated{' '}
-        {new Date(item.updatedAt).toLocaleString()}
-        {item.completedAt && ` · Completed ${new Date(item.completedAt).toLocaleDateString()}`}
+        <time dateTime={item.createdAt} title={exactTime(item.createdAt)}>
+          Created {friendlyDate(item.createdAt, undefined, true)}
+        </time>
+        {' · '}
+        <time dateTime={item.updatedAt} title={exactTime(item.updatedAt)}>
+          edited {timeAgo(item.updatedAt)}
+        </time>
+        {item.completedAt && (
+          <>
+            {' · '}
+            <time dateTime={item.completedAt} title={exactTime(item.completedAt)}>
+              completed {timeAgo(item.completedAt)}
+            </time>
+          </>
+        )}
       </Typography>
     </Stack>
   );
@@ -181,31 +200,6 @@ function useSyncedDraft(saved: string) {
     setDraft(saved);
   }
   return [draft, setDraft] as const;
-}
-
-/** Native date input (date-only string, no timezone — specs §12.5). */
-function DateField({
-  label,
-  value,
-  onCommit,
-}: {
-  label: string;
-  value: string | null;
-  onCommit: (v: string | null) => void;
-}) {
-  return (
-    <TextField
-      size="small"
-      type="date"
-      label={label}
-      value={value ?? ''}
-      onChange={(e) => {
-        const v = e.target.value || null;
-        if (v !== value) onCommit(v);
-      }}
-      slotProps={{ inputLabel: { shrink: true } }}
-    />
-  );
 }
 
 function EstimateField({ value, onCommit }: { value: number | null; onCommit: (v: number | null) => void }) {

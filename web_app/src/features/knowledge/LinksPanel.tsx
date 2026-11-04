@@ -1,21 +1,14 @@
 import CloseRounded from '@mui/icons-material/CloseRounded';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { useMemo, useState } from 'react';
-import { Link as RouterLink } from 'react-router';
+import { SectionHeader } from '../../components/SectionHeader.tsx';
+import { ItemRow, ItemRowList } from '../items/ItemRow.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import { ItemTypeIcon } from '../items/itemMeta.tsx';
@@ -68,47 +61,37 @@ export function LinksPanel({ itemId }: { itemId: string }) {
   return (
     <Stack spacing={3}>
       <Box component="section" aria-label="Related items">
-        <Typography variant="subtitle2" component="h2" sx={{ mb: 1 }}>
-          Links ({outgoing.length})
-        </Typography>
-        {outgoing.length > 0 && (
-          <Paper variant="outlined" sx={{ mb: 1.5 }}>
-            <List dense disablePadding>
+        <SectionHeader title="Links" count={outgoing.length} />
+        {outgoing.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Nothing linked yet. Type [[ in the note, or add a related item.
+          </Typography>
+        ) : (
+          <Box sx={{ mb: 1.5 }}>
+            <ItemRowList label="Links">
               {outgoing.map((r) => (
-                <ListItem
+                <ItemRow
                   key={r.link.id}
-                  disablePadding
-                  divider
-                  secondaryAction={
-                    r.link.origin === 'manual' ? (
-                      <Tooltip title="Remove link">
-                        <IconButton
-                          edge="end"
-                          size="small"
-                          aria-label={`Remove link to ${r.item.title}`}
-                          onClick={() => removeLink.mutate(r.link.id)}
-                        >
-                          <CloseRounded fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    ) : undefined
+                  item={r.item}
+                  to={href(r.item, r.link.targetAnchorId)}
+                  title={r.link.targetSection ? `${r.item.title} › ${r.link.targetSection}` : r.item.title}
+                  meta={r.link.origin === 'content' ? 'Mentioned in the note' : 'Related'}
+                  actions={
+                    r.link.origin === 'manual'
+                      ? [
+                          {
+                            label: 'Remove link',
+                            ariaLabel: `Remove link to ${r.item.title}`,
+                            icon: <CloseRounded fontSize="small" />,
+                            onClick: () => removeLink.mutate(r.link.id),
+                          },
+                        ]
+                      : undefined
                   }
-                >
-                  <ListItemButton component={RouterLink} to={href(r.item, r.link.targetAnchorId)}>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <ItemTypeIcon type={r.item.type} fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        r.link.targetSection ? `${r.item.title} › ${r.link.targetSection}` : r.item.title
-                      }
-                      secondary={r.link.origin === 'content' ? 'Mentioned in the note' : 'Related'}
-                    />
-                  </ListItemButton>
-                </ListItem>
+                />
               ))}
-            </List>
-          </Paper>
+            </ItemRowList>
+          </Box>
         )}
         <Autocomplete
           size="small"
@@ -132,37 +115,28 @@ export function LinksPanel({ itemId }: { itemId: string }) {
       </Box>
 
       <Box component="section" aria-label="Backlinks">
-        <Typography variant="subtitle2" component="h2" sx={{ mb: 1 }}>
-          Backlinks ({backlinks.length})
-        </Typography>
+        <SectionHeader title="Backlinks" count={backlinks.length} />
         {backlinks.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             Nothing links here yet. Type [[ in another note to link to this one.
           </Typography>
         ) : (
-          <Paper variant="outlined">
-            <List dense disablePadding>
-              {backlinks.map((r) => (
-                <ListItem key={r.link.id} disablePadding divider>
-                  <ListItemButton component={RouterLink} to={href(r.item, null)}>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <ItemTypeIcon type={r.item.type} fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={r.item.title}
-                      secondary={
-                        r.link.targetAnchorId
-                          ? `Links to “${r.link.targetSection ?? 'a removed section'}”`
-                          : r.link.origin === 'manual'
-                            ? 'Related'
-                            : 'Mentions this item'
-                      }
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
+          <ItemRowList label="Backlinks">
+            {backlinks.map((r) => (
+              <ItemRow
+                key={r.link.id}
+                item={r.item}
+                to={href(r.item, null)}
+                meta={
+                  r.link.targetAnchorId
+                    ? `Links to “${r.link.targetSection ?? 'a removed section'}”`
+                    : r.link.origin === 'manual'
+                      ? 'Related'
+                      : 'Mentions this item'
+                }
+              />
+            ))}
+          </ItemRowList>
         )}
       </Box>
     </Stack>

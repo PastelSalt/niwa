@@ -22,6 +22,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { EditScope, ItemSummary, Recurrence, ScheduleEntry, ScheduleKind } from '@niwa/contracts';
 import { useState } from 'react';
+import { DateField } from '../../components/DateField.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import {
@@ -245,15 +246,11 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
           />
 
           <Stack direction="row" spacing={1}>
-            <TextField
-              type="date"
+            <DateField
               label={f.allDay ? 'From' : 'Date'}
               value={f.startDay}
-              onChange={(e) => {
-                const v = e.target.value;
-                setF((s) => ({ ...s, startDay: v, endDay: s.endDay < v ? v : s.endDay }));
-              }}
-              slotProps={{ inputLabel: { shrink: true } }}
+              clearable={false}
+              onChange={(v) => v && setF((s) => ({ ...s, startDay: v, endDay: s.endDay < v ? v : s.endDay }))}
             />
             {!f.allDay && (
               <TextField
@@ -266,12 +263,11 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
             )}
           </Stack>
           <Stack direction="row" spacing={1}>
-            <TextField
-              type="date"
+            <DateField
               label={f.allDay ? 'To' : 'End date'}
               value={f.endDay}
-              onChange={(e) => set('endDay', e.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
+              clearable={false}
+              onChange={(v) => v && set('endDay', v)}
             />
             {!f.allDay && (
               <TextField

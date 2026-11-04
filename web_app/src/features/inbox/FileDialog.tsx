@@ -14,6 +14,7 @@ import Typography from '@mui/material/Typography';
 import { isValidTag, normalizeTag, type ItemSummary, type ItemType } from '@niwa/contracts';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { DateField } from '../../components/DateField.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import { ItemTypeIcon, LENS_PATH, TYPE_LABEL } from '../items/itemMeta.tsx';
@@ -139,13 +140,7 @@ export function FileDialog({
           </TextField>
           {single && (
             <>
-              <TextField
-                type="date"
-                label="Due"
-                value={dueAt}
-                onChange={(e) => setDueAt(e.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
+              <DateField label="Due" value={dueAt || null} onChange={(v) => setDueAt(v ?? '')} />
               <Autocomplete
                 multiple
                 freeSolo

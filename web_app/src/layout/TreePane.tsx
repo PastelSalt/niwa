@@ -13,6 +13,7 @@ import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { useEffect, useMemo, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { messageOf } from '../api/client.ts';
+import { preloadNoteEditorWhenIdle } from '../features/knowledge/editor/preload.ts';
 import { DEFAULT_TYPE_FOR, ItemTypeIcon, LENS_PATH, STATUS_LABEL } from '../features/items/itemMeta.tsx';
 import { ItemMenu } from '../features/items/ItemMenu.tsx';
 import { useTree } from '../features/items/queries.ts';
@@ -57,6 +58,8 @@ export function TreePane({
   const [expanded, setExpanded] = usePersistentState<string[]>(`niwa.tree.expanded.${lens}`, []);
 
   // Reveal the selected item.
+  // A tree on screen means a note is likely next: fetch the editor in the background (B-02 V4).
+  useEffect(() => preloadNoteEditorWhenIdle(), []);
   useEffect(() => {
     if (!selectedId || !model.byId.has(selectedId)) return;
     const path = ancestorsOf(model, selectedId).map((a) => a.id);
