@@ -1,21 +1,15 @@
 import DeleteForeverOutlined from '@mui/icons-material/DeleteForeverOutlined';
 import RestoreFromTrashOutlined from '@mui/icons-material/RestoreFromTrashOutlined';
 import Alert from '@mui/material/Alert';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import { useItemDialogs } from './ItemDialogs.tsx';
-import { ItemTypeIcon } from './itemMeta.tsx';
+import { exactTime, timeAgo } from '../../lib/friendlyTime.ts';
+import { ItemRow, ItemRowList } from './ItemRow.tsx';
 import { usePurgeItem, useRestoreItem, useTrash } from './queries.ts';
 
 /** Settings → Trash: restore or delete permanently (specs §12.6). */
@@ -71,45 +65,36 @@ export function TrashSection() {
         </Typography>
       )}
       {data && data.length > 0 && (
-        <Paper variant="outlined">
-          <List dense disablePadding aria-label="Trash">
-            {data.map((item) => (
-              <ListItem
-                key={item.id}
-                divider
-                secondaryAction={
-                  <>
-                    <Tooltip title="Restore">
-                      <IconButton aria-label={`Restore ${item.title}`} onClick={() => void onRestore(item)}>
-                        <RestoreFromTrashOutlined />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete permanently">
-                      <IconButton
-                        aria-label={`Delete ${item.title} permanently`}
-                        edge="end"
-                        color="error"
-                        onClick={() => void onPurge(item)}
-                      >
-                        <DeleteForeverOutlined />
-                      </IconButton>
-                    </Tooltip>
-                  </>
-                }
-              >
-                <ListItemIcon sx={{ minWidth: 36 }}>
-                  <ItemTypeIcon type={item.type} fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.title}
-                  secondary={
-                    item.deletedAt ? `Deleted ${new Date(item.deletedAt).toLocaleString()}` : undefined
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
+        <ItemRowList label="Trash">
+          {data.map((item) => (
+            <ItemRow
+              key={item.id}
+              item={item}
+              to={null}
+              meta={
+                item.deletedAt && (
+                  <time dateTime={item.deletedAt} title={exactTime(item.deletedAt)}>
+                    Deleted {timeAgo(item.deletedAt)}
+                  </time>
+                )
+              }
+              actions={[
+                {
+                  label: 'Restore',
+                  ariaLabel: `Restore ${item.title}`,
+                  icon: <RestoreFromTrashOutlined fontSize="small" />,
+                  onClick: () => void onRestore(item),
+                },
+                {
+                  label: 'Delete permanently',
+                  ariaLabel: `Delete ${item.title} permanently`,
+                  icon: <DeleteForeverOutlined fontSize="small" color="error" />,
+                  onClick: () => void onPurge(item),
+                },
+              ]}
+            />
+          ))}
+        </ItemRowList>
       )}
     </Stack>
   );

@@ -2,15 +2,9 @@ import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import SearchRounded from '@mui/icons-material/SearchRounded';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import InputAdornment from '@mui/material/InputAdornment';
 import LinearProgress from '@mui/material/LinearProgress';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
@@ -20,12 +14,14 @@ import Typography from '@mui/material/Typography';
 import type { ItemNature } from '@niwa/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link as RouterLink, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { Page } from '../../components/Page.tsx';
+import { TagChip } from '../items/chips.tsx';
+import { ItemRow, ItemRowList } from '../items/ItemRow.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useAuth } from '../../auth/AuthProvider.tsx';
 import { EmptyState } from '../../components/EmptyState.tsx';
-import { ItemTypeIcon, LENS_PATH, TYPE_LABEL } from '../items/itemMeta.tsx';
+import { TYPE_LABEL } from '../items/itemMeta.tsx';
 import { useTree } from '../items/queries.ts';
 import { ancestorsOf, buildTree } from '../items/treeModel.ts';
 
@@ -187,53 +183,36 @@ export function SearchPage() {
           <Typography variant="caption" color="text.secondary" role="status">
             {hits.length} result{hits.length === 1 ? '' : 's'}
           </Typography>
-          <Paper variant="outlined" sx={{ mt: 0.5 }}>
-            <List disablePadding aria-label="Search results">
+          <Box sx={{ mt: 0.5 }}>
+            <ItemRowList label="Search results">
               {hits.map((h) => {
                 const path = ancestorsOf(model, h.item.id)
                   .map((a) => a.title)
                   .join(' › ');
                 return (
-                  <ListItem key={h.item.id} disablePadding divider>
-                    <ListItemButton
-                      component={RouterLink}
-                      to={`${LENS_PATH[h.item.nature]}/${h.item.id}`}
-                      sx={{ alignItems: 'flex-start', py: 1.25 }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 36, mt: 0.25 }}>
-                        <ItemTypeIcon
-                          type={h.item.type}
-                          completed={h.item.status === 'completed'}
-                          fontSize="small"
-                        />
-                      </ListItemIcon>
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 600 }} noWrap>
-                          <Highlight text={h.item.title} terms={terms} />
+                  <ItemRow
+                    key={h.item.id}
+                    item={h.item}
+                    title={<Highlight text={h.item.title} terms={terms} />}
+                    meta={
+                      <>
+                        {h.item.inboxedAt ? 'Inbox' : path || 'Top level'} · {TYPE_LABEL[h.item.type]}
+                        {h.item.archivedAt ? ' · Archived' : ''}
+                      </>
+                    }
+                    extra={
+                      h.snippet && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          <Highlight text={h.snippet} terms={terms} />
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" component="div" noWrap>
-                          {h.item.inboxedAt ? 'Inbox' : path || 'Top level'} · {TYPE_LABEL[h.item.type]}
-                          {h.item.archivedAt ? ' · Archived' : ''}
-                        </Typography>
-                        {h.snippet && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            <Highlight text={h.snippet} terms={terms} />
-                          </Typography>
-                        )}
-                        {h.item.tags.length > 0 && (
-                          <Stack direction="row" spacing={0.5} useFlexGap sx={{ mt: 0.5, flexWrap: 'wrap' }}>
-                            {h.item.tags.map((t) => (
-                              <Chip key={t} size="small" label={`#${t}`} sx={{ height: 20 }} />
-                            ))}
-                          </Stack>
-                        )}
-                      </Box>
-                    </ListItemButton>
-                  </ListItem>
+                      )
+                    }
+                    chips={h.item.tags.length > 0 && h.item.tags.map((t) => <TagChip key={t} tag={t} />)}
+                  />
                 );
               })}
-            </List>
-          </Paper>
+            </ItemRowList>
+          </Box>
         </>
       )}
     </Page>

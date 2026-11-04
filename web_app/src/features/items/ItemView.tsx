@@ -11,12 +11,6 @@ import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Link from '@mui/material/Link';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -26,6 +20,8 @@ import { ApiError } from '@niwa/api-client';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Page } from '../../components/Page.tsx';
+import { DueChip, PriorityChip } from './chips.tsx';
+import { ItemRow, ItemRowList } from './ItemRow.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { useNotify } from '../../components/Notifier.tsx';
@@ -221,29 +217,23 @@ export function ItemView({ id }: { id: string }) {
           Nothing inside yet. Children are for anything that deserves its own title, status or link.
         </Typography>
       ) : (
-        <Paper variant="outlined">
-          <List dense disablePadding aria-label="Children">
-            {children.map((c) => (
-              <ListItem key={c.id} disablePadding divider>
-                <ListItemButton component={RouterLink} to={`${LENS_PATH[c.nature]}/${c.id}`}>
-                  <ListItemIcon sx={{ minWidth: 36 }}>
-                    <ItemTypeIcon type={c.type} completed={c.status === 'completed'} fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={c.title}
-                    secondary={
-                      c.nature === 'actionable'
-                        ? [STATUS_LABEL[c.status], c.dueAt ? `due ${formatDay(c.dueAt)}` : null]
-                            .filter(Boolean)
-                            .join(' · ')
-                        : TYPE_LABEL[c.type]
-                    }
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
+        <ItemRowList label="Children">
+          {children.map((c) => (
+            <ItemRow
+              key={c.id}
+              item={c}
+              meta={c.nature === 'actionable' ? STATUS_LABEL[c.status] : TYPE_LABEL[c.type]}
+              chips={
+                c.nature === 'actionable' && (
+                  <>
+                    <PriorityChip priority={c.priority} />
+                    {c.dueAt && <DueChip due={c.dueAt} today={today} done={c.status === 'completed'} />}
+                  </>
+                )
+              }
+            />
+          ))}
+        </ItemRowList>
       )}
 
       {/* No side detail panel on phones: the fields live here, collapsed so the note comes first. */}
