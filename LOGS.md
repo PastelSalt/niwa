@@ -875,3 +875,38 @@
   - `docs/OPS.md`: open questions moved after §13; Render region answered.
   - `docs/DATA_MODEL.md`: retention/size questions settled by the published Privacy Policy.
 - **Verified:** docs only; `format:check` clean; cited paths exist.
+
+### 2026-11-04 — Plan B-02 (web UI/UX refinement) drafted
+- **Context:**
+  - The owner confirmed images work on the live site after adding the Cloudinary keys in Render. The GAPS item is closed.
+  - Focus is now the website's visuals only; mobile is paused.
+- **Audit:**
+  - Seeded a local in-memory account with realistic content.
+  - Took 71 screenshots: every screen, dialog and empty state at 1440 × 900, 820 × 1180 and 390 × 844, in light and dark.
+  - Timed the note editor's first load: 2.0 s on first visit, 1.2 s on reload (dev server).
+  - Surveyed the code: 22 literal font sizes, ad-hoc content widths, 14 px base font, no motion or elevation tokens.
+- **Actions:** created `NIWA-PLAN-B-02.md`:
+  - The findings, as tables per width.
+  - Ten milestones: V0 baseline/overflow check, V1 tokens, V2 shell & tree, V3 item rows & lists, V4 item page & editor, V5 scheduler, V6 states, V7 responsive pass, V8 public/auth pages, V9 quality.
+  - Five open questions.
+- **Correction during drafting:** event colours do follow the picked colour and item type (`entryDisplay.ts`). Only uncoloured events share the primary green, and the plan says so.
+- **Verified:** docs only; nothing built or committed.
+
+### 2026-11-04 — B-02: decisions and personalisation added
+- **Owner:** delegated the five open questions; wants per-user customisation in the signed-in app — a colour theme selector and a global font selector, with **Fredoka** as the default font.
+- **Decisions recorded in `NIWA-PLAN-B-02.md`:**
+  - 15 px body text.
+  - List screens centred beside the tree.
+  - Each Focus task shown once, in its most urgent section.
+  - Fixed tree pane width: 280 px, 320 px from 1440 px.
+  - Order: V0 → V1 → phone bugs → the rest.
+- **Added:**
+  - V1.P4 theme plumbing: theme + font + mode built at runtime; fonts loaded lazily; public pages fixed to Sage + Inter.
+  - **V10 Personalisation:**
+    - Fonts: Fredoka (default; `@fontsource-variable/fredoka` 5.3.0, OFL, weights 300–700, ≈ 30 KB Latin), Inter, Atkinson Hyperlegible, System.
+    - Colour themes: Sage plus alternatives, each with light and dark variants and contrast-tested.
+    - Settings › Appearance pickers.
+    - `users.preferences` saved on the account, so the choice follows the user to other devices.
+    - Tests and audits per theme and font.
+- **Still open (small):** whether public pages also use Fredoka; the exact theme set.
+- **Verified:** docs only.

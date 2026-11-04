@@ -15,6 +15,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ NIWA-PLAN-A-01.md         🟨 backend, web, desktop — M1–M7 done; M8 AI paused; M9/M11/M12 open
 ├─ NIWA-PLAN-A-02.md         🟨 mobile (Flutter) — MA0–MA9 done; MA10 (quality + web parity), MA11 (release) next
 ├─ NIWA-PLAN-B-01.md         🟨 public site — B0–B3, B5 done; B4/B6/B7 have small leftovers
+├─ NIWA-PLAN-B-02.md         ⬜ web UI/UX refinement + personalisation (themes, fonts; default Fredoka) — V0–V10, current focus
 ├─ LICENSE                   ✅ MIT, © 2026 Moeko Works
 ├─ GAPS.md                   ✅ deferred / unverified items (add when skipping, tick when closed)
 ├─ CODEMAP.md                ✅ this file

@@ -2,20 +2,19 @@
 
 Open items that were deferred or not yet verified. Add here when something is skipped; tick and note the
 date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (backend, web, desktop), `NIWA-PLAN-A-02.md`
-(mobile), `NIWA-PLAN-B-01.md` (public site, legal, multi-user).
+(mobile), `NIWA-PLAN-B-01.md` (public site, legal, multi-user), `NIWA-PLAN-B-02.md` (web UI/UX refinement — current focus).
 
 ## Pending by plan (summary — updated 2026-11-04)
 
 Start here. Details for each line are further down or in the plan named.
 
-**Blocking the live app** — sign-in on https://niwa-delta.vercel.app fails until the API is deployed:
-1. Fix the MongoDB connection (owner) → create the Atlas cluster in **Singapore** → connect the Render Blueprint →
-   `scripts/deploy/render.sh` → set `CORS_ORIGINS`. Then check sign-in and the refresh cookie on the live site.
+**Live app** — backend deployed on Render (Singapore) 2026-11-04; sign-up/sign-in confirmed by the owner on 5
+devices; images (Cloudinary) confirmed working 2026-11-04. Next: nightly backup secrets.
 
 **A-01 — backend, web, desktop** · done: M1–M7 code, web live on Vercel
 - M0: formal sign-off of the docs and contract (low priority — the contract has been in use since M1).
-- M1: Atlas + Render setup and first deploy (blocked above).
-- M7: browser performance with a 2–5k-item tree; test Cloudinary with a real account.
+- M1: done — Atlas + Render deployed 2026-11-04.
+- M7: browser performance with a 2–5k-item tree (Cloudinary confirmed live).
 - M8 AI: paused by the owner.
 - M9 Desktop (Electron): not started — after mobile.
 - M11: graph view, semantic search, Markdown export + import (JSON export is done).
@@ -36,8 +35,13 @@ Start here. Details for each line are further down or in the plan named.
 - B7: tour at 200 % text; empty states linking to tour steps; the mobile tour (A-02 MA10).
 - Markdown export (also A-01 M11).
 
+**B-02 — web UI/UX refinement (current focus)** · plan ready 2026-11-04, nothing built yet
+- V0–V9: baseline script, design tokens, shell & tree, item rows, item page & editor, scheduler, states,
+  responsive pass (phone layout bugs: Focus chips overlap, Inbox titles squeezed, month view unreadable), public
+  pages, quality, and **V10 personalisation** (colour themes + in-app font, default Fredoka). Owner's five
+  questions decided 2026-11-04; two small ones left (public-page font, theme set).
+
 **Decisions only the owner can make**
-- Fix MongoDB access (unblocks the backend deploy).
 - Email provider for password reset/verification (skipped for now).
 - When to build and run the mobile app on a device; when to do iOS.
 - Whether to resume AI (M8).
@@ -50,19 +54,11 @@ Start here. Details for each line are further down or in the plan named.
 - [ ] **Performance pass on large trees** (M7.P3) — server side measured (2026-11-04, `scale-check`): `/tree`
       ~0.7 s at the 10k-item quota, ~130 KB gzip. Still to do: browser render/expand/drag cost with 2–5k items;
       virtualize the tree or lazy-load branches if it's slow.
-- [ ] **Cloudinary against a live account** — only tested against a fake Cloudinary API. Needs
-      `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET`; then upload, confirm, orphan sweep and purge by hand.
 - [ ] **Nightly backup secrets** — `.github/workflows/backup.yml` needs `BACKUP_MONGODB_URI`,
       `BACKUP_MONGODB_DB`, `BACKUP_AGE_RECIPIENT` and an `age` key pair (OPS.md §9). First manual run + restore
       drill into staging not done.
 - [ ] **Trash auto-purge switch** — the 30-day purge always runs; no Settings toggle (DATA_MODEL.md §5).
 - [ ] **Keyboard creation in the week grid** — creating by drag is pointer-only; keyboard users use **New**.
-
-### On hold (owner, 2026-11-04)
-- [ ] **MongoDB connection trouble** — the owner can't currently connect to MongoDB. This **blocks the backend
-      deploy**: `backend/src/server.ts` awaits `connectDb()` before `listen()`, so Render's health check would
-      fail. Fix the Atlas connection (IP access list `0.0.0.0/0` for Render, user/password, SRV string), then
-      run `scripts/deploy/render.sh`.
 
 ### Multi-user readiness (owner, 2026-11-04 — NIWA is open to everyone)
 NIWA was built single-user per instance; the owner has opened it to anyone. Data is already separated per
@@ -75,10 +71,6 @@ Product side is in `NIWA-PLAN-B-01.md`.
 - [ ] **Email verification** — accounts are usable without proving the address; decide whether to require it.
 
 ### Carried from earlier milestones
-- [ ] **Hosting accounts** (M1/M2) — Vercel project `niwa` exists; Atlas and the Render service don't yet. `web_app/vercel.json` points at the default `niwa-api.onrender.com` until Render assigns the real host.
-      Deploys are scripted (`scripts/deploy/`, OPS §12). **Web is live** at https://niwa-delta.vercel.app (2026-11-04);
-      the backend waits on the MongoDB connection (see On hold), so sign-in and data calls fail until then.
-      Vercel root directory is now `web_app` (renamed from `frontend`).
 - [ ] **Month drag on touch** (M5) — native drag-and-drop doesn't work on touch; use the dialog.
 - [ ] **Overlapping all-day events in week view** (M5) — stack rather than span.
 - [ ] **Week start** (M5) — fixed to Monday, not configurable.
@@ -122,6 +114,12 @@ Product side is in `NIWA-PLAN-B-01.md`.
 - [ ] **AI (DeepSeek, M8)** — skipped for now (2026-11-04); mobile (`NIWA-PLAN-A-02.md`) comes first.
 
 ## Closed
+
+- [x] **Cloudinary against a live account** — keys set in Render; uploads confirmed by the owner (2026-11-04).
+
+- [x] **Hosting accounts** (M1/M2) — Vercel `niwa`, Render `niwa-api` + `niwa-cache` (Singapore), Atlas all live (2026-11-04).
+
+- [x] **MongoDB connection / backend deploy** — Atlas connected, Render Blueprint applied, `niwa-api.onrender.com` healthy; web works through the Vercel rewrite (2026-11-04).
 
 - [x] **Per-account limits** — item and image-storage quotas (`lib/quota.ts`, env-tunable), per-account rate limit; usage in Settings › Account (2026-11-04).
 - [x] **Sign-up abuse** — server-wide cap on new accounts per hour, logged when hit (2026-11-04).
