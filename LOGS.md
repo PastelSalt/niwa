@@ -910,3 +910,19 @@
     - Tests and audits per theme and font.
 - **Still open (small):** whether public pages also use Fredoka; the exact theme set.
 - **Verified:** docs only.
+
+### 2026-11-04 — B-02: Fredoka everywhere, pastel themes, interactive landing
+- **Owner:**
+  - Fredoka on the public pages too.
+  - The default theme and every alternative should be pastel.
+  - The landing page should become interactive, so visitors can play with a preview of the app and the customisation.
+- **`NIWA-PLAN-B-02.md`:**
+  - Defaults are now **Garden** (pastel sage + blossom) + **Fredoka** everywhere, set in the V1.P4 plumbing.
+  - V10 themes are all pastel: Garden, Blossom, Lavender, Sky, Peach to start; final values go to the owner for approval.
+  - New pastel readability rules: pastel fills, deep text, pastel buttons with dark text, muted pastels in dark mode, contrast-tested.
+  - New **V11 interactive landing page**:
+    - An in-browser playground built from the real components with labelled example content: no account, no network calls, nothing saved.
+    - A customise panel (themes, fonts, light/dark) that affects only the playground.
+    - Loaded lazily to keep the landing page fast; accessibility and tests included.
+  - Open questions cleared.
+- **Verified:** docs only; nothing built.

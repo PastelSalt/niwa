@@ -1,7 +1,7 @@
 # NIWA — Plan B-02 (Web UI/UX refinement)
 
 **Role of this file:** milestone tracker for refining the **look and feel of the web app** (`web_app/`) — the
-signed-in screens first, then the public pages so they match. No new product features; mobile (`flutter_app/`)
+signed-in screens first, then the public pages so they match, plus personalisation and an interactive landing page. No new product features; mobile (`flutter_app/`)
 is out of scope until the owner says otherwise.
 **Plan version:** B-02
 **Created:** 2026-11-04
@@ -10,9 +10,10 @@ is out of scope until the owner says otherwise.
 **Rules that still apply:** pure MUI (`PROJECT-SPECS.md` §11.7); colours only from `@niwa/tokens`; light and
 dark both first-class; WCAG 2.1 AA; the "truth rule" of `NIWA-PLAN-B-01.md` for any public copy.
 **Previous plans:** `NIWA-PLAN-B-01.md` (public site, legal, multi-user — done apart from small leftovers).
-**Personalisation (owner, 2026-11-04):** signed-in users can pick a **colour theme** and a **font**; the in-app
-default font is **Fredoka** (the owner's choice). Public pages keep the brand font (Inter). See V10; the theme
-and font plumbing is built into V1 so nothing has to be redone.
+**Personalisation (owner, 2026-11-04):** signed-in users can pick a **colour theme** and a **font**. The default
+everywhere — app **and** public pages — is the font **Fredoka** with a **pastel** colour theme (the owner's
+choice); every alternative theme is pastel too. Visitors can try themes and fonts on an interactive landing page
+(V11). See V10; the theme and font plumbing is built into V1 so nothing has to be redone.
 
 ---
 
@@ -87,7 +88,7 @@ loaded, the search highlighting, the capture dialog, dark-mode event colours, ke
 | Wide screens | **Centre** list screens (Focus, Inbox, Search, Settings, Trash) in the space beside the tree, at the `list` width | Removes the empty right half without stretching lines too long |
 | Focus duplicates | **Show each task once**, in its most urgent section (Overdue › In progress › High priority › Upcoming › Recently updated); other facts become chips | Same task three times makes the list look longer than it is |
 | Tree pane | **Fixed width**, wider on large screens (280 px → 320 px from 1440 px) | Simpler; drag-to-resize can come later if needed |
-| Order | **V0 → V1 → V10 plumbing check → phone bugs (V3 rows, V5 month, V7 phone) → the rest** | Foundations first so fixes use the new tokens, but the visible phone bugs follow right after |
+| Order | **V0 → V1 → V10 plumbing check → phone bugs (V3 rows, V5 month, V7 phone) → the rest → V10 UI → V11 landing** | Foundations first so fixes use the new tokens, but the visible phone bugs follow right after |
 
 ---
 
@@ -105,9 +106,11 @@ loaded, the search highlighting, the capture dialog, dark-mode event colours, ke
 | V7 | Responsive pass (phone, tablet, wide desktop) | ⬜ | V2–V6 |
 | V8 | Public & auth pages brought in line | ⬜ | V1 |
 | V9 | Quality: accessibility, performance, regression | ⬜ | V2–V8, V10 |
-| V10 | Personalisation: colour themes + in-app font (default Fredoka) | ⬜ | V1 (plumbing), V9 checks |
+| V10 | Personalisation: pastel colour themes + font picker (default Garden + Fredoka) | ⬜ | V1 (plumbing), V9 checks |
+| V11 | Interactive landing page: playground + customisation preview | ⬜ | V3–V5 components, V10 themes/fonts |
 
 **Exit criteria (whole plan):** every finding in the audit tables is fixed or explicitly declined in `LOGS.md`;
+users can personalise theme and font; visitors can try NIWA on the landing page;
 no overlapping or clipped text at 360, 390, 820 or 1440 px (checked by V0's script); axe clean in light and dark;
 no literal font sizes or content widths outside the theme; existing tests green.
 
@@ -154,10 +157,12 @@ no literal font sizes or content widths outside the theme; existing tests green.
 
 ### V1.P4 — Theme plumbing for personalisation (no UI yet)
 - [ ] The MUI theme is built from a **theme id + font id + colour mode** at runtime, instead of one fixed theme;
-      today's look is theme `sage` + font `inter`. Every screen reads colours and fonts only from the theme.
+      the defaults are theme `garden` (pastel, V10) + font `fredoka`. Every screen reads colours and fonts only
+      from the theme.
 - [ ] Fonts register lazily: only the selected family's files are fetched (same CssBaseline approach as
       `web_app/src/app/fonts.ts`, so the pure-MUI rule holds).
-- [ ] Public pages (landing, auth, policies) always use theme `sage` + font `inter`, whatever a signed-in user picked.
+- [ ] Public pages (landing, auth, policies) use the defaults (`garden` + `fredoka`), whatever a signed-in user
+      picked — except inside the landing playground (V11), which previews other choices in its own sandbox.
 
 **Exit criteria:** theme exposes the scale and widths; a grep finds no literal font sizes or content widths in
 `web_app/src` (exceptions listed in code with a reason); switching the theme id in code recolours every screen.
@@ -283,25 +288,35 @@ no literal font sizes or content widths outside the theme; existing tests green.
 
 ---
 
-## V10 — Personalisation (signed-in app only)
+## V10 — Personalisation (signed-in app)
 
 **Goal:** let each user choose a colour theme and a font for the app. Defaults: font **Fredoka**, theme
-**Sage** (today's palette). Choices follow the account across devices; public pages are not affected.
+**Garden** (a pastel take on today's sage-and-blossom palette). Choices follow the account across devices. Public
+pages always show the defaults (Fredoka + Garden).
+
+**Pastel, but readable:** pastel colours are used for backgrounds, surfaces, chips, highlights, event blocks and
+buttons; **text stays deep** (charcoal / deep ink of the theme's hue) so it meets WCAG AA. Primary buttons are a
+pastel fill with dark text rather than a dark fill with white text. Dark mode uses muted, desaturated pastels on a
+deep background, not neon.
 
 ### V10.P1 — Choices
 - [ ] **Fonts** (self-hosted, OFL, Latin + Latin Extended, loaded only when chosen):
       **Fredoka** (default — `@fontsource-variable/fredoka` 5.3.0, weights 300–700, ≈ 30 KB Latin),
-      **Inter** (current), **Atkinson Hyperlegible** (high legibility), and **System** (the device font, nothing to
+      **Inter** (today's font), **Atkinson Hyperlegible** (high legibility), and **System** (the device font, nothing to
       download). Code blocks stay JetBrains Mono; the wordmark's 庭 stays the Noto Sans JP slice (Fredoka has no
       Japanese).
-- [ ] **Colour themes**, each with light and dark variants defined in `@niwa/tokens`: **Sage** (default, today's
-      palette) plus a small set of alternatives (e.g. Blossom, Ocean, Dusk) — final names and colours designed in
-      V10.P2. Every theme must pass `contrast.test.ts` (WCAG AA text, 3:1 icons) in both modes before it ships.
+- [ ] **Colour themes — all pastel**, each with light and dark variants defined in `@niwa/tokens`:
+      **Garden** (default: pastel sage + blossom pink, from today's palette), plus a starting set such as
+      **Blossom** (pink), **Lavender** (lilac), **Sky** (baby blue) and **Peach** (apricot) — final names and
+      values designed in V10.P2 and shown to the owner before they ship. Every theme must pass
+      `contrast.test.ts` (WCAG AA text, 3:1 icons and focus rings) in both modes.
 - [ ] Light / Dark / System stays a separate switch, so any theme works in either mode.
 
 ### V10.P2 — Design
 - [ ] Per-font tuning table (size, line height, letter spacing for body/headings) so Fredoka's rounded shapes
       and Inter's tighter ones both read at 15 px.
+- [ ] Pastel palette rules: which roles may be pastel (fills) and which must stay deep (text, icons, focus rings,
+      borders on inputs); applied to every theme so they all feel like one family.
 - [ ] Theme palettes: background, surface, primary, secondary, text, divider, item-type and status colours —
       no screen-specific colours.
 - [ ] Item-type colours (project/task/note/idea) stay recognisable in every theme.
@@ -310,7 +325,7 @@ no literal font sizes or content widths outside the theme; existing tests green.
 - [ ] Theme picker: swatch cards showing each palette in the current mode; selecting applies instantly.
 - [ ] Font picker: each option rendered in its own font with a sample line; selecting applies instantly (the font
       file loads on demand, with the old font kept until it's ready — no flash of unstyled text).
-- [ ] "Reset to defaults" (Sage + Fredoka + System mode).
+- [ ] "Reset to defaults" (Garden + Fredoka + System mode).
 
 ### V10.P4 — Saving the choice
 - [ ] Backend: `users.preferences { theme, font }` with defaults; contract + OpenAPI; read with `GET /auth/me`,
@@ -326,14 +341,55 @@ no literal font sizes or content widths outside the theme; existing tests green.
 - [ ] Bundle: only the chosen font's file is downloaded (checked in the network panel and recorded in `LOGS.md`).
 
 **Exit criteria:** a user can switch theme and font, the choice follows them to another browser, every
-combination is readable, and visitors still see the public site in Sage + Inter.
+combination is readable, and visitors see the public site in Garden + Fredoka (apart from their own playground
+preview, V11).
+
+---
+
+## V11 — Interactive landing page ("try it before you sign up")
+
+**Goal:** visitors can play with a small, working preview of NIWA on the landing page — including the
+customisation — so they see what the private app is like before creating an account.
+
+**Truth rule (B-01) applies:** the playground uses invented example content, clearly labelled "Example", runs
+entirely in the visitor's browser (no account, no network calls, nothing saved), and only shows features the real
+app has.
+
+### V11.P1 — Playground
+- [ ] A framed mini-app on the landing page built from the **same components** as the real app (tree, `ItemRow`,
+      note view, Focus, a week strip of the scheduler), fed by an in-memory example workspace — not screenshots.
+- [ ] Things a visitor can do: expand/collapse the tree, open a note, tick a task and watch it leave Focus,
+      capture an idea and see it appear in the Inbox, switch lens (Knowledge / Actionable / Scheduler).
+- [ ] **Customise panel** beside it: theme swatches (all V10 themes), font picker (all V10 fonts), light/dark
+      toggle — applied to the playground only, instantly. A short note: "Your choices are saved to your account
+      after you sign up."
+- [ ] "Start fresh" resets the playground; a gentle "Create account" call-to-action under it (hidden when sign-up
+      is closed, as today).
+
+### V11.P2 — Page refresh around it
+- [ ] Hero rewritten around the playground (replaces the static example tree); the real screenshots stay further
+      down as a "full app" view, retaken after V2–V5.
+- [ ] Landing sections restyled with the pastel default theme and Fredoka; subtle motion (scroll-in, hover) using
+      V1 motion tokens, off with reduced motion.
+
+### V11.P3 — Accessibility & performance
+- [ ] Playground fully keyboard operable, announced as an interactive example (`role="region"`, clear label), no
+      keyboard traps; the rest of the page usable without touching it.
+- [ ] Loaded lazily when scrolled into view (or after first paint) so the landing's first load stays light;
+      re-measure phone LCP (B-01 leftover 3.3 s, target 2.5 s) and keep CLS at 0.
+- [ ] Works at 360 px: the customise panel becomes a sheet under the preview.
+
+### V11.P4 — Tests
+- [ ] Unit/e2e: playground actions work offline (no `/api` requests made), theme/font switches only affect the
+      playground, reset works, sign-up CTA respects `registrationOpen`.
+- [ ] Axe audit of the landing with the playground in light and dark.
+
+**Exit criteria:** a visitor can try the main ideas and the customisation without an account, the page stays
+fast and accessible, and nothing in the playground claims more than the app does.
 
 ---
 
 ## Open questions for owner
 
-All five original questions were delegated and are answered in **Decisions** above. Still open:
-
-1. **Public pages font:** keep Inter for visitors (current plan), or use Fredoka there too so the brand matches the
-   app default?
-2. **Theme set:** happy with Sage + three alternatives to start, or a specific list/colour you have in mind?
+All earlier questions are answered (Decisions above; 2026-11-04: Fredoka on public pages too, pastel default and
+pastel alternatives). The final theme colours will be shown to the owner for approval in V10.P2 before they ship.

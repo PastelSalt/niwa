@@ -38,8 +38,9 @@ devices; images (Cloudinary) confirmed working 2026-11-04. Next: nightly backup 
 **B-02 — web UI/UX refinement (current focus)** · plan ready 2026-11-04, nothing built yet
 - V0–V9: baseline script, design tokens, shell & tree, item rows, item page & editor, scheduler, states,
   responsive pass (phone layout bugs: Focus chips overlap, Inbox titles squeezed, month view unreadable), public
-  pages, quality, and **V10 personalisation** (colour themes + in-app font, default Fredoka). Owner's five
-  questions decided 2026-11-04; two small ones left (public-page font, theme set).
+  pages, quality, **V10 personalisation** (pastel colour themes + font picker; default Garden + Fredoka, also on
+  public pages) and **V11 interactive landing page** (playground + customisation preview, no account needed).
+  All owner questions answered 2026-11-04; final theme colours to be shown for approval in V10.P2.
 
 **Decisions only the owner can make**
 - Email provider for password reset/verification (skipped for now).
