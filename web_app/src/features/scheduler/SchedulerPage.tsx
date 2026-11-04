@@ -1,4 +1,5 @@
 import AddRounded from '@mui/icons-material/AddRounded';
+import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import ChevronLeftRounded from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRounded from '@mui/icons-material/ChevronRightRounded';
 import Alert from '@mui/material/Alert';
@@ -175,6 +176,27 @@ export function SchedulerPage() {
         <Alert severity="error" sx={{ m: 2 }}>
           {messageOf(error)}
         </Alert>
+      )}
+      {/* Empty view: say how to add something (B-02 V5). */}
+      {!error && !isFetching && entries.length === 0 && (
+        <Box
+          role="status"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: { xs: 1.5, md: 2 },
+            py: 1,
+            color: 'text.secondary',
+          }}
+        >
+          <EventAvailableOutlined fontSize="small" sx={{ color: 'primary.main' }} />
+          <Typography variant="body2">
+            Nothing scheduled here yet. Use <strong>New</strong>,{' '}
+            {view === 'month' ? 'or click a day' : 'or drag on the grid'} to add an event. Tasks can be given
+            time from their details.
+          </Typography>
+        </Box>
       )}
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: view === 'month' ? 'auto' : 'hidden' }}>

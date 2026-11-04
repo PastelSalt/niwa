@@ -19,6 +19,7 @@ import Typography from '@mui/material/Typography';
 
 import { useState, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
+import { visuallyHidden } from '../lib/a11y.ts';
 import { useAuth } from '../auth/AuthProvider.tsx';
 import { Wordmark } from '../components/Wordmark.tsx';
 import { useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
@@ -182,13 +183,3 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
     </AppBar>
   );
 }
-
-// Strings, not numbers: in `sx`, `width: 1` means 100%.
-const visuallyHidden = {
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;

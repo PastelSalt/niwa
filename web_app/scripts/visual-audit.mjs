@@ -350,7 +350,7 @@ function screens(ids) {
       name: 'event-dialog',
       path: `/scheduler/month/${today}`,
       open: async (page) => {
-        await page.locator(`[role="gridcell"][data-day="${today}"]`).click({ position: { x: 8, y: 8 } });
+        await page.getByRole('button', { name: 'New', exact: true }).click();
         await page.getByRole('dialog').waitFor();
       },
     },

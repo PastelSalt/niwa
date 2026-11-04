@@ -1,4 +1,4 @@
-import { useColorScheme, useTheme } from '@mui/material/styles';
+import { useColorScheme, useTheme, type SxProps, type Theme } from '@mui/material/styles';
 import type { ItemSummary, ScheduleEntry } from '@niwa/contracts';
 import { palettes, themes } from '@niwa/tokens';
 import { useCallback, useMemo } from 'react';
@@ -27,7 +27,10 @@ export interface EntryLook {
   item: ItemSummary | undefined;
 }
 
-/** Blocks show their item's live title; colour falls back to the item type or the primary colour. */
+/**
+ * Blocks show their item's live title; colour falls back to the item type, and uncoloured events use the
+ * theme's calm muted tone (B-02 V5) so they don't all shout in the primary colour.
+ */
 export function useEntryLook() {
   const { colorScheme } = useColorScheme();
   const mode = colorScheme === 'dark' ? 'dark' : 'light';
@@ -40,9 +43,28 @@ export function useEntryLook() {
     (e: ScheduleEntry): EntryLook => {
       const item = e.itemId ? byId.get(e.itemId) : undefined;
       const title = e.kind === 'block' ? e.title || item?.title || 'Time block' : e.title;
-      const color = e.color ?? (item ? typeColors[mode][item.type] : active[mode].primary);
+      const color = e.color ?? (item ? typeColors[mode][item.type] : active[mode].textSecondary);
       return { title, color, textColor: readableOn(color), item };
     },
     [byId, mode, active, typeColors],
   );
+}
+
+/**
+ * How an entry block is painted (B-02 V5): in light mode a soft tint of its colour with a strong left edge and
+ * body-colour text; in dark mode a solid fill with whichever text reads best on it.
+ */
+type SxFn = Extract<SxProps<Theme>, (theme: Theme) => unknown>;
+
+export function entryBlockSx(look: Pick<EntryLook, 'color' | 'textColor'>): SxFn {
+  return (theme: Theme) => ({
+    bgcolor: theme.alpha(look.color, 0.16),
+    color: 'text.primary',
+    borderLeft: `3px solid ${look.color}`,
+    ...theme.applyStyles('dark', {
+      bgcolor: look.color,
+      color: look.textColor,
+      borderLeft: 0,
+    }),
+  });
 }

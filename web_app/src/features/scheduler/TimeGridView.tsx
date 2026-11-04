@@ -16,13 +16,18 @@ import {
   snap,
 } from '../../lib/dates.ts';
 import { visuallyHidden } from '../../lib/a11y.ts';
-import { useEntryLook } from './entryDisplay.ts';
+import { entryBlockSx, useEntryLook } from './entryDisplay.ts';
 import { layoutDay, type Segment } from './layout.ts';
 
 const HOUR_PX = 48;
 const PX_PER_MIN = HOUR_PX / 60;
 const MIN_DURATION = 15;
 const GUTTER = 56;
+/** Working hours, left unshaded (B-02 V5). */
+const WORK_START = 8;
+const WORK_END = 18;
+/** Caption line height in px, for fitting title lines into a block. */
+const LINE_PX = 16;
 
 interface TimeGridProps {
   days: Date[];
@@ -66,10 +71,14 @@ export function TimeGridView({
     return () => window.clearInterval(t);
   }, []);
 
-  // Open at 07:00 so the working day is in view.
+  // Open around "now" when today is in view, else at 07:00 — with room so the first hour label isn't
+  // clipped under the all-day row (B-02 V5).
+  const showsToday = days.some((d) => dayKey(d) === dayKey(new Date()));
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 7 * HOUR_PX;
-  }, []);
+    if (!scrollRef.current) return;
+    const hour = showsToday ? Math.max(0, Math.min(minutesOfDay(new Date()) / 60 - 2, 16)) : 7;
+    scrollRef.current.scrollTop = Math.max(0, hour * HOUR_PX - 12);
+  }, [showsToday]);
 
   const dayKeys = days.map(dayKey);
   const timed = entries.filter((e) => !e.isAllDay);
@@ -224,7 +233,7 @@ export function TimeGridView({
                   <ButtonBase
                     key={e.id}
                     onClick={() => onOpen(e)}
-                    sx={{
+                    sx={(theme) => ({
                       display: 'block',
                       width: '100%',
                       textAlign: 'left',
@@ -232,13 +241,14 @@ export function TimeGridView({
                       mb: 0.25,
                       borderRadius: 0.75,
                       typography: 'caption',
+                      fontWeight: 600,
                       lineHeight: 1.6,
-                      bgcolor: l.color,
-                      color: l.textColor,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                    }}
+                      ...entryBlockSx(l)(theme),
+                    })}
+                    title={l.title}
                   >
                     {l.title}
                   </ButtonBase>
@@ -294,15 +304,38 @@ export function TimeGridView({
                     const at = Math.floor(minutes / 15) * 15;
                     begin(e, { kind: 'create', day: i, from: at, to: at });
                   }}
-                  sx={{
+                  sx={(theme) => ({
                     flex: 1,
                     minWidth: 0,
                     position: 'relative',
                     borderLeft: 1,
                     borderColor: 'divider',
                     cursor: 'crosshair',
-                  }}
+                    // Weekends get a faint tint (B-02 V5).
+                    bgcolor: [0, 6].includes(day.getDay())
+                      ? theme.alpha((theme.vars ?? theme).palette.text.primary, 0.025)
+                      : 'transparent',
+                  })}
                 >
+                  {/* Outside working hours: shaded, so the working day stands out. */}
+                  {[
+                    [0, WORK_START],
+                    [WORK_END, 24],
+                  ].map(([from, to]) => (
+                    <Box
+                      key={from}
+                      aria-hidden
+                      sx={(theme) => ({
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        top: from! * HOUR_PX,
+                        height: (to! - from!) * HOUR_PX,
+                        bgcolor: theme.alpha((theme.vars ?? theme).palette.text.primary, 0.03),
+                        pointerEvents: 'none',
+                      })}
+                    />
+                  ))}
                   <Box component="span" sx={visuallyHidden}>
                     {day.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
                   </Box>
@@ -315,6 +348,13 @@ export function TimeGridView({
                     const startD = new Date(e.startAt);
                     const endD = resizing ? atMinutes(day, drag.end) : new Date(e.endAt);
                     const height = Math.max(MIN_DURATION, end - p.start) * PX_PER_MIN;
+                    const range = formatRange(startD, endD);
+                    const showTime = height >= 34;
+                    // Title first: as many lines as the block holds, then the time if there's room.
+                    const titleLines = Math.max(
+                      1,
+                      Math.floor((height - 6 - (showTime ? LINE_PX : 0)) / LINE_PX),
+                    );
                     return (
                       <Box
                         key={p.key}
@@ -334,48 +374,68 @@ export function TimeGridView({
                             moved: false,
                           });
                         }}
-                        sx={{
+                        // Hover shows the full title and time, whatever fits in the block.
+                        title={`${l.title}\n${range}`}
+                        sx={(theme) => ({
                           position: 'absolute',
                           top: p.start * PX_PER_MIN,
                           height,
                           left: `calc(${(p.column / p.columns) * 100}% + 2px)`,
                           width: `calc(${100 / p.columns}% - 4px)`,
-                          bgcolor: l.color,
-                          color: l.textColor,
                           borderRadius: 1,
                           px: 0.75,
                           py: 0.25,
                           overflow: 'hidden',
+                          containerType: 'inline-size',
                           cursor: 'grab',
                           opacity: moving ? 0.35 : 1,
-                          boxShadow: 1,
                           zIndex: 1,
+                          ...entryBlockSx(l)(theme),
                           '&:focus-visible': { outline: 2, outlineColor: 'text.primary', outlineOffset: 1 },
-                        }}
+                        })}
                       >
                         <Typography
                           variant="caption"
                           component="div"
                           sx={{
                             fontWeight: 600,
-                            lineHeight: 1.3,
-                            display: 'flex',
-                            gap: 0.5,
-                            alignItems: 'center',
+                            lineHeight: `${LINE_PX}px`,
+                            display: '-webkit-box',
+                            WebkitLineClamp: titleLines,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            overflowWrap: 'anywhere',
                           }}
-                          noWrap
                         >
                           {l.title}
-                          {e.seriesId && <RepeatRounded sx={{ fontSize: '1em' }} />}
+                          {e.seriesId && (
+                            <RepeatRounded sx={{ fontSize: '1em', verticalAlign: '-0.125em', ml: 0.5 }} />
+                          )}
                         </Typography>
                         {/* Short blocks hide the time visually; keep it in the accessible name. */}
-                        {height >= 34 ? (
-                          <Typography variant="caption" component="div" sx={{ lineHeight: 1.3 }} noWrap>
-                            {formatRange(startD, endD)}
+                        {showTime ? (
+                          <Typography
+                            variant="caption"
+                            component="div"
+                            sx={{
+                              lineHeight: `${LINE_PX}px`,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              // Narrow columns (week view on tablets) show the start time only.
+                              '& .range-short': { display: 'none' },
+                              '@container (max-width: 132px)': {
+                                '& .range-full': { display: 'none' },
+                                '& .range-short': { display: 'inline' },
+                              },
+                            }}
+                          >
+                            <span className="range-full">{range}</span>
+                            <span className="range-short">{formatTime(startD)}</span>
                           </Typography>
                         ) : (
                           <Box component="span" sx={visuallyHidden}>
-                            {formatRange(startD, endD)}
+                            {range}
                           </Box>
                         )}
                         <Box

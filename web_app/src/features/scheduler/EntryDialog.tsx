@@ -36,6 +36,7 @@ import {
 import { ItemTypeIcon } from '../items/itemMeta.tsx';
 import { useTree } from '../items/queries.ts';
 import { ENTRY_COLORS } from './entryDisplay.ts';
+import { repeatSummary } from './repeatSummary.ts';
 import { useCreateEntry, useDeleteEntry, useUpdateEntry } from './queries.ts';
 
 export type EntryDialogRequest =
@@ -181,7 +182,15 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
 
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{editing ? (f.kind === 'block' ? 'Time block' : 'Event') : 'New'}</DialogTitle>
+      <DialogTitle>
+        {editing
+          ? f.kind === 'block'
+            ? 'Time block'
+            : 'Event'
+          : f.kind === 'block'
+            ? 'New time block'
+            : 'New event'}
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -227,6 +236,9 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
             slotProps={{ htmlInput: { maxLength: 300 } }}
           />
 
+          <Typography variant="overline" color="text.secondary" component="p" sx={{ mb: -1 }}>
+            When
+          </Typography>
           <FormControlLabel
             control={<Switch checked={f.allDay} onChange={(e) => set('allDay', e.target.checked)} />}
             label="All day"
@@ -281,7 +293,7 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
             helperText={
               recurring && scope === 'instance'
                 ? 'Choose “This and following” to change the repeat.'
-                : undefined
+                : (repeatSummary(f.recurrence, f.startDay, f.startTime, f.allDay) ?? undefined)
             }
           >
             {(Object.keys(RECURRENCE_LABEL) as Recurrence[]).map((r) => (
