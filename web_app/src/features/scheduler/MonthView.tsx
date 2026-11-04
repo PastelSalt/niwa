@@ -1,14 +1,20 @@
+import AddRounded from '@mui/icons-material/AddRounded';
 import RepeatRounded from '@mui/icons-material/RepeatRounded';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import type { ScheduleEntry } from '@niwa/contracts';
 import { useMemo, useState } from 'react';
 import { addDays, allDayKeys, dayKey, formatTime, weekdayNames } from '../../lib/dates.ts';
 import { visuallyHidden } from '../../lib/a11y.ts';
-import { useEntryLook } from './entryDisplay.ts';
+import { entryBlockSx, useEntryLook } from './entryDisplay.ts';
 
 const MAX_CHIPS = 3;
+/** Phones: dots per day in the grid (V5), the day's titles in the list below. */
+const MAX_DOTS = 3;
 const DRAG_TYPE = 'application/x-niwa-entry';
 
 interface MonthViewProps {
@@ -37,9 +43,17 @@ export function MonthView({
   onShowDay,
 }: MonthViewProps) {
   const look = useEntryLook();
+  const theme = useTheme();
+  // Phones get dots in the grid and the selected day's entries below it, so titles stay readable (V5).
+  const compact = useMediaQuery(theme.breakpoints.down('sm'));
   const [dropDay, setDropDay] = useState<string | null>(null);
   const today = dayKey(new Date());
+  const [picked, setPicked] = useState<string | null>(null);
   const days = useMemo(() => Array.from({ length: 42 }, (_, i) => addDays(gridStart, i)), [gridStart]);
+  // Selected day on phones: the one tapped, else today when it's in this month, else the 1st.
+  const inThisMonth = days.filter((d) => d.getMonth() === month).map(dayKey);
+  const selected =
+    picked && inThisMonth.includes(picked) ? picked : inThisMonth.includes(today) ? today : inThisMonth[0]!;
   const weeks = useMemo(() => Array.from({ length: 6 }, (_, w) => days.slice(w * 7, w * 7 + 7)), [days]);
 
   const byDay = useMemo(() => {
@@ -53,28 +67,133 @@ export function MonthView({
     return map;
   }, [entries]);
 
+  if (compact) {
+    const selectedDate = days.find((d) => dayKey(d) === selected)!;
+    const list = byDay.get(selected) ?? [];
+    return (
+      <Box>
+        <WeekdayHeader />
+        <Box
+          role="grid"
+          aria-label="Month"
+          sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
+        >
+          {weeks.map((week) => (
+            <Box key={dayKey(week[0]!)} role="row" sx={{ display: 'contents' }}>
+              {week.map((day) => {
+                const key = dayKey(day);
+                const entriesOn = byDay.get(key) ?? [];
+                const inMonth = day.getMonth() === month;
+                const isSelected = key === selected;
+                return (
+                  <Box
+                    key={key}
+                    role="gridcell"
+                    data-day={key}
+                    aria-selected={isSelected}
+                    sx={{ borderBottom: 1, borderColor: 'divider', minWidth: 0 }}
+                  >
+                    <ButtonBase
+                      onClick={() => (inMonth ? setPicked(key) : onShowDay(day))}
+                      aria-label={`${day.toLocaleDateString(undefined, {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                      })}${entriesOn.length ? `, ${entriesOn.length} ${entriesOn.length === 1 ? 'entry' : 'entries'}` : ''}`}
+                      sx={(t) => ({
+                        width: '100%',
+                        minHeight: 52,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        py: 0.75,
+                        bgcolor: isSelected
+                          ? t.alpha((t.vars ?? t).palette.primary.main, 0.12)
+                          : 'transparent',
+                        '&.Mui-focusVisible': { outline: 2, outlineColor: 'primary.main', outlineOffset: -2 },
+                      })}
+                    >
+                      <DayNumber day={day} isToday={key === today} inMonth={inMonth} />
+                      <Box aria-hidden sx={{ display: 'flex', gap: 0.375, height: 6 }}>
+                        {entriesOn.slice(0, MAX_DOTS).map((e) => (
+                          <Box
+                            key={e.id}
+                            sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: look(e).color }}
+                          />
+                        ))}
+                      </Box>
+                    </ButtonBase>
+                  </Box>
+                );
+              })}
+            </Box>
+          ))}
+        </Box>
+
+        <Box component="section" aria-label="Selected day" sx={{ px: 2, pt: 2, pb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Typography variant="subtitle1" component="h3" sx={{ flex: 1 }}>
+              {selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+            </Typography>
+            <Button size="small" startIcon={<AddRounded />} onClick={() => onCreate(selectedDate)}>
+              Add
+            </Button>
+          </Box>
+          {list.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              Nothing planned.
+            </Typography>
+          ) : (
+            <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+              {list.map((e) => {
+                const l = look(e);
+                return (
+                  <li key={`${e.id}-${selected}`}>
+                    <ButtonBase
+                      onClick={() => onOpen(e)}
+                      sx={{
+                        width: '100%',
+                        justifyContent: 'flex-start',
+                        textAlign: 'left',
+                        gap: 1.5,
+                        py: 1,
+                        px: 1,
+                        borderRadius: 1,
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      <Box
+                        aria-hidden
+                        sx={{
+                          width: 4,
+                          alignSelf: 'stretch',
+                          borderRadius: 1,
+                          bgcolor: l.color,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography variant="body2" color="text.secondary" sx={{ width: 64, flexShrink: 0 }}>
+                        {e.isAllDay ? 'All day' : formatTime(new Date(e.startAt))}
+                      </Typography>
+                      <Typography variant="body1" sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
+                        {l.title}
+                      </Typography>
+                      {e.seriesId && <RepeatRounded fontSize="inline" sx={{ color: 'text.secondary' }} />}
+                    </ButtonBase>
+                  </li>
+                );
+              })}
+            </Box>
+          )}
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 520 }}>
-      <Box
-        aria-hidden
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        {weekdayNames().map((n) => (
-          <Typography
-            key={n}
-            variant="caption"
-            color="text.secondary"
-            sx={{ px: 1, py: 0.75, fontWeight: 600 }}
-          >
-            {n}
-          </Typography>
-        ))}
-      </Box>
+      <WeekdayHeader />
       <Box
         role="grid"
         aria-label="Month"
@@ -134,26 +253,9 @@ export function MonthView({
                   <Box component="span" sx={visuallyHidden}>
                     {day.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
                   </Box>
-                  <Typography
-                    variant="caption"
-                    component="div"
-                    aria-hidden
-                    sx={{
-                      width: 22,
-                      height: 22,
-                      display: 'grid',
-                      placeItems: 'center',
-                      borderRadius: '50%',
-                      mb: 0.25,
-                      pointerEvents: 'none',
-                      fontWeight: key === today ? 700 : 400,
-                      color:
-                        key === today ? 'primary.contrastText' : inMonth ? 'text.primary' : 'text.secondary',
-                      bgcolor: key === today ? 'primary.main' : 'transparent',
-                    }}
-                  >
-                    {day.getDate()}
-                  </Typography>
+                  <Box sx={{ mb: 0.25 }}>
+                    <DayNumber day={day} isToday={key === today} inMonth={inMonth} />
+                  </Box>
                   {list.slice(0, MAX_CHIPS).map((e) => {
                     const l = look(e);
                     return (
@@ -165,10 +267,14 @@ export function MonthView({
                           ev.dataTransfer.effectAllowed = 'move';
                         }}
                         onClick={() => onOpen(e)}
+                        title={e.isAllDay ? l.title : `${formatTime(new Date(e.startAt))} ${l.title}`}
                         // Timed chips are named by their visible text (time, title); all-day ones add "all day".
-                        aria-label={e.isAllDay ? `${l.title}, all day` : undefined}
-                        sx={{
+                        aria-label={
+                          e.isAllDay ? `${l.title}, all day` : `${formatTime(new Date(e.startAt))} ${l.title}`
+                        }
+                        sx={(theme) => ({
                           display: 'flex',
+                          containerType: 'inline-size',
                           width: '100%',
                           justifyContent: 'flex-start',
                           gap: 0.5,
@@ -176,13 +282,13 @@ export function MonthView({
                           py: 0.125,
                           mb: 0.25,
                           borderRadius: 0.75,
-                          fontSize: 12,
+                          typography: 'caption',
                           lineHeight: 1.5,
                           textAlign: 'left',
                           ...(e.isAllDay
-                            ? { bgcolor: l.color, color: l.textColor }
+                            ? { fontWeight: 600, ...entryBlockSx(l)(theme) }
                             : { '&:hover': { bgcolor: 'action.hover' } }),
-                        }}
+                        })}
                       >
                         {!e.isAllDay && (
                           <Box
@@ -191,7 +297,15 @@ export function MonthView({
                           />
                         )}
                         {!e.isAllDay && (
-                          <Box component="span" sx={{ color: 'text.secondary', flexShrink: 0 }}>
+                          <Box
+                            component="span"
+                            sx={{
+                              color: 'text.secondary',
+                              flexShrink: 0,
+                              // Narrow cells (tablets): the title gets the room; the time is in the tooltip.
+                              '@container (max-width: 150px)': { display: 'none' },
+                            }}
+                          >
                             {formatTime(new Date(e.startAt))}
                           </Box>
                         )}
@@ -201,7 +315,9 @@ export function MonthView({
                         >
                           {l.title}
                         </Box>
-                        {e.seriesId && <RepeatRounded sx={{ fontSize: 12, opacity: 0.7, flexShrink: 0 }} />}
+                        {e.seriesId && (
+                          <RepeatRounded sx={{ fontSize: '1em', opacity: 0.7, flexShrink: 0 }} />
+                        )}
                       </ButtonBase>
                     );
                   })}
@@ -209,7 +325,7 @@ export function MonthView({
                     <ButtonBase
                       onClick={() => onShowDay(day)}
                       sx={{
-                        fontSize: 12,
+                        typography: 'caption',
                         color: 'text.secondary',
                         px: 0.5,
                         borderRadius: 0.75,
@@ -226,5 +342,53 @@ export function MonthView({
         ))}
       </Box>
     </Box>
+  );
+}
+
+function WeekdayHeader() {
+  return (
+    <Box
+      aria-hidden
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+        borderBottom: 1,
+        borderColor: 'divider',
+      }}
+    >
+      {weekdayNames().map((n) => (
+        <Typography
+          key={n}
+          variant="caption"
+          color="text.secondary"
+          sx={{ px: { xs: 0, sm: 1 }, py: 0.75, fontWeight: 600, textAlign: { xs: 'center', sm: 'left' } }}
+        >
+          {n}
+        </Typography>
+      ))}
+    </Box>
+  );
+}
+
+function DayNumber({ day, isToday, inMonth }: { day: Date; isToday: boolean; inMonth: boolean }) {
+  return (
+    <Typography
+      variant="caption"
+      component="div"
+      aria-hidden
+      sx={{
+        width: 22,
+        height: 22,
+        display: 'grid',
+        placeItems: 'center',
+        borderRadius: '50%',
+        pointerEvents: 'none',
+        fontWeight: isToday ? 700 : 400,
+        color: isToday ? 'primary.contrastText' : inMonth ? 'text.primary' : 'text.secondary',
+        bgcolor: isToday ? 'primary.main' : 'transparent',
+      }}
+    >
+      {day.getDate()}
+    </Typography>
   );
 }

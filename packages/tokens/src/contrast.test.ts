@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { palettes, typeColors, type ColorMode } from './index.ts';
+import {
+  palettes,
+  priorityColors,
+  statusColors,
+  themes,
+  typeColors,
+  typeScaleFor,
+  fonts,
+  type ColorMode,
+  type FontId,
+} from './index.ts';
 
 /** WCAG 2.x relative luminance / contrast ratio. */
 function luminance(hex: string): number {
@@ -52,5 +62,63 @@ describe.each(modes)('%s palette', (mode) => {
     for (const c of fills) {
       expect(Math.max(contrast('#FFFFFF', c), contrast('#1A1D1B', c))).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+describe.each(Object.entries(themes))('theme %s', (_id, theme) => {
+  it.each(modes)('status and priority roles reach 3:1 as dots, icons and chip borders (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const bg of [p.background, p.surface]) {
+      for (const c of [...Object.values(statusColors(p)), ...Object.values(priorityColors(p))])
+        expect(contrast(c, bg)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it.each(modes)('text stays AA on every surface (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const bg of [p.background, p.surface]) {
+      expect(contrast(p.textPrimary, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(p.textSecondary, bg)).toBeGreaterThanOrEqual(4.5);
+      // primary is the deep ink used for links, icons and focus rings
+      expect(contrast(p.primary, bg)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each(modes)('pastel fills carry deep text at AA (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    expect(contrast(p.onPrimaryContainer, p.primaryContainer)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(p.primaryContrast, p.primary)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(p.secondaryContrast, p.secondary)).toBeGreaterThanOrEqual(4.5);
+    // Body text on a selected/pastel container stays readable too.
+    expect(contrast(p.textPrimary, p.primaryContainer)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(modes)('item-type colours reach 3:1 as icons (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const bg of [p.background, p.surface])
+      for (const c of Object.values(theme.typeColors[mode]))
+        expect(contrast(c, bg)).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(modes)('solid event fills carry white or dark text at 4.5:1 (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const c of [
+      p.primary,
+      p.secondary,
+      p.error,
+      p.warning,
+      p.success,
+      p.info,
+      ...Object.values(theme.typeColors[mode]),
+    ])
+      expect(Math.max(contrast('#FFFFFF', c), contrast('#1A1D1B', c))).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe('type scale', () => {
+  it.each(Object.keys(fonts) as FontId[])('%s: nothing readable under 12 px; body is 15 px', (font) => {
+    const scale = typeScaleFor(font);
+    expect(scale.body.size).toBe(15);
+    for (const step of Object.values(scale)) expect(step.size).toBeGreaterThanOrEqual(12);
   });
 });

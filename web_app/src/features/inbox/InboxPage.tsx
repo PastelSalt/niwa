@@ -3,39 +3,32 @@ import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
 import DriveFileMoveOutlined from '@mui/icons-material/DriveFileMoveOutlined';
 import InboxOutlined from '@mui/icons-material/InboxOutlined';
 import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import Paper from '@mui/material/Paper';
-import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router';
+import { RowSkeletons } from '../items/RowSkeletons.tsx';
+import { Page } from '../../components/Page.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
-import { ItemTypeIcon, LENS_PATH, TYPE_LABEL } from '../items/itemMeta.tsx';
+import { HintChip } from '../items/chips.tsx';
+import { TYPE_LABEL } from '../items/itemMeta.tsx';
+import { ItemRow, ItemRowList } from '../items/ItemRow.tsx';
 import { useTree } from '../items/queries.ts';
 import { useItemActions } from '../items/useItemActions.ts';
 import { useQuickCapture } from './CaptureProvider.tsx';
 import { FileDialog } from './FileDialog.tsx';
 import { useInbox } from './queries.ts';
 
+/** Compact capture time ("now", "5m", "3h", "Nov 3"); the full time is in the tooltip. */
 function capturedAgo(iso: string): string {
   const mins = Math.round((Date.now() - Date.parse(iso)) / 60_000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m`;
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours} h ago`;
+  if (hours < 24) return `${hours}h`;
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
@@ -61,7 +54,7 @@ export function InboxPage() {
   const titleOf = (id: string | null) => (id ? tree.find((t) => t.id === id)?.title : undefined);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 900 }}>
+    <Page width="list">
       <Stack direction="row" sx={{ alignItems: 'center', mb: 2, gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="h5" component="h2" sx={{ flex: 1 }}>
           Inbox{' '}
@@ -95,7 +88,7 @@ export function InboxPage() {
         </Paper>
       )}
 
-      {isLoading && <Skeleton variant="rounded" height={160} />}
+      {isLoading && <RowSkeletons />}
       {error && <Alert severity="error">{messageOf(error)}</Alert>}
       {items && list.length === 0 && (
         <EmptyState
@@ -105,78 +98,52 @@ export function InboxPage() {
         />
       )}
       {list.length > 0 && (
-        <Paper variant="outlined">
-          <List disablePadding aria-label="Inbox items">
-            {list.map((it) => {
-              const suggested = titleOf(it.suggestedParentId);
-              return (
-                <ListItem
-                  key={it.id}
-                  divider
-                  disablePadding
-                  secondaryAction={
-                    <Stack direction="row" spacing={0.5}>
-                      <Button
-                        size="small"
-                        startIcon={<DriveFileMoveOutlined />}
-                        onClick={() => setFiling([it])}
-                        aria-label={`File ${it.title}`}
-                      >
-                        File
-                      </Button>
-                      <Tooltip title="Delete">
-                        <IconButton
-                          size="small"
-                          aria-label={`Delete ${it.title}`}
-                          onClick={() => void actions.remove(it, 0)}
-                        >
-                          <DeleteOutlineRounded fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  }
-                  sx={{ pr: 18 }}
-                >
-                  <Checkbox
-                    checked={selected.has(it.id)}
-                    onChange={() => toggle(it.id)}
-                    slotProps={{ input: { 'aria-label': `Select ${it.title}` } }}
-                    sx={{ ml: 1 }}
-                  />
-                  <ListItemButton
-                    component={RouterLink}
-                    to={`${LENS_PATH[it.nature]}/${it.id}`}
-                    sx={{ minWidth: 0 }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <ItemTypeIcon type={it.type} fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={it.title}
-                      secondary={
-                        <Box
-                          component="span"
-                          sx={{ display: 'inline-flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}
-                        >
-                          <span>
-                            {TYPE_LABEL[it.type]} · {it.inboxedAt ? capturedAgo(it.inboxedAt) : ''}
-                          </span>
-                          {suggested && <Chip size="small" variant="outlined" label={`→ ${suggested}`} />}
-                        </Box>
-                      }
-                      slotProps={{ primary: { noWrap: true }, secondary: { component: 'span' } }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
-        </Paper>
+        <ItemRowList label="Inbox items">
+          {list.map((it) => {
+            const suggested = titleOf(it.suggestedParentId);
+            return (
+              <ItemRow
+                key={it.id}
+                item={it}
+                selection={{ checked: selected.has(it.id), onChange: () => toggle(it.id) }}
+                meta={
+                  <>
+                    {TYPE_LABEL[it.type]}
+                    {it.inboxedAt && (
+                      <>
+                        {' · '}
+                        <time dateTime={it.inboxedAt} title={new Date(it.inboxedAt).toLocaleString()}>
+                          {capturedAgo(it.inboxedAt)}
+                        </time>
+                      </>
+                    )}
+                  </>
+                }
+                chips={suggested && <HintChip label={`→ ${suggested}`} />}
+                actions={[
+                  {
+                    label: 'File',
+                    ariaLabel: `File ${it.title}`,
+                    icon: <DriveFileMoveOutlined fontSize="small" />,
+                    onClick: () => setFiling([it]),
+                    primary: true,
+                  },
+                  {
+                    label: 'Delete',
+                    ariaLabel: `Delete ${it.title}`,
+                    icon: <DeleteOutlineRounded fontSize="small" />,
+                    onClick: () => void actions.remove(it, 0),
+                  },
+                ]}
+              />
+            );
+          })}
+        </ItemRowList>
       )}
 
       {filing && (
         <FileDialog items={filing} onClose={() => setFiling(null)} onDone={() => setSelected(new Set())} />
       )}
-    </Box>
+    </Page>
   );
 }

@@ -1,38 +1,56 @@
 import notoJpWordmark from '../assets/fonts/noto-sans-jp-101-400-normal.woff2';
+import atkinsonLatinExt from '@fontsource-variable/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-ext-wght-normal.woff2';
+import atkinsonLatin from '@fontsource-variable/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-wght-normal.woff2';
+import fredokaLatinExt from '@fontsource-variable/fredoka/files/fredoka-latin-ext-wght-normal.woff2';
+import fredokaLatin from '@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2';
 import interLatinExt from '@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2';
 import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2';
 import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2';
+import type { FontId } from '@niwa/tokens';
 
 /**
- * Self-hosted brand fonts (NIWA-PLAN-B-01 B5), registered through CssBaseline so the pure-MUI rule holds
- * (no stylesheet imports). Each face has its unicode-range, so browsers only fetch what a page uses.
+ * Self-hosted fonts (NIWA-PLAN-B-01 B5, B-02 V1.P4), registered through CssBaseline so the pure-MUI rule
+ * holds (no stylesheet imports). The theme only registers the **selected** family, so the browser never
+ * downloads the others; each face also has its unicode-range, so only the scripts a page uses are fetched.
  *
- * - Inter (variable, 100–900): Latin + Latin Extended — ~130 KB, enough for the UI copy.
- * - Noto Sans JP: only the ~10 KB slice holding the wordmark's 庭 (U+5EAD), vendored from
- *   @fontsource/noto-sans-jp 5.3.1 (OFL, see assets/fonts/NotoSansJP-OFL.txt). Other Japanese text falls back
- *   to the system font; ship more slices if Japanese UI copy is ever added.
- * - JetBrains Mono (variable, Latin, ~40 KB) for code in notes. Registered under the token's own name
- *   ("JetBrains Mono"), so `typography.monoFamily` picks it up unchanged.
+ * - Fredoka (variable, 300–700; default): Latin + Latin Extended (~30 KB for Latin). No Japanese glyphs.
+ * - Inter (variable, 100–900): Latin + Latin Extended (~130 KB).
+ * - Atkinson Hyperlegible Next (variable, 200–800; high legibility): Latin + Latin Extended (~53 KB).
+ * - System: nothing to download.
+ * - Always: Noto Sans JP — only the ~10 KB slice holding the wordmark's 庭 (U+5EAD), vendored from
+ *   @fontsource/noto-sans-jp 5.3.1 (OFL, see assets/fonts/NotoSansJP-OFL.txt) — and JetBrains Mono
+ *   (variable, Latin, ~40 KB) for code in notes, under the token's own name ("JetBrains Mono").
  */
-export const fontFaces = `
+
+const LATIN =
+  'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD';
+const LATIN_EXT =
+  'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF';
+
+const face = (family: string, weights: string, src: string, range: string) => `
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: '${family}';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
-  src: url(${interLatin}) format('woff2-variations');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Inter Variable';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url(${interLatinExt}) format('woff2-variations');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
-    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
+  font-weight: ${weights};
+  src: url(${src}) format('woff2-variations');
+  unicode-range: ${range};
+}`;
+
+const FAMILY_FACES: Record<FontId, string> = {
+  fredoka:
+    face('Fredoka Variable', '300 700', fredokaLatin, LATIN) +
+    face('Fredoka Variable', '300 700', fredokaLatinExt, LATIN_EXT),
+  inter:
+    face('Inter Variable', '100 900', interLatin, LATIN) +
+    face('Inter Variable', '100 900', interLatinExt, LATIN_EXT),
+  atkinson:
+    face('Atkinson Hyperlegible Next Variable', '200 800', atkinsonLatin, LATIN) +
+    face('Atkinson Hyperlegible Next Variable', '200 800', atkinsonLatinExt, LATIN_EXT),
+  system: '',
+};
+
+const SHARED_FACES = `
 @font-face {
   font-family: 'Noto Sans JP';
   font-style: normal;
@@ -41,13 +59,42 @@ export const fontFaces = `
   src: url(${notoJpWordmark}) format('woff2');
   unicode-range: U+5EAD;
 }
-@font-face {
-  font-family: 'JetBrains Mono';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 800;
-  src: url(${monoLatin}) format('woff2-variations');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
+${face('JetBrains Mono', '100 800', monoLatin, LATIN)}
 `;
+
+/** Family name and Latin file per font, for loading one ahead of switching to it. */
+const PRELOAD: Record<FontId, { family: string; weights: string; url: string } | null> = {
+  fredoka: { family: 'Fredoka Variable', weights: '300 700', url: fredokaLatin },
+  inter: { family: 'Inter Variable', weights: '100 900', url: interLatin },
+  atkinson: { family: 'Atkinson Hyperlegible Next Variable', weights: '200 800', url: atkinsonLatin },
+  system: null,
+};
+
+/**
+ * Load a font's Latin face before the theme switches to it (V10.P3), so the old font stays on screen until
+ * the new one is ready — no flash of fallback text. Also lets the font picker render each option in its own
+ * font. Resolves (never rejects) — on failure the theme just switches and the browser swaps when it can.
+ */
+export async function ensureFontLoaded(font: FontId): Promise<void> {
+  const f = PRELOAD[font];
+  if (!f || typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) return;
+  const already = [...document.fonts].some(
+    (face) => face.family.replace(/"/g, '') === f.family && face.status === 'loaded',
+  );
+  if (already) return;
+  try {
+    const face = new FontFace(f.family, `url(${f.url}) format('woff2-variations')`, {
+      weight: f.weights,
+      display: 'swap',
+      unicodeRange: LATIN,
+    });
+    document.fonts.add(await face.load());
+  } catch {
+    /* offline or blocked — fall through */
+  }
+}
+
+/** @font-face rules for one font choice plus the shared wordmark and code faces. */
+export function fontFacesFor(font: FontId): string {
+  return FAMILY_FACES[font] + SHARED_FACES;
+}

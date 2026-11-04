@@ -12,6 +12,8 @@ export interface UserDoc {
   aiEnabled: boolean;
   /** First-run tour (NIWA-PLAN-B-01 B7); null until finished or skipped. */
   onboarding: { status: 'completed' | 'skipped'; version: number; at: Date } | null;
+  /** Appearance (NIWA-PLAN-B-02 V10); null until first changed — the serializer fills the defaults. */
+  preferences: { theme?: string; font?: string; mode?: 'system' | 'light' | 'dark' } | null;
   /** Set by the operator (scripts/admin.ts) to block sign-in; never shown to other users. */
   disabledAt: Date | null;
   disabledReason: string | null;
@@ -34,6 +36,17 @@ const userSchema = new Schema<UserDoc>(
           status: { type: String, enum: ['completed', 'skipped'], required: true },
           version: { type: Number, required: true },
           at: { type: Date, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
+    preferences: {
+      type: new Schema(
+        {
+          theme: { type: String },
+          font: { type: String },
+          mode: { type: String, enum: ['system', 'light', 'dark'] },
         },
         { _id: false },
       ),

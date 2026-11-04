@@ -44,7 +44,7 @@ export function ChangePassword() {
 
   return (
     <form onSubmit={(e) => void submit(e)} noValidate>
-      <Stack spacing={2} sx={{ maxWidth: 400 }}>
+      <Stack spacing={2} sx={{ maxWidth: (t) => t.niwa.width.narrow }}>
         {error && <Alert severity="error">{error}</Alert>}
         <TextField
           label="Current password"
@@ -89,7 +89,7 @@ function Usage() {
     ['Images', data.imageBytes, data.imageByteLimit, `${mb(data.imageBytes)} of ${mb(data.imageByteLimit)}`],
   ];
   return (
-    <Stack spacing={1.5} sx={{ width: '100%', maxWidth: 400 }}>
+    <Stack spacing={1.5} sx={{ width: '100%', maxWidth: (t) => t.niwa.width.narrow }}>
       {rows.map(([label, used, limit, text]) => (
         <div key={label}>
           <Stack direction="row" sx={{ justifyContent: 'space-between' }}>

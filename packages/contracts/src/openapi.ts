@@ -127,6 +127,12 @@ export function buildRegistry(): OpenAPIRegistry {
     body: auth.OnboardingInput,
     response: auth.MeResponse,
   });
+  add('put', '/account/preferences', {
+    tag: 'Account',
+    summary: 'Save appearance preferences (theme, font, light/dark) — partial update',
+    body: auth.PreferencesInput,
+    response: auth.MeResponse,
+  });
   add('post', '/account/password', {
     tag: 'Account',
     summary: 'Change password; signs out every other session and returns a fresh one',

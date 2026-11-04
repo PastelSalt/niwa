@@ -1,4 +1,11 @@
-import { natureOf, type Item, type ItemSummary, type PublicUser, type Workspace } from '@niwa/contracts';
+import {
+  DEFAULT_PREFERENCES,
+  natureOf,
+  type Item,
+  type ItemSummary,
+  type PublicUser,
+  type Workspace,
+} from '@niwa/contracts';
 import type { ItemDoc } from '../models/item.model.ts';
 import type { UserDoc } from '../models/user.model.ts';
 import type { WorkspaceDoc } from '../models/workspace.model.ts';
@@ -20,6 +27,11 @@ export function toPublicUser(user: UserDoc): PublicUser {
           at: user.onboarding.at.toISOString(),
         }
       : null,
+    preferences: {
+      theme: user.preferences?.theme ?? DEFAULT_PREFERENCES.theme,
+      font: user.preferences?.font ?? DEFAULT_PREFERENCES.font,
+      mode: user.preferences?.mode ?? DEFAULT_PREFERENCES.mode,
+    },
   };
 }
 

@@ -1,7 +1,9 @@
 import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
+import { Link as RouterLink } from 'react-router';
 import { Wordmark } from '../components/Wordmark.tsx';
 
 export function AuthLayout({
@@ -25,9 +27,17 @@ export function AuthLayout({
         py: 6,
       }}
     >
-      <Box sx={{ width: '100%', maxWidth: 400 }}>
+      <Box sx={{ width: '100%', maxWidth: (t) => t.niwa.width.narrow }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Wordmark size="large" />
+          <Link
+            component={RouterLink}
+            to="/"
+            underline="none"
+            aria-label="NIWA home"
+            sx={{ display: 'inline-block' }}
+          >
+            <Wordmark size="large" />
+          </Link>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
             A garden for your ideas.
           </Typography>

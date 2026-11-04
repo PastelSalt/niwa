@@ -22,14 +22,6 @@ export const STATUS_LABEL: Record<ItemStatus, string> = {
   completed: 'Completed',
 };
 
-/** Status accent (used as a dot/icon, not as text colour). */
-export const STATUS_DOT: Record<ItemStatus, string> = {
-  not_started: 'text.disabled',
-  in_progress: 'info.main',
-  blocked: 'warning.main',
-  completed: 'success.main',
-};
-
 export const PRIORITY_LABEL: Record<ItemPriority, string> = {
   none: 'None',
   low: 'Low',

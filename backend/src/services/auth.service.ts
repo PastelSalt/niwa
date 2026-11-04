@@ -7,6 +7,7 @@ import {
   type ChangePasswordInput,
   type LoginInput,
   type OnboardingInput,
+  type PreferencesInput,
   type RegisterInput,
 } from '@niwa/contracts';
 import { hash, verify } from '@node-rs/argon2';
@@ -145,6 +146,15 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
 
     async setOnboarding(userId: string, input: OnboardingInput) {
       const user = await userRepo.update(userId, { onboarding: { ...input, at: new Date() } });
+      if (!user) throw unauthorized();
+      return toPublicUser(user);
+    },
+
+    /** Appearance choices (B-02 V10): a partial update merged into what's stored. */
+    async setPreferences(userId: string, input: PreferencesInput) {
+      const current = await userRepo.findById(userId);
+      if (!current) throw unauthorized();
+      const user = await userRepo.update(userId, { preferences: { ...current.preferences, ...input } });
       if (!user) throw unauthorized();
       return toPublicUser(user);
     },

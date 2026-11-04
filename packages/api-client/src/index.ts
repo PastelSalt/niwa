@@ -26,6 +26,7 @@ import {
   type LoginInput,
   type MoveItemInput,
   type OnboardingInput,
+  type PreferencesInput,
   type PublicUser,
   type RegisterInput,
   type RestoreResponse,
@@ -254,6 +255,16 @@ export function createApiClient(options: ApiClientOptions) {
       /** Also updates the session's user, so `onSessionChange` listeners see the new state. */
       async setOnboarding(input: OnboardingInput) {
         const { user } = await request<{ user: PublicUser }>('/account/onboarding', {
+          method: 'PUT',
+          body: input,
+        });
+        const current = session;
+        if (current) setSession({ ...current, user });
+        return user;
+      },
+      /** Appearance (B-02 V10); also updates the session's user. */
+      async setPreferences(input: PreferencesInput) {
+        const { user } = await request<{ user: PublicUser }>('/account/preferences', {
           method: 'PUT',
           body: input,
         });

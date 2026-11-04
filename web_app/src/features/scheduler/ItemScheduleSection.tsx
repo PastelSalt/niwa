@@ -56,7 +56,7 @@ export function ItemScheduleSection({ item }: { item: Item }) {
                 {' · '}
                 {b.isAllDay ? 'All day' : formatRange(new Date(b.startAt), new Date(b.endAt))}
               </Typography>
-              {b.seriesId && <RepeatRounded sx={{ fontSize: 14, color: 'text.secondary' }} />}
+              {b.seriesId && <RepeatRounded fontSize="inline" sx={{ color: 'text.secondary' }} />}
             </ButtonBase>
           ))}
           {blocks.length > 5 && (

@@ -14,6 +14,7 @@ import { messageOf } from '../api/client.ts';
 import { muiField } from '../lib/forms.ts';
 import { useRegistrationOpen } from '../public/useRegistrationOpen.ts';
 import { AuthLayout } from './AuthLayout.tsx';
+import { PasswordField } from './PasswordField.tsx';
 import { useAuth } from './AuthProvider.tsx';
 
 type FormIn = z.input<typeof LoginInput>;
@@ -56,9 +57,8 @@ export function LoginPage() {
             helperText={errors.email?.message}
             {...muiField(register('email'))}
           />
-          <TextField
+          <PasswordField
             label="Password"
-            type="password"
             autoComplete="current-password"
             error={!!errors.password}
             helperText={errors.password?.message}

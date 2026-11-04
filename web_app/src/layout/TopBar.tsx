@@ -19,6 +19,7 @@ import Typography from '@mui/material/Typography';
 
 import { useState, type RefObject } from 'react';
 import { useNavigate } from 'react-router';
+import { visuallyHidden } from '../lib/a11y.ts';
 import { useAuth } from '../auth/AuthProvider.tsx';
 import { Wordmark } from '../components/Wordmark.tsx';
 import { useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
@@ -29,11 +30,13 @@ interface TopBarProps {
   title: string;
   compact: boolean;
   searchRef: RefObject<HTMLInputElement | null>;
+  /** The screen shows its own name, so the title is for screen readers only. */
+  titleHidden?: boolean;
   detailOpen: boolean;
   onToggleDetail: () => void;
 }
 
-export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }: TopBarProps) {
+export function TopBar({ title, titleHidden, compact, searchRef, detailOpen, onToggleDetail }: TopBarProps) {
   const { user, logout } = useAuth();
   const capture = useQuickCapture();
   const onboarding = useOnboarding();
@@ -51,12 +54,13 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
     <AppBar position="sticky" sx={{ bgcolor: 'background.default', borderBottom: 1, borderColor: 'divider' }}>
       <Toolbar variant="dense" sx={{ gap: { xs: 1, md: 1.5 }, minHeight: 56, px: { xs: 1.5, sm: 2 } }}>
         {compact && <Wordmark size="small" />}
-        {/* On phones the bottom nav already shows where you are; keep the h1 for screen readers. */}
+        {/* One visible name per screen: phones have the bottom nav, and some screens name themselves.
+            The h1 stays for screen readers either way. */}
         <Typography
           variant="subtitle1"
           component="h1"
           noWrap
-          sx={compact ? visuallyHidden : { fontWeight: 600, flexShrink: 0 }}
+          sx={compact || titleHidden ? visuallyHidden : { fontWeight: 600, flexShrink: 0 }}
         >
           {title}
         </Typography>
@@ -66,6 +70,7 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
           role="search"
           data-tour="search"
           onSubmit={submitSearch}
+          // A control's width, not a content width.
           sx={{ flex: 1, maxWidth: 480, mx: 'auto' }}
         >
           <InputBase
@@ -124,7 +129,7 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
                 height: 30,
                 bgcolor: 'secondary.main',
                 color: 'secondary.contrastText',
-                fontSize: 14,
+                typography: 'button',
               }}
             >
               {user?.email.charAt(0).toUpperCase()}
@@ -181,12 +186,3 @@ export function TopBar({ title, compact, searchRef, detailOpen, onToggleDetail }
     </AppBar>
   );
 }
-
-const visuallyHidden = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  whiteSpace: 'nowrap',
-} as const;

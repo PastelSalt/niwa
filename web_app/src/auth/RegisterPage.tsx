@@ -14,6 +14,7 @@ import { messageOf } from '../api/client.ts';
 import { muiField } from '../lib/forms.ts';
 import { useRegistrationOpen } from '../public/useRegistrationOpen.ts';
 import { AuthLayout } from './AuthLayout.tsx';
+import { PasswordField } from './PasswordField.tsx';
 import { useAuth } from './AuthProvider.tsx';
 
 const RegisterForm = RegisterInput.extend({ confirmPassword: z.string() }).refine(
@@ -66,17 +67,15 @@ export function RegisterPage() {
             helperText={errors.email?.message}
             {...muiField(register('email'))}
           />
-          <TextField
+          <PasswordField
             label="Password"
-            type="password"
             autoComplete="new-password"
             error={!!errors.password}
             helperText={errors.password?.message ?? 'At least 12 characters.'}
             {...muiField(register('password'))}
           />
-          <TextField
+          <PasswordField
             label="Confirm password"
-            type="password"
             autoComplete="new-password"
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword?.message}

@@ -1,8 +1,8 @@
-/** Hide visually but keep for screen readers. */
+/** Hide visually but keep for screen readers. Strings, not numbers: in `sx`, `width: 1` means 100%. */
 export const visuallyHidden = {
   position: 'absolute',
-  width: 1,
-  height: 1,
+  width: '1px',
+  height: '1px',
   overflow: 'hidden',
   clip: 'rect(0 0 0 0)',
   whiteSpace: 'nowrap',

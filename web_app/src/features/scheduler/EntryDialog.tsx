@@ -22,6 +22,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { EditScope, ItemSummary, Recurrence, ScheduleEntry, ScheduleKind } from '@niwa/contracts';
 import { useState } from 'react';
+import { DateField } from '../../components/DateField.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import {
@@ -36,6 +37,7 @@ import {
 import { ItemTypeIcon } from '../items/itemMeta.tsx';
 import { useTree } from '../items/queries.ts';
 import { ENTRY_COLORS } from './entryDisplay.ts';
+import { repeatSummary } from './repeatSummary.ts';
 import { useCreateEntry, useDeleteEntry, useUpdateEntry } from './queries.ts';
 
 export type EntryDialogRequest =
@@ -181,7 +183,15 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
 
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{editing ? (f.kind === 'block' ? 'Time block' : 'Event') : 'New'}</DialogTitle>
+      <DialogTitle>
+        {editing
+          ? f.kind === 'block'
+            ? 'Time block'
+            : 'Event'
+          : f.kind === 'block'
+            ? 'New time block'
+            : 'New event'}
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -227,21 +237,20 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
             slotProps={{ htmlInput: { maxLength: 300 } }}
           />
 
+          <Typography variant="overline" color="text.secondary" component="p" sx={{ mb: -1 }}>
+            When
+          </Typography>
           <FormControlLabel
             control={<Switch checked={f.allDay} onChange={(e) => set('allDay', e.target.checked)} />}
             label="All day"
           />
 
           <Stack direction="row" spacing={1}>
-            <TextField
-              type="date"
+            <DateField
               label={f.allDay ? 'From' : 'Date'}
               value={f.startDay}
-              onChange={(e) => {
-                const v = e.target.value;
-                setF((s) => ({ ...s, startDay: v, endDay: s.endDay < v ? v : s.endDay }));
-              }}
-              slotProps={{ inputLabel: { shrink: true } }}
+              clearable={false}
+              onChange={(v) => v && setF((s) => ({ ...s, startDay: v, endDay: s.endDay < v ? v : s.endDay }))}
             />
             {!f.allDay && (
               <TextField
@@ -254,12 +263,11 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
             )}
           </Stack>
           <Stack direction="row" spacing={1}>
-            <TextField
-              type="date"
+            <DateField
               label={f.allDay ? 'To' : 'End date'}
               value={f.endDay}
-              onChange={(e) => set('endDay', e.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
+              clearable={false}
+              onChange={(v) => v && set('endDay', v)}
             />
             {!f.allDay && (
               <TextField
@@ -281,7 +289,7 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
             helperText={
               recurring && scope === 'instance'
                 ? 'Choose “This and following” to change the repeat.'
-                : undefined
+                : (repeatSummary(f.recurrence, f.startDay, f.startTime, f.allDay) ?? undefined)
             }
           >
             {(Object.keys(RECURRENCE_LABEL) as Recurrence[]).map((r) => (
@@ -308,7 +316,7 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
                     borderRadius: '50%',
                     border: 2,
                     borderColor: f.color === null ? 'text.primary' : 'divider',
-                    fontSize: 11,
+                    typography: 'caption',
                   }}
                 >
                   A
@@ -332,7 +340,7 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
                       outlineColor: 'text.primary',
                     }}
                   >
-                    {f.color === c.hex && <CheckRounded sx={{ fontSize: 16 }} />}
+                    {f.color === c.hex && <CheckRounded fontSize="inline" />}
                   </ButtonBase>
                 </Tooltip>
               ))}

@@ -2,7 +2,6 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import type { Item, ItemSummary } from '@niwa/contracts';
-import { typography } from '@niwa/tokens';
 import { useQueryClient } from '@tanstack/react-query';
 import { Placeholder } from '@tiptap/extensions';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -175,9 +174,10 @@ export function NoteEditor({ item }: { item: Item }) {
             ...theme.typography.body1,
             lineHeight: 1.7,
             '& > * + *': { mt: 1.25 },
+            // Note headings sit below the item title on the type scale (V1.P1).
             '& h1': { ...theme.typography.h4, mt: 3 },
-            '& h2': { ...theme.typography.h5, mt: 3 },
-            '& h3': { ...theme.typography.h6, mt: 2.5 },
+            '& h2': { ...theme.typography.h6, mt: 3 },
+            '& h3': { ...theme.typography.subtitle1, mt: 2.5 },
             '& h1, & h2, & h3': {
               scrollMarginTop: 96,
               borderRadius: 1,
@@ -185,7 +185,10 @@ export function NoteEditor({ item }: { item: Item }) {
             },
             '& .niwa-flash': { bgcolor: theme.alpha((theme.vars ?? theme).palette.secondary.main, 0.25) },
             '& p': { m: 0 },
-            '& ul, & ol': { pl: 3, my: 0 },
+            // Only the bottom margin: the top comes from the block rhythm above (V4).
+            '& ul, & ol': { pl: 3, mb: 0 },
+            '& li + li': { mt: 0.5 },
+            '& li > p': { m: 0 },
             '& blockquote': {
               m: 0,
               pl: 2,
@@ -194,14 +197,14 @@ export function NoteEditor({ item }: { item: Item }) {
               color: 'text.secondary',
             },
             '& code': {
-              fontFamily: typography.monoFamily,
+              fontFamily: theme.niwa.monoFamily,
               fontSize: '0.875em',
               bgcolor: 'action.hover',
               px: 0.5,
               borderRadius: 0.5,
             },
             '& pre': {
-              fontFamily: typography.monoFamily,
+              fontFamily: theme.niwa.monoFamily,
               bgcolor: 'action.hover',
               p: 1.5,
               borderRadius: 1,

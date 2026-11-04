@@ -20,11 +20,15 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
         gap: 1.5,
         py: 8,
         px: 3,
-        maxWidth: 420,
+        maxWidth: (t) => t.niwa.width.narrow,
         mx: 'auto',
       }}
     >
-      {icon && <Box sx={{ color: 'primary.main', '& svg': { fontSize: 48 } }}>{icon}</Box>}
+      {icon && (
+        <Box sx={(t) => ({ color: 'primary.main', '& svg': { fontSize: t.niwa.iconSize.emptyState } })}>
+          {icon}
+        </Box>
+      )}
       <Typography variant="h6" component="p">
         {title}
       </Typography>

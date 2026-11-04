@@ -50,6 +50,12 @@ export default tseslint.config(
   },
   // Operator CLIs print their results.
   { files: ['backend/scripts/**/*.ts'], rules: { 'no-console': 'off' } },
+  // The visual audit prints its report and runs part of its code inside the page (B-02 V0).
+  {
+    files: ['web_app/scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+    rules: { 'no-console': 'off' },
+  },
   {
     files: [
       'web_app/src/**/*.{ts,tsx}',

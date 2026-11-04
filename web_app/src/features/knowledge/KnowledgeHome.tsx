@@ -1,21 +1,46 @@
 import AutoStoriesOutlined from '@mui/icons-material/AutoStoriesOutlined';
 import EventRepeatOutlined from '@mui/icons-material/EventRepeatOutlined';
-import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
+import { ROOT_CONTAINERS } from '@niwa/contracts';
+import { useMemo } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { EmptyState } from '../../components/EmptyState.tsx';
+import { Page } from '../../components/Page.tsx';
+import { SectionHeader } from '../../components/SectionHeader.tsx';
+import { exactTime, timeAgo } from '../../lib/friendlyTime.ts';
 import { todayLocal } from '../items/itemMeta.tsx';
+import { ItemRow, ItemRowList } from '../items/ItemRow.tsx';
+import { RowSkeletons } from '../items/RowSkeletons.tsx';
+import { useTree } from '../items/queries.ts';
+import { ancestorsOf, buildTree } from '../items/treeModel.ts';
 import { useReview } from './queries.ts';
 
-/** Knowledge landing: what's due for review, and how to start. */
+const RECENT = 8;
+
+/** Knowledge landing: what's due for review and what you were last working on (B-02 V6). */
 export function KnowledgeHome() {
   const { data: due = [] } = useReview(todayLocal());
+  const { data: items, isLoading } = useTree();
+  const model = useMemo(() => buildTree(items ?? []), [items]);
+  const recent = useMemo(
+    () =>
+      (items ?? [])
+        .filter(
+          (i) =>
+            i.nature === 'knowledge' &&
+            !(i.parentId === null && (ROOT_CONTAINERS as readonly string[]).includes(i.title)),
+        )
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+        .slice(0, RECENT),
+    [items],
+  );
+
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 860 }}>
+    <Page width="list">
       {due.length > 0 && (
-        <Paper variant="outlined" sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Paper variant="outlined" sx={{ p: 2, mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <EventRepeatOutlined color="secondary" />
           <Typography variant="body2" sx={{ flex: 1 }}>
             {due.length === 1 ? '1 note is' : `${due.length} notes are`} due for review.
@@ -25,16 +50,46 @@ export function KnowledgeHome() {
           </Button>
         </Paper>
       )}
-      <EmptyState
-        icon={<AutoStoriesOutlined />}
-        title="Your notebook garden"
-        description="Pick a topic in the tree or create one with +. Write with headings for an outline, and type [[ to link other notes."
-        action={
-          <Button component={RouterLink} to="/knowledge/review" size="small">
-            Open review queue
-          </Button>
-        }
-      />
-    </Box>
+
+      {isLoading && <RowSkeletons rows={4} />}
+
+      {!isLoading && recent.length > 0 && (
+        <section aria-labelledby="recent-notes">
+          <SectionHeader id="recent-notes" title="Recently edited" />
+          <ItemRowList label="Recently edited">
+            {recent.map((i) => (
+              <ItemRow
+                key={i.id}
+                item={i}
+                meta={
+                  <>
+                    {ancestorsOf(model, i.id)
+                      .map((a) => a.title)
+                      .join(' › ') || 'Top level'}
+                    {' · '}
+                    <time dateTime={i.updatedAt} title={exactTime(i.updatedAt)}>
+                      {timeAgo(i.updatedAt)}
+                    </time>
+                  </>
+                }
+              />
+            ))}
+          </ItemRowList>
+        </section>
+      )}
+
+      {!isLoading && recent.length === 0 && (
+        <EmptyState
+          icon={<AutoStoriesOutlined />}
+          title="Your notebook garden"
+          description="Pick a topic in the tree or create one with +. Write with headings for an outline, and type [[ to link other notes."
+          action={
+            <Button component={RouterLink} to="/knowledge/review" size="small">
+              Open review queue
+            </Button>
+          }
+        />
+      )}
+    </Page>
   );
 }

@@ -1,19 +1,15 @@
-import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined';
-import LightModeOutlined from '@mui/icons-material/LightModeOutlined';
-import SettingsBrightnessOutlined from '@mui/icons-material/SettingsBrightnessOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Link from '@mui/material/Link';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
-import { useColorScheme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 import { Navigate, Link as RouterLink, useNavigate, useParams } from 'react-router';
+import { AppearanceSection } from './AppearanceSection.tsx';
+import { Section } from './Section.tsx';
+import { Page } from '../../components/Page.tsx';
 import { useAuth } from '../../auth/AuthProvider.tsx';
 import { LEGAL_LINKS } from '../../public/PublicLayout.tsx';
 import { site } from '../../public/site.ts';
@@ -29,54 +25,6 @@ const SECTIONS = [
   { key: 'help', label: 'Help' },
 ] as const;
 type SectionKey = (typeof SECTIONS)[number]['key'];
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Paper variant="outlined" sx={{ p: 3 }}>
-      <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600 }}>
-        {title}
-      </Typography>
-      {description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {description}
-        </Typography>
-      )}
-      {children}
-    </Paper>
-  );
-}
-
-function AppearanceSection() {
-  const { mode, setMode } = useColorScheme();
-  return (
-    <Section title="Theme" description="Choose light or dark, or let NIWA follow your device.">
-      <ToggleButtonGroup
-        exclusive
-        value={mode ?? 'system'}
-        onChange={(_, next: 'light' | 'dark' | 'system' | null) => next && setMode(next)}
-        aria-label="Theme"
-      >
-        <ToggleButton value="light" aria-label="Light">
-          <LightModeOutlined fontSize="small" sx={{ mr: 1 }} /> Light
-        </ToggleButton>
-        <ToggleButton value="dark" aria-label="Dark">
-          <DarkModeOutlined fontSize="small" sx={{ mr: 1 }} /> Dark
-        </ToggleButton>
-        <ToggleButton value="system" aria-label="System">
-          <SettingsBrightnessOutlined fontSize="small" sx={{ mr: 1 }} /> System
-        </ToggleButton>
-      </ToggleButtonGroup>
-    </Section>
-  );
-}
 
 function AccountSection() {
   const { user, logout } = useAuth();
@@ -195,7 +143,7 @@ export function SettingsPage() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 760 }}>
+    <Page width="form">
       <Tabs
         value={current}
         onChange={(_, key: SectionKey) => navigate(`/settings/${key}`)}
@@ -214,6 +162,6 @@ export function SettingsPage() {
       </Tabs>
       {body[current]}
       <About />
-    </Box>
+    </Page>
   );
 }

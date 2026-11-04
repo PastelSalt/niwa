@@ -2,11 +2,10 @@ import Box from '@mui/material/Box';
 import LinearProgress from '@mui/material/LinearProgress';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
 import type { ItemNature } from '@niwa/contracts';
 import { Suspense, useCallback, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
+import { useUserAppearance } from '../app/appearance.tsx';
 import { NotifierProvider } from '../components/Notifier.tsx';
 import { CaptureProvider, useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
 import { ItemDialogsProvider } from '../features/items/ItemDialogs.tsx';
@@ -18,12 +17,16 @@ import { BottomNav, NavRail } from './NavRail.tsx';
 import { TopBar } from './TopBar.tsx';
 import { TreePane } from './TreePane.tsx';
 import { useGlobalShortcuts } from './useGlobalShortcuts.ts';
+import { useShellLayout } from './useLayout.ts';
 
 /**
- * Rail | Tree pane | Main | Detail panel — CONCEPT.md §1.1, responsive per §1.2:
- * ≥ lg everything docked · md–lg detail as overlay · < md bottom nav; the tree becomes the main view.
+ * Rail | Tree pane | Main | Detail panel — CONCEPT.md §1.1, responsive per §1.2 and B-02 V7:
+ * ≥ 1280 px everything docked · 720–1280 px two panes, details as an overlay · < 720 px bottom nav; the tree
+ * becomes the main view.
  */
 export function AppShell() {
+  // The user's theme and font apply inside the app only; public pages keep the defaults (B-02 V1.P4).
+  useUserAppearance();
   return (
     <NotifierProvider>
       {/* Signed-in screens are private; React hoists this into <head>. robots.txt disallows them too. */}
@@ -43,9 +46,9 @@ const lensOf = (d: Destination | undefined): ItemNature | null =>
   d?.key === 'knowledge' || d?.key === 'actionable' ? d.key : null;
 
 function ShellLayout() {
-  const theme = useTheme();
-  const isPhone = useMediaQuery(theme.breakpoints.down('md'));
-  const isWide = useMediaQuery(theme.breakpoints.up('lg'));
+  const shell = useShellLayout();
+  const isPhone = shell === 'single';
+  const isWide = shell === 'docked';
   const location = useLocation();
   const destination = destinationForPath(location.pathname);
   const lens = lensOf(destination);
@@ -73,6 +76,7 @@ function ShellLayout() {
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <TopBar
           title={destination?.label ?? 'niwa'}
+          titleHidden={destination?.namedOnScreen}
           compact={isPhone}
           searchRef={searchRef}
           detailOpen={detailOpen}

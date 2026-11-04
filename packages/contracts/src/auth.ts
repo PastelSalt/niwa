@@ -30,6 +30,34 @@ export const OnboardingState = z
   .meta({ id: 'OnboardingState' });
 export type OnboardingState = z.infer<typeof OnboardingState>;
 
+// ---- Appearance preferences (NIWA-PLAN-B-02 V10) ----
+
+/** Colour themes and fonts the clients know; all themes are pastel, each with light and dark variants. */
+export const THEME_IDS = ['garden', 'blossom', 'lavender', 'sky', 'peach'] as const;
+export const FONT_IDS = ['fredoka', 'inter', 'atkinson', 'system'] as const;
+export const ColorModePreference = z.enum(['system', 'light', 'dark']).meta({ id: 'ColorModePreference' });
+
+export const Preferences = z
+  .object({
+    theme: z.string().meta({ description: `One of ${THEME_IDS.join(', ')}; clients fall back to garden` }),
+    font: z.string().meta({ description: `One of ${FONT_IDS.join(', ')}; clients fall back to fredoka` }),
+    mode: ColorModePreference,
+  })
+  .meta({ id: 'Preferences', description: 'Appearance choices that follow the account across devices' });
+export type Preferences = z.infer<typeof Preferences>;
+
+export const DEFAULT_PREFERENCES: Preferences = { theme: 'garden', font: 'fredoka', mode: 'system' };
+
+/** Partial update; only known ids are accepted. */
+export const PreferencesInput = z
+  .object({
+    theme: z.enum(THEME_IDS).optional(),
+    font: z.enum(FONT_IDS).optional(),
+    mode: ColorModePreference.optional(),
+  })
+  .meta({ id: 'PreferencesInput' });
+export type PreferencesInput = z.infer<typeof PreferencesInput>;
+
 export const PublicUser = z
   .object({
     id: Id,
@@ -41,6 +69,7 @@ export const PublicUser = z
     onboarding: OnboardingState.nullable().meta({
       description: 'null until the user finishes or skips the tour',
     }),
+    preferences: Preferences,
   })
   .meta({ id: 'PublicUser' });
 export type PublicUser = z.infer<typeof PublicUser>;

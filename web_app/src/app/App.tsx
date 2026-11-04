@@ -1,13 +1,12 @@
 import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider } from '@mui/material/styles';
 import type { ApiClient } from '@niwa/api-client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { AuthProvider } from '../auth/AuthProvider.tsx';
+import { AppearanceProvider } from './appearance.tsx';
 import { routes } from './router.tsx';
-import { theme } from './theme.ts';
 
 const router = createBrowserRouter(routes);
 
@@ -20,13 +19,13 @@ export function App({ api }: { api: ApiClient }) {
   );
 
   return (
-    <ThemeProvider theme={theme} defaultMode="system" noSsr>
+    <AppearanceProvider>
       <CssBaseline enableColorScheme />
       <QueryClientProvider client={queryClient}>
         <AuthProvider api={api}>
           <RouterProvider router={router} />
         </AuthProvider>
       </QueryClientProvider>
-    </ThemeProvider>
+    </AppearanceProvider>
   );
 }

@@ -10,10 +10,11 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Paper from '@mui/material/Paper';
-import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { Link as RouterLink } from 'react-router';
+import { RowSkeletons } from '../items/RowSkeletons.tsx';
+import { Page } from '../../components/Page.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { useNotify } from '../../components/Notifier.tsx';
@@ -38,14 +39,14 @@ export function ReviewQueue() {
   const { data, isLoading, error } = useReview(today);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 860 }}>
+    <Page width="list">
       <Typography variant="h5" component="h2" sx={{ mb: 0.5 }}>
         Review queue
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Notes you asked to revisit. Set “Review on” in an item’s details to add it here.
       </Typography>
-      {isLoading && <Skeleton variant="rounded" height={120} />}
+      {isLoading && <RowSkeletons />}
       {error && <Alert severity="error">{messageOf(error)}</Alert>}
       {data?.length === 0 && (
         <EmptyState
@@ -63,7 +64,7 @@ export function ReviewQueue() {
           </List>
         </Paper>
       )}
-    </Box>
+    </Page>
   );
 }
 
