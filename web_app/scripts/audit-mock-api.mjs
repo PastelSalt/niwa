@@ -27,7 +27,7 @@ function addDays(date, n) {
 }
 
 export class MockWorkspace {
-  constructor({ email, onboarded = true }) {
+  constructor({ email, onboarded = true, preferences = {} }) {
     this.user = {
       id: oid(),
       email,
@@ -36,6 +36,7 @@ export class MockWorkspace {
       hasAiKey: false,
       createdAt: now(),
       onboarding: onboarded ? { status: 'skipped', version: 1, at: now() } : null,
+      preferences: { theme: 'garden', font: 'fredoka', mode: 'system', ...preferences },
     };
     this.items = [];
     this.entries = [];
@@ -123,6 +124,10 @@ export class MockWorkspace {
     if (route === 'GET /auth/config') return json(200, { registrationOpen: true });
     if (route === 'PUT /account/onboarding') {
       this.user.onboarding = { ...body, at: now() };
+      return json(200, { user: this.user });
+    }
+    if (route === 'PUT /account/preferences') {
+      this.user.preferences = { ...this.user.preferences, ...body };
       return json(200, { user: this.user });
     }
     if (route === 'GET /account/usage')

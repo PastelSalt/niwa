@@ -1,11 +1,35 @@
-import { act, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { useState } from 'react';
-import { AppearanceProvider, readCachedAppearance, useAppearance, useUserAppearance } from './appearance.tsx';
+import { createApiClient } from '@niwa/api-client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useState, type ReactNode } from 'react';
+import { AuthProvider } from '../auth/AuthProvider.tsx';
+import {
+  AppearanceProvider,
+  readCachedAppearance,
+  toAppearance,
+  useAppearance,
+  useUserAppearance,
+} from './appearance.tsx';
 import { fontFacesFor } from './fonts.ts';
 import { createNiwaTheme } from './theme.ts';
 
 afterEach(() => localStorage.clear());
+
+/** Signed out: enough of the app around a hook that reads the session. */
+function Signedout({ children }: { children: ReactNode }) {
+  const api = createApiClient({
+    baseUrl: '/api/v1',
+    fetch: vi.fn(
+      async () => new Response('{"error":{"code":"UNAUTHORIZED","message":"No"}}', { status: 401 }),
+    ),
+  });
+  return (
+    <QueryClientProvider client={new QueryClient()}>
+      <AuthProvider api={api}>{children}</AuthProvider>
+    </QueryClientProvider>
+  );
+}
 
 describe('theme plumbing (B-02 V1.P4)', () => {
   it('builds the theme from a theme id + font id; defaults are Garden + Fredoka', () => {
@@ -34,6 +58,10 @@ describe('theme plumbing (B-02 V1.P4)', () => {
   });
 
   it('falls back to the defaults for unknown or broken cached ids', () => {
+    expect(toAppearance({ theme: 'lavender', font: 'atkinson' })).toEqual({
+      theme: 'lavender',
+      font: 'atkinson',
+    });
     localStorage.setItem('niwa.appearance', JSON.stringify({ theme: 'neon', font: 'comic' }));
     expect(readCachedAppearance()).toEqual({ theme: 'garden', font: 'fredoka' });
     localStorage.setItem('niwa.appearance', '{not json');
@@ -49,25 +77,35 @@ describe('theme plumbing (B-02 V1.P4)', () => {
       useUserAppearance({ theme: 'garden', font: 'inter' });
       return null;
     }
-    let setSignedIn: (v: boolean) => void = () => {};
     function Harness() {
-      const [signedIn, set] = useState(true);
-      setSignedIn = set;
+      const [signedIn, setSignedIn] = useState(true);
       return (
         <>
           <Probe />
+          <button onClick={() => setSignedIn(false)}>Sign out</button>
           {signedIn && <SignedIn />}
         </>
       );
     }
     render(
       <AppearanceProvider defaultMode="light">
-        <Harness />
+        <Signedout>
+          <Harness />
+        </Signedout>
       </AppearanceProvider>,
     );
     expect(screen.getByText('garden/inter')).toBeInTheDocument();
     expect(readCachedAppearance()).toEqual({ theme: 'garden', font: 'inter' });
-    act(() => setSignedIn(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(screen.getByText('garden/fredoka')).toBeInTheDocument();
+  });
+});
+
+describe('ids shared with the API contract', () => {
+  it('every theme and font the API accepts exists in the tokens, and vice versa', async () => {
+    const { FONT_IDS, THEME_IDS } = await import('@niwa/contracts');
+    const { fonts, themes } = await import('@niwa/tokens');
+    expect([...THEME_IDS].sort()).toEqual(Object.keys(themes).sort());
+    expect([...FONT_IDS].sort()).toEqual(Object.keys(fonts).sort());
   });
 });

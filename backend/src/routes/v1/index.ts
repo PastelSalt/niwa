@@ -39,6 +39,7 @@ export function createV1Router({ config, tokens, auth, limiters }: V1Deps): Rout
 
   // Account (NIWA-PLAN-B-01 B4, B7). Password checks go through the strict limiter like login.
   router.put('/account/onboarding', protect, authCtl.setOnboarding);
+  router.put('/account/preferences', protect, authCtl.setPreferences);
   router.post('/account/password', authLimiter, protect, authCtl.changePassword);
   router.get('/account/usage', protect, authCtl.usage);
   router.get('/account/export', protect, authCtl.exportData);

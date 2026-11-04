@@ -12,6 +12,7 @@
  *   pnpm --filter @niwa/web visual-audit -- --mock       # no MongoDB: a small fake API (scripts/audit-mock-api.mjs)
  *   … -- --only=focus,inbox --widths=390,360 --modes=light --no-shots
  *   … -- --mock --landing-shots                         # retake public/screens/*.webp for the landing page
+ *   … -- --theme=lavender --font=inter                  # signed-in screens in another theme/font (V10.P5)
  *
  * Exits 1 when the check finds overlapping or spilling text, so it can gate a milestone (V7 exit criteria).
  */
@@ -42,8 +43,19 @@ const HEIGHT = { 1440: 900, 820: 1180, 390: 844, 360: 780 };
 const MODES = list(args.modes, ['light', 'dark']);
 const ONLY = list(args.only, null);
 const MOCK = Boolean(args.mock);
+/** Appearance for the signed-in accounts (public pages always show the defaults). */
+const PREFS = {
+  ...(typeof args.theme === 'string' && { theme: args.theme }),
+  ...(typeof args.font === 'string' && { font: args.font }),
+};
 const SHOTS = !args['no-shots'];
-const OUT = join(webRoot, '.visual-audit', new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19));
+const OUT = join(
+  webRoot,
+  '.visual-audit',
+  new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) +
+    (args.theme ? `-${args.theme}` : '') +
+    (args.font ? `-${args.font}` : ''),
+);
 // A fixed zone with no DST keeps times stable between runs.
 const TIME_ZONE = 'Asia/Manila';
 
@@ -156,7 +168,7 @@ const at = (date, hh, mm = 0) =>
 async function account(request, tag, { finishTour = true } = {}) {
   const email = `audit+${tag}-${Date.now().toString(36)}@niwa.test`;
   if (MOCK) {
-    const ws = new MockWorkspace({ email, onboarded: finishTour });
+    const ws = new MockWorkspace({ email, onboarded: finishTour, preferences: PREFS });
     return {
       email,
       api: async (method, path, body) => ws.handle(method, path, new URLSearchParams(), body).body,
@@ -168,6 +180,7 @@ async function account(request, tag, { finishTour = true } = {}) {
     password: PASSWORD,
   });
   if (finishTour) await call(request, token, 'PUT', '/account/onboarding', { status: 'skipped', version: 1 });
+  if (Object.keys(PREFS).length) await call(request, token, 'PUT', '/account/preferences', PREFS);
   return {
     email,
     api: (method, path, body) => call(request, token, method, path, body),

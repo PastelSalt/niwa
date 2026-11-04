@@ -68,6 +68,33 @@ describe('PUT /account/onboarding', () => {
   });
 });
 
+describe('PUT /account/preferences', () => {
+  it('starts on the defaults, merges partial updates and rejects unknown ids', async () => {
+    const app = buildApp();
+    const { token, user } = await signUp(app);
+    expect((user as unknown as { preferences: unknown }).preferences).toEqual({
+      theme: 'garden',
+      font: 'fredoka',
+      mode: 'system',
+    });
+
+    const auth = { Authorization: `Bearer ${token}` };
+    await request(app).put('/api/v1/account/preferences').set(auth).send({ font: 'inter' }).expect(200);
+    const res = await request(app)
+      .put('/api/v1/account/preferences')
+      .set(auth)
+      .send({ theme: 'lavender', mode: 'dark' })
+      .expect(200);
+    expect(res.body.user.preferences).toEqual({ theme: 'lavender', font: 'inter', mode: 'dark' });
+
+    const me = await request(app).get('/api/v1/auth/me').set(auth).expect(200);
+    expect(me.body.user.preferences.font).toBe('inter');
+
+    await request(app).put('/api/v1/account/preferences').set(auth).send({ theme: 'neon' }).expect(400);
+    await request(app).put('/api/v1/account/preferences').send({ font: 'inter' }).expect(401);
+  });
+});
+
 describe('POST /account/password', () => {
   it('needs the current password, then signs out other sessions and keeps this one', async () => {
     const app = buildApp();

@@ -79,7 +79,39 @@ describe.each(Object.entries(themes))('theme %s', (_id, theme) => {
     for (const bg of [p.background, p.surface]) {
       expect(contrast(p.textPrimary, bg)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(p.textSecondary, bg)).toBeGreaterThanOrEqual(4.5);
+      // primary is the deep ink used for links, icons and focus rings
+      expect(contrast(p.primary, bg)).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it.each(modes)('pastel fills carry deep text at AA (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    expect(contrast(p.onPrimaryContainer, p.primaryContainer)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(p.primaryContrast, p.primary)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(p.secondaryContrast, p.secondary)).toBeGreaterThanOrEqual(4.5);
+    // Body text on a selected/pastel container stays readable too.
+    expect(contrast(p.textPrimary, p.primaryContainer)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(modes)('item-type colours reach 3:1 as icons (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const bg of [p.background, p.surface])
+      for (const c of Object.values(theme.typeColors[mode]))
+        expect(contrast(c, bg)).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(modes)('solid event fills carry white or dark text at 4.5:1 (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    for (const c of [
+      p.primary,
+      p.secondary,
+      p.error,
+      p.warning,
+      p.success,
+      p.info,
+      ...Object.values(theme.typeColors[mode]),
+    ])
+      expect(Math.max(contrast('#FFFFFF', c), contrast('#1A1D1B', c))).toBeGreaterThanOrEqual(4.5);
   });
 });
 

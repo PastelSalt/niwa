@@ -21,10 +21,10 @@ import {
   typeScaleFor,
   type ColorMode,
   type FontId,
-  type Palette,
   type PriorityRole,
   type StatusRole,
   type ThemeId,
+  type ThemePalette,
   type TypeStep,
 } from '@niwa/tokens';
 import { fontFacesFor } from './fonts.ts';
@@ -51,11 +51,14 @@ export interface NiwaThemeExtras {
 declare module '@mui/material/styles' {
   interface Palette {
     itemType: ItemTypeColors;
+    /** Pastel fill + deep text for contained buttons and selections (V10). */
+    primaryContainer: { main: string; contrastText: string };
     status: Record<StatusRole, string>;
     priority: Record<PriorityRole, string>;
   }
   interface PaletteOptions {
     itemType?: ItemTypeColors;
+    primaryContainer?: { main: string; contrastText: string };
     status?: Record<StatusRole, string>;
     priority?: Record<PriorityRole, string>;
   }
@@ -94,10 +97,11 @@ declare module '@mui/material/SvgIcon' {
   }
 }
 
-function colorScheme(p: Palette, types: ItemTypeColors): ColorSystemOptions {
+function colorScheme(p: ThemePalette, types: ItemTypeColors): ColorSystemOptions {
   return {
     palette: {
       itemType: types,
+      primaryContainer: { main: p.primaryContainer, contrastText: p.onPrimaryContainer },
       status: statusColors(p),
       priority: priorityColors(p),
       primary: { main: p.primary, contrastText: p.primaryContrast },
@@ -207,7 +211,25 @@ a:focus-visible {
           }),
         },
       },
-      MuiButton: { defaultProps: { disableElevation: true } },
+      MuiButton: {
+        defaultProps: { disableElevation: true },
+        // Pastel rules (V10): primary buttons are a pastel fill with deep text, not a dark fill with white.
+        variants: [
+          {
+            props: { variant: 'contained', color: 'primary' },
+            style: ({ theme }) => {
+              const pal = (theme.vars ?? theme).palette;
+              return {
+                backgroundColor: pal.primaryContainer.main,
+                color: pal.primaryContainer.contrastText,
+                '&:hover': {
+                  backgroundColor: `color-mix(in srgb, ${pal.primaryContainer.main} 88%, ${pal.primaryContainer.contrastText})`,
+                },
+              };
+            },
+          },
+        ],
+      },
       // Touch screens: every icon button is at least 44 × 44 px (WCAG 2.5.5 target size, V7).
       MuiIconButton: {
         styleOverrides: { root: { '@media (pointer: coarse)': { minWidth: 44, minHeight: 44 } } },

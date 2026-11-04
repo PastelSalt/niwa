@@ -16,7 +16,9 @@ export const userRepo = {
 
   update(
     id: Types.ObjectId | string,
-    set: Partial<Pick<UserDoc, 'passwordHash' | 'onboarding' | 'disabledAt' | 'disabledReason'>>,
+    set: Partial<
+      Pick<UserDoc, 'passwordHash' | 'onboarding' | 'preferences' | 'disabledAt' | 'disabledReason'>
+    >,
   ): Promise<UserDoc | null> {
     return UserModel.findByIdAndUpdate(id, { $set: set }, { returnDocument: 'after' }).lean<UserDoc>().exec();
   },

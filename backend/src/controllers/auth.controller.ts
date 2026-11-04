@@ -7,6 +7,7 @@ import {
   NATIVE_CLIENT_HEADER,
   REFRESH_COOKIE,
   OnboardingInput,
+  PreferencesInput,
   RefreshInput,
   RegisterInput,
 } from '@niwa/contracts';
@@ -108,6 +109,12 @@ export function createAuthController(config: AppConfig, auth: AuthService) {
     res.json({ user: await auth.setOnboarding(authOf(res.locals).userId, parse(OnboardingInput, req.body)) });
   };
 
+  const setPreferences: RequestHandler = async (req, res) => {
+    res.json({
+      user: await auth.setPreferences(authOf(res.locals).userId, parse(PreferencesInput, req.body)),
+    });
+  };
+
   const changePassword: RequestHandler = async (req, res) => {
     const client = clientOf(req);
     const input = parse(ChangePasswordInput, req.body);
@@ -141,6 +148,7 @@ export function createAuthController(config: AppConfig, auth: AuthService) {
     me,
     config: config_,
     setOnboarding,
+    setPreferences,
     changePassword,
     usage,
     exportData,

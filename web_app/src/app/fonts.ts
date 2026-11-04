@@ -1,4 +1,6 @@
 import notoJpWordmark from '../assets/fonts/noto-sans-jp-101-400-normal.woff2';
+import atkinsonLatinExt from '@fontsource-variable/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-ext-wght-normal.woff2';
+import atkinsonLatin from '@fontsource-variable/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-wght-normal.woff2';
 import fredokaLatinExt from '@fontsource-variable/fredoka/files/fredoka-latin-ext-wght-normal.woff2';
 import fredokaLatin from '@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2';
 import interLatinExt from '@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2';
@@ -13,6 +15,7 @@ import type { FontId } from '@niwa/tokens';
  *
  * - Fredoka (variable, 300–700; default): Latin + Latin Extended (~30 KB for Latin). No Japanese glyphs.
  * - Inter (variable, 100–900): Latin + Latin Extended (~130 KB).
+ * - Atkinson Hyperlegible Next (variable, 200–800; high legibility): Latin + Latin Extended (~53 KB).
  * - System: nothing to download.
  * - Always: Noto Sans JP — only the ~10 KB slice holding the wordmark's 庭 (U+5EAD), vendored from
  *   @fontsource/noto-sans-jp 5.3.1 (OFL, see assets/fonts/NotoSansJP-OFL.txt) — and JetBrains Mono
@@ -41,6 +44,9 @@ const FAMILY_FACES: Record<FontId, string> = {
   inter:
     face('Inter Variable', '100 900', interLatin, LATIN) +
     face('Inter Variable', '100 900', interLatinExt, LATIN_EXT),
+  atkinson:
+    face('Atkinson Hyperlegible Next Variable', '200 800', atkinsonLatin, LATIN) +
+    face('Atkinson Hyperlegible Next Variable', '200 800', atkinsonLatinExt, LATIN_EXT),
   system: '',
 };
 
@@ -55,6 +61,38 @@ const SHARED_FACES = `
 }
 ${face('JetBrains Mono', '100 800', monoLatin, LATIN)}
 `;
+
+/** Family name and Latin file per font, for loading one ahead of switching to it. */
+const PRELOAD: Record<FontId, { family: string; weights: string; url: string } | null> = {
+  fredoka: { family: 'Fredoka Variable', weights: '300 700', url: fredokaLatin },
+  inter: { family: 'Inter Variable', weights: '100 900', url: interLatin },
+  atkinson: { family: 'Atkinson Hyperlegible Next Variable', weights: '200 800', url: atkinsonLatin },
+  system: null,
+};
+
+/**
+ * Load a font's Latin face before the theme switches to it (V10.P3), so the old font stays on screen until
+ * the new one is ready — no flash of fallback text. Also lets the font picker render each option in its own
+ * font. Resolves (never rejects) — on failure the theme just switches and the browser swaps when it can.
+ */
+export async function ensureFontLoaded(font: FontId): Promise<void> {
+  const f = PRELOAD[font];
+  if (!f || typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) return;
+  const already = [...document.fonts].some(
+    (face) => face.family.replace(/"/g, '') === f.family && face.status === 'loaded',
+  );
+  if (already) return;
+  try {
+    const face = new FontFace(f.family, `url(${f.url}) format('woff2-variations')`, {
+      weight: f.weights,
+      display: 'swap',
+      unicodeRange: LATIN,
+    });
+    document.fonts.add(await face.load());
+  } catch {
+    /* offline or blocked — fall through */
+  }
+}
 
 /** @font-face rules for one font choice plus the shared wordmark and code faces. */
 export function fontFacesFor(font: FontId): string {
