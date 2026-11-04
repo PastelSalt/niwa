@@ -208,6 +208,10 @@ a:focus-visible {
         },
       },
       MuiButton: { defaultProps: { disableElevation: true } },
+      // Touch screens: every icon button is at least 44 × 44 px (WCAG 2.5.5 target size, V7).
+      MuiIconButton: {
+        styleOverrides: { root: { '@media (pointer: coarse)': { minWidth: 44, minHeight: 44 } } },
+      },
       MuiPaper: { defaultProps: { elevation: 0 } },
       MuiPopover: { styleOverrides: { paper: ({ theme }) => layered('popover')(theme) } },
       MuiMenu: { styleOverrides: { paper: ({ theme }) => layered('popover')(theme) } },

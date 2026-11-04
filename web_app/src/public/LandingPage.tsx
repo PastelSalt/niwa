@@ -271,17 +271,20 @@ function Lenses() {
   );
 }
 
-/** Real screenshots of the app (B2.P2), with example content made for them. */
+/**
+ * Real screenshots of the app (B2.P2), with example content made for them; retaken after the B-02 refresh
+ * with `pnpm --filter @niwa/web visual-audit -- --mock --landing-shots`.
+ */
 function Screens() {
   const shots = [
     {
       src: '/screens/knowledge-light.webp',
-      alt: 'A course project open in the Knowledge lens, light theme: the tree on the left, the note editor in the middle and item details on the right.',
+      alt: 'A course note open in the Knowledge lens, light theme: the tree on the left, the note with headings and a list in the middle, and its details on the right.',
       caption: 'Knowledge, light theme',
     },
     {
       src: '/screens/focus-dark.webp',
-      alt: 'The Focus view in dark theme, listing high-priority, upcoming and recently updated tasks from different projects.',
+      alt: 'The Focus view in dark theme: overdue, in-progress, high-priority and upcoming tasks from different projects, each shown once with its priority and due date.',
       caption: 'Focus, dark theme',
     },
   ];

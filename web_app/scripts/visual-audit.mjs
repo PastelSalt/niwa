@@ -11,6 +11,7 @@
  *   pnpm --filter @niwa/web visual-audit -- --reuse      # reuse servers already running on those ports
  *   pnpm --filter @niwa/web visual-audit -- --mock       # no MongoDB: a small fake API (scripts/audit-mock-api.mjs)
  *   … -- --only=focus,inbox --widths=390,360 --modes=light --no-shots
+ *   … -- --mock --landing-shots                         # retake public/screens/*.webp for the landing page
  *
  * Exits 1 when the check finds overlapping or spilling text, so it can gate a milestone (V7 exit criteria).
  */
@@ -506,6 +507,49 @@ async function settle(page, wait) {
   await page.waitForTimeout(400);
 }
 
+/**
+ * The landing page's "See it" screenshots (B-01 B2.P2, retaken in B-02 V8): the example workspace above,
+ * 1280 × 800, encoded as WebP by the browser itself so no image tool is needed.
+ */
+async function landingShots(browser, acc, ids) {
+  const shots = [
+    { file: 'knowledge-light.webp', mode: 'light', path: `/knowledge/${ids.week3}`, wait: '.ProseMirror' },
+    { file: 'focus-dark.webp', mode: 'dark', path: '/actionable' },
+  ];
+  for (const shot of shots) {
+    const ctx = await browser.newContext({
+      baseURL: BASE,
+      viewport: { width: 1280, height: 800 },
+      colorScheme: shot.mode,
+      timezoneId: TIME_ZONE,
+      reducedMotion: 'reduce',
+    });
+    await acc.attach(ctx);
+    const page = await ctx.newPage();
+    await page.goto(shot.path);
+    await settle(page, shot.wait);
+    // No text caret or hover state in the picture.
+    await page.mouse.move(0, 799);
+    await page.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.blur());
+    const png = await page.screenshot({ type: 'png' });
+    const webp = await page.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const canvas = Object.assign(document.createElement('canvas'), {
+        width: img.width,
+        height: img.height,
+      });
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      return canvas.toDataURL('image/webp', 0.82).split(',')[1];
+    }, png.toString('base64'));
+    const out = join(webRoot, 'public', 'screens', shot.file);
+    writeFileSync(out, Buffer.from(webp, 'base64'));
+    console.log(`Wrote ${out} (${Math.round(Buffer.from(webp, 'base64').length / 1024)} KB)`);
+    await ctx.close();
+  }
+}
+
 async function main() {
   await servers();
   if (SHOTS) mkdirSync(OUT, { recursive: true });
@@ -519,6 +563,12 @@ async function main() {
   const { ids } = await seed(full);
   const empty = await account(setup.request, 'empty');
   await setup.close();
+
+  if (args['landing-shots']) {
+    await landingShots(browser, full, ids);
+    await browser.close();
+    return;
+  }
 
   const list = screens(ids).filter((s) => !ONLY || ONLY.includes(s.name));
   for (const mode of MODES) {
