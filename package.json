@@ -16,6 +16,8 @@
     "format:check": "prettier --check .",
     "openapi": "pnpm --filter @niwa/contracts generate",
     "openapi:check": "pnpm --filter @niwa/contracts check",
+    "tokens:dart": "pnpm --filter @niwa/tokens dart",
+    "tokens:dart:check": "pnpm --filter @niwa/tokens dart:check",
     "dev:memory": "pnpm --parallel --filter @niwa/backend --filter @niwa/web dev:memory",
     "build": "pnpm --filter @niwa/web build",
     "e2e": "pnpm --filter @niwa/web e2e"

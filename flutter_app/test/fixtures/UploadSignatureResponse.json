@@ -1,0 +1,11 @@
+{
+  "cloudName": "demo",
+  "apiKey": "123456789012345",
+  "timestamp": 1793700000,
+  "signature": "0123456789abcdef0123456789abcdef01234567",
+  "folder": "niwa/6745f0c2a1b2c3d4e5f60701",
+  "publicId": "0b6f9a2e-1c2d-4e5f-8a9b-0c1d2e3f4a5b",
+  "tags": "niwa-pending",
+  "allowedFormats": "png,jpg,webp,gif",
+  "uploadUrl": "https://api.cloudinary.com/v1_1/demo/image/upload"
+}

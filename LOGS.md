@@ -297,3 +297,293 @@
 - **Verified:** lint, format, typecheck, unit/integration tests (tokens 8, contracts 8, api-client 6, web 31, backend 84), build and smoke e2e all pass from `web_app/`.
 - **Owner action needed:** when the Vercel project is created, set its root directory to `web_app`. Install the Flutter SDK + Android Studio (A-02 MA0).
 - **Next:** A-02 MA0 → MA1 scaffold.
+
+### 2026-11-04 — Mobile MA0 toolchain + MA1.P1 scaffold (Linux work laptop)
+- **Plan ref:** A-02 MA0 (done), MA1.P1 (done)
+- **Actions:**
+  - New dev machine (CachyOS laptop): `pnpm install` via `npx pnpm@12.15.0` (Node 26 has no corepack); lint, typecheck and all tests pass (tokens 8, contracts 8, api-client 6, web 31, backend 84).
+  - MA0: Flutter 3.47.9 / Dart 3.13.7 at `~/develop/flutter`; `flutter doctor` clean for Android (SDK 36 build-tools, platform 37, Studio JBR); emulator `Medium_Phone_API_37.0`.
+  - MA1.P1: `flutter create --org works.moeko --project-name niwa --platforms android,ios` in `flutter_app/`.
+    - Android `minSdk 26`, `targetSdk 36`.
+    - Lints: `very_good_analysis` + strict casts/inference/raw types; generated `*.g.dart` / `*.freezed.dart` excluded.
+    - Dependencies: flutter_riverpod, riverpod_annotation, go_router, dio, freezed_annotation, json_annotation, drift, drift_flutter, flutter_secure_storage, connectivity_plus; dev: build_runner, freezed, json_serializable, riverpod_generator, drift_dev.
+    - `lib/main.dart` (ProviderScope), `lib/app/{app,router}.dart`, `lib/core/config/env.dart` (`APP_ENV`, `API_BASE`), `lib/core/theme/app_theme.dart` (seeded placeholder), `lib/features/home/ui/placeholder_screen.dart`; `test/app_test.dart`.
+  - `.prettierignore`: whole `flutter_app/` (Dart tooling formats it).
+  - Docs: `flutter_app/README.md`, CODEMAP, A-02 plan.
+- **Decisions (owner):** bundle id `works.moeko.niwa`; `minSdk 26` / `targetSdk 36`; scheduler reminders opt-in per entry, 10 min default.
+- **Decisions:** `flutter_quill` and `flutter_local_notifications` are added in MA6/MA7, where their Android setup (desugaring, permissions) is needed. No Gradle flavors yet; `--dart-define` covers env selection.
+- **Verified:** `flutter analyze` no issues; `dart format --set-exit-if-changed` clean; `flutter test` 2 pass (placeholder in light + dark, `APP_ENV` fallback); `flutter build apk --debug` succeeds (first Gradle run ≈ 19 min). Root lint, format:check pass. Not yet run on the emulator.
+- **Next:** MA1.P2 theme from tokens, then MA1.P3 models, MA1.P4 CI.
+
+### 2026-11-04 — Mobile MA1.P2 theme from tokens
+- **Plan ref:** A-02 MA1.P2 (done)
+- **Actions:**
+  - `packages/tokens/scripts/generate-dart.ts` writes `flutter_app/lib/core/theme/tokens.g.dart`: `NiwaPalette`, `NiwaTypeColors`, `NiwaTokens` (light/dark palettes and type colours, font families without CSS generics, base size, radii, spacing unit). Output is already `dart format`-clean. `--check` mode like `generate-openapi.ts`.
+  - Root scripts `tokens:dart` / `tokens:dart:check`; the check runs in the `ci.yml` `check` job (Node only). Tokens `tsconfig` now includes `scripts/`.
+  - Flutter: `core/theme/app_theme.dart` maps tokens onto a Material 3 `ColorScheme` (mirrors `web_app/src/app/theme.ts`: semibold headings and buttons, flat app bar/cards, `radius` 10, chips `radiusSmall`); `core/theme/niwa_colors.dart` theme extension for warning/success/info/item types; `core/theme/theme_mode.dart` (`themeModeProvider`, system by default); `core/util/contrast.dart` (`contrastRatio`, `readableOn`, port of `lib/a11y.ts`).
+  - Placeholder screen shows type and status swatches and button styles.
+  - `test/theme_test.dart`: port of `contrast.test.ts` on the Dart tokens, plus checks that `ThemeData` uses them.
+- **Decisions:** fonts are listed as `fontFamilyFallback` only; Inter / Noto Sans JP aren't bundled yet, so the platform font shows until they are (later: font assets).
+- **Verified:** `flutter analyze` no issues; `dart format` clean; `flutter test` 13 pass. `tokens:dart:check`, tokens typecheck + tests (8), root lint, typecheck, format:check pass. No APK build or emulator run (owner will say when).
+- **Next:** MA1.P3 models (freezed + contract check).
+
+### 2026-11-04 — Mobile MA1.P3 models + contract check
+- **Plan ref:** A-02 MA1.P3 (done)
+- **Actions:**
+  - `flutter_app/lib/core/models/` (freezed + json_serializable, barrel `models.dart`): `Item`, `ItemSummary`, `User` (contract `PublicUser`), `AuthResponse`, `Workspace`, `Link`, `LinkWithItem`, `ScheduleEntry`, `SearchHit`, `Attachment`, `ApiError` / `ErrorEnvelope`; `enums.dart` with every contract enum.
+  - `build.yaml`: `explicit_to_json` so nested models serialise as maps.
+  - `test/fixtures/<Schema>.json` (11) and `test/contract_test.dart`:
+    - each fixture validates against `openapi.yaml` (types, enums, no extra or missing fields; `$ref` / `allOf` resolved) and covers every field;
+    - it round-trips through the model unchanged;
+    - per field, including inline nested objects (`ErrorEnvelope.error.*`): `null` accepted only where the contract allows it, optional fields may be absent, every contract enum value decodes, unknown values fall back.
+  - Dev deps: `yaml`, `collection`.
+- **Decisions:**
+  - `IsoDateTime` → `DateTime`; `DateOnly` stays a string (no timezone, specs §12.5).
+  - `content` is `Map<String, dynamic>?` (ProseMirror JSON untouched, specs §12.4).
+  - Enums: `unknown` member + `unknownEnumValue`; `ErrorCode` uses screaming snake case.
+  - Optional contract fields (`refreshToken`, `details`, `requestId`) are omitted from `toJson` when null.
+  - No `ScheduleSeries` model: the contract has no series resource.
+  - Contract check is a Dart test (runs with `flutter test`) rather than a separate tool.
+  - Generated `*.freezed.dart` / `*.g.dart` are committed; MA1.P4 CI will check they're up to date.
+  - Constructors use the Dart 3.13 `const factory(...)` / `factory fromJson` form (lint `unnecessary_type_name_in_constructor`); freezed 3 generates fine with it.
+- **Verified:**
+  - `flutter test` 172 pass (13 earlier + 159 contract).
+  - Mutation check: dropping `ItemPriority.critical` and making `Workspace.name` nullable fail `priority: every contract value decodes` (Item, ItemSummary) and `Workspace name: null rejected`; reverted and regenerated.
+  - `flutter analyze` no issues, `dart format` clean; root `tokens:dart:check`, lint, format:check pass. No APK build (owner will say when).
+- **Next:** MA1.P4 Flutter CI workflow (code only; first CI run when pushed), then MA2 API client & auth.
+
+### 2026-11-04 — Mobile MA1.P4 CI workflow + MA2.P1 API client
+- **Plan ref:** A-02 MA1.P4 (written, not yet run), MA2.P1 (client, errors, refresh, tests done; per-area repositories open)
+- **Actions:**
+  - `.github/workflows/flutter.yml`: on changes to `flutter_app/`, `packages/tokens/`, `packages/contracts/` or itself. Steps: Java 17, Flutter 3.47.9 (cached), `pub get`, `dart format --set-exit-if-changed`, `analyze`, `build_runner` + `git diff --exit-code -- lib` (generated code is fresh), `flutter test`, `build apk --debug`.
+  - `lib/core/api/`:
+    - `api_client.dart`: Dio with `X-Client: mobile`, `X-Request-Id`, timeouts (15 s connect, 60 s receive). Session in memory with a `sessionChanges` stream. Single-flight `refresh()`, one retry on 401, sign-out when refresh returns 401/403. `restoreSession`, `register`, `login`, `logout` (local sign-out even if the server is unreachable), `me`, `request`, `anonymous`.
+    - `api_exception.dart`: `ApiException`, `OfflineException`.
+    - `refresh_token_store.dart`: `RefreshTokenStore` interface + `MemoryRefreshTokenStore`.
+  - `test/api_client_test.dart` (19 tests) against a fake adapter that rotates refresh tokens and detects reuse.
+- **Decisions:**
+  - Explicit request wrapper instead of a Dio interceptor, so the flow matches `@niwa/api-client` line for line.
+  - `validateStatus` accepts everything; status mapping is done in one place.
+  - Non-envelope 5xx → `UPSTREAM_ERROR` with a friendly message, like the TS client.
+- **Verified:**
+  - `flutter test` 191 pass; `flutter analyze` no issues; `dart format` clean; workflow passes Prettier.
+  - Mutation check: removing single-flight fails `concurrent 401s share a single refresh`; restored.
+  - Workflow not run yet (needs a push). No APK build (owner will say when).
+- **Next:** MA2.P1 repositories (items, links, schedule, inbox, search, uploads); MA2.P2 secure storage + session provider; MA2.P3 login/register screens.
+
+### 2026-11-04 — Mobile MA2.P1 repositories + MA2.P2 session
+- **Plan ref:** A-02 MA2.P1 (done), MA2.P2 (done except router redirects, which move to MA2.P3)
+- **Actions:**
+  - Models: `FocusResponse`, `RestoreResponse` (+ `RestoreTarget`), `DeleteResponse`, `PromoteSectionResponse`, `TagCount`, `ItemLinksResponse`, `UploadConfigResponse`, `UploadSignatureResponse`, each with a fixture and a contract-test entry. Contract test: enum probes now only for string enums (`z.literal(true)` is a boolean enum).
+  - `enums.dart`: `alwaysCreate` enum maps + `.wire` extensions; sending `unknown` throws `ArgumentError`.
+  - `core/api/change.dart` (`Change<T>`, `putChange`), `core/api/json.dart` (`.decode` / `.field` / `.list` on `Future<Object?>`), `core/util/date_only.dart`.
+  - Repositories: `features/items/data/items_repository.dart` (`ItemsRepository`, `ItemChanges`, `TagsRepository`), `inbox/…/inbox_repository.dart`, `search/…/search_repository.dart`, `scheduler/…/schedule_repository.dart` (`EditScope`; instants sent as UTC), `knowledge/…/{links,uploads}_repository.dart`, `settings/…/workspace_repository.dart`.
+  - Session:
+    - `core/auth/secure_refresh_token_store.dart`: flutter_secure_storage, iOS `first_unlock_this_device`.
+    - `core/api/providers.dart`: token store, `ApiClient` and repository providers.
+    - `core/auth/session.dart`: sealed `SessionState`, `SessionController` (restore at launch, follows the client's session stream, login/register/logout, refresh on resume within 1 min of expiry).
+    - `ApiClient`: `Session.expiresAt`, injectable clock, synchronous session stream.
+  - Tests: `repositories_test.dart` (18), `session_test.dart` (10); `FakeServer` moved to `test/support/fake_server.dart`.
+- **Decisions:**
+  - Repositories return futures directly (no `async`), using chained decode helpers.
+  - `SessionUnavailable` covers both offline and 5xx at launch: the stored token is kept and the UI retries; only a 401/403 from refresh signs out.
+  - Session stream is synchronous so `await login()` is immediately reflected in `sessionProvider`.
+  - Device time zone for schedule writes is a parameter for now (MA7 reads it from the device).
+- **Verified:** `flutter test` 273 pass; `flutter analyze` no issues; `dart format` clean; `build_runner` output unchanged; root format:check + `tokens:dart:check` pass. No APK build or emulator run (owner will say when).
+- **Next:** MA2.P3 login/register screens + router redirects.
+
+### 2026-11-04 — Mobile MA2.P3 login/register + session routing
+- **Plan ref:** A-02 MA2.P3 (done); MA2 code complete (exit check against `pnpm dev:memory` on the emulator still to do)
+- **Actions:**
+  - `core/api/error_message.dart` (`messageOf`, port of the web one, plus waking-up / offline / rate-limit-with-wait); `core/util/validators.dart` (email, login password, new password 12–256, confirmation).
+  - `features/auth/ui/`:
+    - `auth_layout.dart`: `AuthLayout`, `FormErrorBanner` (live region), `AuthSwitchPrompt`.
+    - `auth_form.dart`: `AuthFormState` mixin, `SubmitButton`.
+    - `password_field.dart`: show/hide toggle.
+    - `login_screen.dart`, `register_screen.dart`: copy from the web pages; autofill hints; email trimmed.
+    - `session_screens.dart`: `SplashScreen`, `SessionUnavailableScreen` with Try again.
+  - `app/router.dart`: `Routes`, pure `redirectFor`, `routerProvider` (GoRouter refreshed from `sessionProvider` through a `ValueNotifier`); `NiwaApp` uses it.
+  - `SessionController.logout` swallows network/API errors (local sign-out already done). Placeholder home shows the signed-in email and a Log out button.
+  - Tests: `test/support/test_app.dart` (`pumpApp`), `test/auth_flow_test.dart` (14 tests), and `app_test.dart` now goes through it.
+- **Fixed:** the "First time here? / Create your account" row overflowed at narrow widths and large text. It's now a centred `Wrap`, with a test at 360 px and 2× text.
+- **Verified:** `flutter test` all pass; `flutter analyze` no issues; `dart format` clean; root format:check passes. No APK build or emulator run (owner will say when).
+- **Next:** MA3 app shell (tabs, routes mirroring web paths, capture FAB, snackbar Undo). MA2's exit check (register/login/logout/restart on the emulator against `pnpm dev:memory`) runs together with the first build.
+
+### 2026-11-04 — Mobile MA3 app shell & navigation
+- **Plan ref:** A-02 MA3.P1–P2 (done except shell goldens)
+- **Actions:**
+  - `app/router.dart`:
+    - `StatefulShellRoute.indexedStack` with five branches (Knowledge, Actionable, Scheduler, Inbox, Search) on web paths; full-screen `/items/:id` (redirect to the lens, keeping `#anchor`) and `/settings/:section`.
+    - `/scheduler` → today's day view; invalid scheduler or settings params redirect; `errorBuilder` → Not found.
+    - `redirectFor(session, Uri)` keeps the target as `?from=` through splash and login (in-app paths only).
+  - `app/app_shell.dart`: `NavigationBar` with Inbox `Badge` (99+ cap, count in tooltip); re-tap a tab to return to its root; `PopScope` sends Android back from another tab to Knowledge; capture FAB.
+  - `app/destinations.dart`, `app/niwa_app_bar.dart` (search + account menu: email, Settings, Log out).
+  - `core/ui/state_views.dart` (`EmptyState`, `ErrorState` with retry, static `ListSkeleton`); `core/ui/snackbars.dart` (root `ScaffoldMessenger` key, Undo action with 8 s duration).
+  - Features:
+    - `inbox/data/inbox_providers.dart` (`inboxItemsProvider`, `inboxCountProvider`); `inbox/ui/inbox_screen.dart` (real list, pull to refresh, empty/error/loading).
+    - `capture/ui/capture_sheet.dart`: title + Idea/Note/Task, refreshes the Inbox and badge, "Captured to Inbox" snackbar.
+    - `items/ui/{item_type_icon,lens_screens}.dart`: Knowledge, Actionable, Review and Not found placeholders, and `ItemRedirectScreen`.
+    - `scheduler/ui/scheduler_screen.dart`, `search/ui/search_screen.dart` (query in the URL).
+    - `settings/ui/settings_screen.dart`: Appearance theme radio (live), Account (email, log out), AI / Trash placeholders.
+  - Removed `features/home` (MA1 placeholder).
+  - Deep links: Android `VIEW` intent filter `niwa://open`; iOS `CFBundleURLTypes` `niwa`.
+  - Tests: `test/shell_test.dart` (9): tabs, per-tab stacks, Android back, badge + capture, Inbox empty/error/retry, `/items/:id` → lens, deep link through login, Settings theme switch, not-found and param redirects. `redirectFor` tests extended (`from` round-trip, external `from` rejected). `pumpApp` disables Riverpod auto-retry.
+- **Decisions:**
+  - Each tab screen owns its `AppBar` (`NiwaAppBar`); the shell owns the bottom bar and FAB.
+  - Deep-link form `niwa://open/<web path>`, so the URL path equals the web path.
+  - Inbox badge reads the same provider as the Inbox screen, so capture/filing invalidation updates both.
+- **Verified:** `flutter test` 299 pass; `flutter analyze` no issues; `dart format` clean; manifest and plist parse; root format:check passes. No APK build, emulator run or device deep-link test (owner will say when). Gaps recorded in `GAPS.md` § Mobile.
+- **Next:** MA4 items, tree & Actionable (lens drill-down, item view and fields, structure changes, Focus).
+
+### 2026-11-04 — Mobile MA4 items, tree & Actionable
+- **Plan ref:** A-02 MA4.P1–P4 (done in code; device run pending)
+- **Actions:**
+  - `features/items/domain/tree_model.dart`: port of `treeModel.ts` (`buildTree`, `ancestorsOf`, `isDescendant`, `lensView`, `visibleChildren`, `moveUp`/`moveDown`/`indent`/`outdent`/`dropMove`), plus `descendantCount`, `reorderMove` (visible neighbour), `moveTargetProblem`.
+  - `features/items/data/item_providers.dart`: `treeProvider`, `itemProvider` family, `focusProvider`, `tagsProvider`, `summaryOf`, `ItemActions` (create, update, move, archive with Undo, delete with Undo → restore, "Restored to Inbox" notice, `VERSION_CONFLICT` → reload + notice).
+  - UI (`features/items/ui/`):
+    - `item_meta.dart` (labels, status colours, lens paths, `formatDay`); `item_row.dart`.
+    - `item_menu.dart`: open, add inside/below, move to, move up/down, archive, Trash.
+    - `item_dialogs.dart`: create dialog, delete confirmation when it has children, move-to picker with reasons.
+    - `item_fields_sheet.dart`: type/status/priority, due/review dates, tags with `/tags` autocomplete and contract normalisation; sends only changes.
+    - `item_screen.dart`: breadcrumb, title saved on Done or blur, field chips, read-only content, children with drag-handle reorder (`onReorderItem`) and an optimistic order.
+  - `features/items/ui/lens_screens.dart`: Knowledge home (`LensTree`, Review and New actions); Actionable home with Focus / Browse tabs; item routes open `ItemScreen` in the route's lens.
+  - `features/actionable/ui/focus_view.dart`: web sections and copy; `FocusRow` with an optimistic checkbox (holds until the server agrees).
+  - `features/knowledge/domain/prosemirror_text.dart`: read-only text blocks (headings, paragraphs, lists, quotes, code) until MA6.
+  - `NiwaAppBar`: `actions` and `bottom`; `ItemTypeIcon`: completed tasks.
+  - Tests:
+    - `test/support/fake_workspace.dart`: in-memory backend for tree, items CRUD with version checks, move/orderKeys, archive, cascading delete/restore with the Inbox fallback, Focus, tags and Inbox. Hooked into `FakeServer`.
+    - `pumpSignedIn` helper.
+    - `tree_model_test.dart` (7), `items_flow_test.dart` (9: the three `tree.spec.ts` scenarios, drag reorder, move-to refusals, field sheet diff + 409 reload, title save, archive Undo, restore-to-Inbox, content rendering).
+    - Shell and auth tests updated for the real screens.
+- **Decisions:**
+  - Drill-down navigation (one screen per item, children listed below) instead of an expandable tree: it fits a phone and keeps one back stack per tab.
+  - Archived items leave the tree, as on the web; they stay reachable by link and are unarchived from the menu or Undo.
+  - Drag reorder has a non-drag alternative (Move up/down) for switch and screen-reader users.
+- **Verified:** `flutter test` 315 pass; `flutter analyze` no issues; `dart format` clean; generated code unchanged; root format:check passes. No APK build or emulator run (owner will say when).
+- **Next:** MA5 local cache & offline (Drift read cache, offline capture queue) or MA6 notes editor (flutter_quill + ProseMirror ⇄ Delta).
+
+### 2026-11-04 — Mobile MA5 local cache & offline (+ backend capture idempotency)
+- **Plan ref:** A-02 MA5.P1–P3 (done in code; device run pending)
+- **Actions:**
+  - **Contract + backend:**
+    - `CaptureInput.clientId` (optional UUID); OpenAPI regenerated.
+    - `items.captureClientId` with a unique partial index `{ workspaceId, captureClientId }`.
+    - `itemService.capture` returns the earlier item for a repeated `clientId`; a concurrent duplicate (E11000) returns the winner. The field is never serialised.
+    - Test in `inbox-search.test.ts` (repeat, race, independent without an id, invalid id → 400). DATA_MODEL §1 updated.
+  - **Flutter:**
+    - `core/db/app_database.dart` (Drift v1: `cache_entries`, `outbox`, wipe) and `db_providers.dart`.
+    - `core/db/cached.dart` (`cachedThenFresh`); `core/net/network_status.dart` (connectivity_plus + `/health` probe, re-probe while offline); `core/util/uuid.dart`.
+    - Cached providers: tree, item, Focus, tags, Inbox.
+    - `features/capture/data/capture_queue.dart`: FIFO outbox, `clientId` per capture, stop when offline, backoff on 5xx/429, 4xx → failed with Retry / Discard; drains on capture, reconnect, sign-in and launch.
+    - Capture sheet goes through the queue, with an "it'll sync" message offline. The Inbox lists waiting and failed captures; the badge counts them.
+    - `OfflineBanner` in the shell; `ItemActions` refuse edits offline with a message.
+    - Session: caches the user, so an offline launch opens signed in; wipes the DB on sign-out; `logout()` waits for the wipe.
+    - `features/auth/ui/logout.dart` warns about unsynced captures.
+  - **Tests:**
+    - `test/offline_test.dart` (13): DB, uuid, `cachedThenFresh`, the airplane-mode exit scenario, lost-response retry without a duplicate, backoff, Retry/Discard, logout warning + wipe.
+    - Test helpers: in-memory DB, controllable connectivity, real restart (unmount first); `FakeServer.offline`; `FakeWorkspace` POST `/inbox` is idempotent on `clientId`.
+    - Shell, repository and session tests updated.
+- **Decisions:**
+  - Snapshot cache keyed by request instead of normalised tables, until offline editing needs them.
+  - Outbox state is reloaded by the queue after each write (no Drift table watcher): simpler, and no lingering Drift timers in widget tests.
+  - A launch that can't reach the server opens as the cached user; only a server rejection of the refresh token signs out.
+- **Found and fixed:** `clientId` wasn't actually being sent at first; the lost-response test caught it (two items created).
+- **Verified:**
+  - `flutter test` 328 pass; `flutter analyze` no issues; `dart format` clean; generated code fresh.
+  - Backend 85 pass; tokens/contracts/api-client pass; `openapi:check`, lint, format:check pass.
+  - Web: 31 pass, but `shell.test.tsx` "hides the tree pane…" failed intermittently (2 of 4 runs); untouched code, logged in GAPS.
+  - No APK build or device run (owner will say when).
+- **Next:** MA6 notes editor (flutter_quill + ProseMirror ⇄ Delta converter).
+
+### 2026-11-04 — Mobile MA6 notes editor (flutter_quill)
+- **Plan ref:** A-02 MA6.P1–P3 (done in code; manual round-trip pending)
+- **Actions:**
+  - **Web fixtures:** `web_app/src/features/knowledge/editor/editorFixtures.test.ts` builds note bodies with the web editor's real schema (`generateJSON` + StarterKit/AnchoredHeading/NiwaLink/NiwaImage). It checks `flutter_app/test/fixtures/editor/*.json` (7 supported, 4 locked); `UPDATE_EDITOR_FIXTURES=1` rewrites them. It runs in the web test suite, so the mobile fixtures can't go stale.
+  - **Converter** `features/knowledge/domain/pm_delta.dart`:
+    - `pmToDelta` / `deltaToPm` for every supported node and mark.
+    - Heading anchors travel as a `niwaAnchor` inline embed; `niwaLink`, `niwaBreak`, `niwaRule`, `niwaImage` and `niwaLocked` embeds.
+    - Canonical mark order and TipTap link defaults; adjacent same-mark text merged.
+    - List indents clamped; headings clamped to H1–H3.
+    - Unsupported blocks, unsupported inline content and same-kind neighbours become locked blocks.
+    - AnchorGuard: missing or duplicate anchors get a fresh id; a deleted anchor is reused by heading text.
+  - **Editor:**
+    - `features/knowledge/data/note_autosave.dart`: port of `useAutosave` — 800 ms debounce, latest version, silent retry for a field-only 409, content-conflict pause with keep mine / load latest, offline status.
+    - `features/knowledge/ui/note_editor_screen.dart`: flutter_quill with a compact toolbar and save status. Outline sheet: jump to a heading, or promote its section to a child note. `[[` and the link button open the picker. Read-only when archived, offline or in conflict. Flushes on leave.
+    - `features/knowledge/ui/note_embeds.dart`: invisible anchor, live `niwaLink` chip with a missing state, line break, rule, image, locked card.
+    - `features/knowledge/ui/link_picker.dart`: items, then sections (`headingsOf`).
+    - `features/knowledge/ui/links_panel.dart` + `data/link_providers.dart`: outgoing and backlinks, related add/remove.
+    - Item screen: Edit/Write notes button, read view scrolls to a `#h-` anchor, links panel below the children.
+    - Routes `…/:itemId/edit` in both lenses; Quill localizations delegate.
+  - **Dependencies:** flutter_quill 11.6, dart_quill_delta, flutter_localizations.
+  - **Tests:**
+    - `pm_delta_test.dart` (21): every fixture round-trips through flutter_quill's `Document`; locked fixtures, unknown node/mark, non-default link and adjacent same-kind blocks stay byte-identical; edits beside locked blocks; four anchor rules; indent clamp.
+    - `note_autosave_test.dart` (8): the web autosave rules.
+    - `note_editor_test.dart` (8): edit → saved PM, locked block preserved, `[[` → section link, missing link, outline promote, archived read-only, links panel, `#h-` scroll.
+    - `FakeWorkspace`: 409 carries `details.current`; links endpoints; promote-section.
+- **Found and fixed:**
+  - Unsupported inline content mid-paragraph used to keep the half-converted text in front of the locked block; the block is now reset first.
+  - Adjacent same-kind blocks would have merged into one.
+- **Verified:** `flutter test` 365 pass; `flutter analyze` no issues; `dart format` clean; generated code fresh; web fixture check (11), lint, format:check, web typecheck pass. No APK build or device run (owner will say when).
+- **Next:** MA7 Scheduler (day/week/month views, entries, recurrence scopes, reminders with flutter_local_notifications).
+
+### 2026-11-04 — Mobile MA7 Scheduler + reminders
+- **Plan ref:** A-02 MA7.P1–P3 (done in code; agenda view not built; device run pending)
+- **Actions:**
+  - **Domain:**
+    - `scheduler/domain/calendar.dart`: port of `lib/dates.ts` with Monday weeks, calendar-day arithmetic and UTC all-day helpers.
+    - `layout.dart`: port of `layout.ts`, plus `segmentsForDay` (clipped to the day), `allDayFor`, `entriesOn`.
+    - `entry_look.dart`: live block titles, token colours, readable text.
+  - **Data:**
+    - `scheduleRangeProvider` (cached `cachedThenFresh` per range) and `itemScheduleProvider`.
+    - `ScheduleActions`: create, update with scope (recurrence only sent for one-offs or "this and following"), retime for drags, remove with scope. Offline guard; refreshes and reminder resync.
+    - `core/util/time_zone.dart` (flutter_timezone).
+  - **Reminders:**
+    - Drift v2 adds a `reminders` table (`entry:`/`series:` → minutes); migration from v1 keeps the outbox.
+    - `scheduler/data/reminders.dart`: `planReminders` (pure), `ReminderService` (asks permission on first use, syncs 14 days ahead at sign-in/launch and after changes, cancels on logout), `NotificationGateway` + flutter_local_notifications implementation with inexact `zonedSchedule`.
+  - **UI:**
+    - `time_grid.dart` (day and week): all-day row, overlap columns, now line. Tap a slot to create; long-press drag to move (across days in week); bottom-edge resize from touch-down; 15-min snap.
+    - `month_grid.dart`; `entry_sheet.dart` (port of `EntryDialog`: event or item block, dates/times, all-day, colour, repeat, scope, reminder, delete).
+    - `scheduler_screen.dart`: view switch, previous/today/next, new entry.
+    - `item_schedule_section.dart`: Schedule time + upcoming blocks on actionable items. The shell keeps reminders alive.
+  - **Android:**
+    - Core library desugaring.
+    - `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, the notification receivers.
+    - **`INTERNET` in the main manifest** — it was only in the debug/profile manifests, so a release build couldn't have reached the API.
+  - **Dependencies:** flutter_timezone, flutter_local_notifications, timezone; dev `sqlite3`.
+  - **Tests:**
+    - `scheduler_domain_test.dart` (13): the web cases plus clipping, all-day dates, looks and contrast.
+    - `scheduler_flow_test.dart` (9): slot create, drag move, edge resize, overlaps, month → day → week, repeat scopes (instance rename, delete this and following), item block, reminders on/off, refused permission, offline cache + refused edit, v1 → v2 migration.
+    - `FakeWorkspace` schedule endpoints with series semantics; `FakeNotifications`; time zone override.
+- **Decisions:**
+  - Reminders live on the phone, not the server; per entry or per series.
+  - Inexact alarms, to avoid the exact-alarm permission.
+  - All-day entries have no reminder.
+- **Found and fixed:** the resize edge lagged the finger by the drag slop; it now counts from touch-down.
+- **Verified:** `flutter test` 387 pass; `flutter analyze` no issues; `dart format` clean; generated code fresh; root lint and format:check pass. No APK build or device run (owner will say when).
+- **Next:** MA8 Inbox filing, capture details and search results.
+
+### 2026-11-04 — Mobile MA8 Inbox, capture & search
+- **Plan ref:** A-02 MA8.P1–P3 (done; stretch items — capture tile/shortcut, share intent — not built)
+- **Actions:**
+  - **Capture** (`capture/ui/capture_sheet.dart`):
+    - Details become one paragraph per line (`textToDoc`, like the web).
+    - "Suggest filing under …" offers the item on screen (the shell reads `/knowledge|actionable/:id`).
+    - Save & next with an "N captured" counter, then a "Captured N items to Inbox" summary, shown after the sheet closes.
+    - Drift v3 adds outbox `body` and `suggested_parent_id`, so details and suggestions survive offline; the queue sends them.
+  - **Inbox:**
+    - `inbox/ui/inbox_screen.dart`: newest first, suggestion chip, checkboxes and long-press select, selection bar (Delete selected, File selected), per-row File/Delete, "Inbox zero".
+    - `inbox/ui/file_sheet.dart`: port of `FileDialog` — place search with paths, the suggested parent preselected, type or "Keep each type", due/tags for single items; "Filed under …" with Open. Partial failures are reported.
+    - `ItemActions.removeMany` (one Undo for all); item actions refresh the Inbox.
+    - `Snackbars.show` takes a general action label.
+  - **Search:**
+    - `search/data/search_providers.dart`: `searchProvider` (offline → title/tag search over the cached tree) and `RecentSearches` (on the phone, wiped on logout).
+    - `search/ui/search_screen.dart`: 300 ms debounce into `?q=`, All/Knowledge/Actionable (`nature`), "Include archived" (`archived=1`), `Highlight` (port), path, snippet, tags, recent searches, offline banner.
+  - **Tests:**
+    - `inbox_search_test.dart` (5): the web capture → file single + bulk → tree scenario; details + suggested parent; delete with Undo (one, many); search titles/tags/body with highlights, filter and recents; offline search.
+    - The migration test now covers v1 → v3.
+    - `FakeWorkspace`: filing, search with snippets, newest-first Inbox, stored capture details.
+- **Found and fixed:**
+  - The capture summary snackbar was shown during a build (when the sheet closed); it's now posted after the frame.
+  - A pending debounced keystroke could undo a tap on a recent search or Clear; both now cancel it.
+- **Verified:** `flutter test` 392 pass; `flutter analyze` no issues; `dart format` clean; generated code fresh; root format:check passes. No APK build or device run (owner will say when).
+- **Next:** MA9 Settings, Trash and images (persisted theme, Trash list/restore/purge, image upload from the phone).

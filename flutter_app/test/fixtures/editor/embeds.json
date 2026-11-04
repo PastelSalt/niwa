@@ -1,0 +1,60 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "See "
+        },
+        {
+          "type": "niwaLink",
+          "attrs": {
+            "itemId": "6745f0c2a1b2c3d4e5f60718",
+            "anchorId": null,
+            "title": "Thesis outline",
+            "sectionTitle": null
+          }
+        },
+        {
+          "type": "text",
+          "text": " and "
+        },
+        {
+          "type": "niwaLink",
+          "attrs": {
+            "itemId": "6745f0c2a1b2c3d4e5f60719",
+            "anchorId": "b2",
+            "title": "Reading notes",
+            "sectionTitle": "Section"
+          }
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "attrs": {
+        "src": "https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/niwa/x.png",
+        "alt": "Diagram",
+        "title": null,
+        "width": null,
+        "height": null,
+        "attachmentId": "6745f0c2a1b2c3d4e5f60740"
+      }
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "end"
+        }
+      ]
+    }
+  ]
+}

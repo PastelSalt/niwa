@@ -200,6 +200,10 @@ export const CaptureInput = z
     type: ItemType.default('idea'),
     content: ProseMirrorDoc.optional(),
     suggestedParentId: Id.nullable().optional(),
+    clientId: z.uuid().optional().meta({
+      description:
+        'Client-generated id (offline capture queues). Repeating a capture with the same id returns the first item instead of creating a duplicate.',
+    }),
   })
   .meta({ id: 'CaptureInput' });
 export type CaptureInput = z.infer<typeof CaptureInput>;

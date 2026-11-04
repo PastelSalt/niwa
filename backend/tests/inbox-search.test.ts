@@ -57,6 +57,31 @@ describe('inbox', () => {
     expect(tree).not.toContain('Buy seeds');
   });
 
+  it('a repeated clientId returns the first capture instead of a duplicate', async () => {
+    const clientId = '0b6f9a2e-1c2d-4e5f-8a9b-0c1d2e3f4a5b';
+    const first = (await capture({ title: 'Offline thought', clientId }).expect(201)).body.item as Item;
+    const retry = (await capture({ title: 'Offline thought', clientId }).expect(201)).body.item as Item;
+    expect(retry.id).toBe(first.id);
+    expect(retry).not.toHaveProperty('clientId');
+    expect(retry).not.toHaveProperty('captureClientId');
+
+    // Concurrent retries (both miss the lookup) still create one item.
+    const raced = '7d3c1f00-aaaa-4bbb-8ccc-0123456789ab';
+    const [a, b] = await Promise.all([
+      capture({ title: 'Race', clientId: raced }).expect(201),
+      capture({ title: 'Race', clientId: raced }).expect(201),
+    ]);
+    expect(a.body.item.id).toBe(b.body.item.id);
+    expect((await inbox()).filter((i) => i.title === 'Race')).toHaveLength(1);
+    expect((await inbox()).filter((i) => i.title === 'Offline thought')).toHaveLength(1);
+
+    // Without a clientId captures stay independent; a bad one is rejected.
+    await capture({ title: 'Twice' }).expect(201);
+    await capture({ title: 'Twice' }).expect(201);
+    expect((await inbox()).filter((i) => i.title === 'Twice')).toHaveLength(2);
+    await capture({ title: 'x', clientId: 'not-a-uuid' }).expect(400);
+  });
+
   it('remembers a suggested parent (ignoring unknown ones)', async () => {
     const ok = (await capture({ title: 'x', suggestedParentId: roots.Projects }).expect(201)).body.item;
     const bad = (await capture({ title: 'y', suggestedParentId: 'f'.repeat(24) }).expect(201)).body.item;

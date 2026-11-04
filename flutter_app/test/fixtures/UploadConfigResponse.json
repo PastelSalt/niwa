@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "maxBytes": 10485760,
+  "allowedMime": [
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/gif"
+  ]
+}

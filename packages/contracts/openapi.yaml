@@ -682,6 +682,10 @@ components:
             - type:
                 - string
                 - "null"
+        clientId:
+          type: string
+          format: uuid
+          description: Client-generated id (offline capture queues). Repeating a capture with the same id returns the first item instead of creating a duplicate.
       required:
         - title
     TagListResponse:

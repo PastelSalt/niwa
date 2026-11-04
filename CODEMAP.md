@@ -42,7 +42,7 @@ niwa-site/
 ├─ backend/                  ✅ NIWA API → Render
 ├─ web_app/                  ✅ web client → Vercel
 ├─ desktop_app/              🔜 M9 Electron Forge (README placeholder; after mobile)
-└─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); README only until MA1 scaffold
+└─ flutter_app/              🟨 Flutter mobile — NIWA-PLAN-A-02.md (outside pnpm); scaffolded (MA1.P1), token theme (MA1.P2), contract models (MA1.P3), CI, API + session + auth screens (MA2), app shell + routes (MA3), item tree + Focus (MA4), offline cache + capture queue (MA5), notes editor (MA6), scheduler + reminders (MA7), inbox filing + search (MA8): lib/{app,core,features}
 ```
 
 Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa-site.git` (pushed).
@@ -58,7 +58,7 @@ Git: branch `main`, remote `origin` = `https://github.com/PastelSalt/niwa-site.g
 | `apps/api` | `backend/` | Render | ✅ M1 |
 | `apps/web` | `web_app/` | Vercel | ✅ M2 |
 | `apps/desktop` | `desktop_app/` | — | 🔜 M9 |
-| `apps/mobile` | `flutter_app/` | — | 🔜 M10 |
+| `apps/mobile` | `flutter_app/` | — | 🟨 A-02 (MA1) |
 | `packages/contracts` | `packages/contracts/` | — | ✅ |
 | `packages/api-client` | `packages/api-client/` | — | ✅ |
 | `packages/tokens` | `packages/tokens/` | — | ✅ |
@@ -96,6 +96,7 @@ Rule: **a new endpoint is added here first** (schema + `add(...)` in `openapi.ts
 ```text
 packages/tokens/src/index.ts ✅ palettes (light/dark), typeColors, typography, shape, spacingUnit
 packages/tokens/src/contrast.test.ts ✅ WCAG contrast guarantees for both themes (text, buttons, status, block fills)
+packages/tokens/scripts/generate-dart.ts ✅ writes flutter_app/lib/core/theme/tokens.g.dart (`pnpm tokens:dart`, `--check` in CI)
 ```
 
 ---

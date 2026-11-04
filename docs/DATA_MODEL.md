@@ -38,6 +38,7 @@ These are needed by `CONCEPT.md` flows. Once accepted, fold them into `PROJECT-S
 | `schedule_series` | `recurrence`, `anchorAt`, `durationMs`, `isAllDay`, `color`, `timeZone`, `materializedThrough`, `untilIndex` | — | ✅ M5 — new collection for recurring rules |
 | `refresh_sessions` | `id`, `userId`, `tokenHash`, `familyId`, `expiresAt`, `revokedAt`, `createdAt` | — | Refresh rotation + reuse detection (§12.1) |
 | `users` | `workspaceId` | string | Single-workspace MVP link |
+| `items` | `captureClientId` | string (UUID) \| null | ✅ A-02 MA5 — idempotency key from offline capture queues (`CaptureInput.clientId`); never returned |
 
 Additional indexes:
 
@@ -47,6 +48,7 @@ attachments:      { itemId }, { orphanedAt }
 schedule_entries: { workspaceId, startAt, endAt }, { seriesId }
 refresh_sessions: { tokenHash } unique, { familyId }, { expiresAt } TTL
 items:            { workspaceId, deleteBatchId }
+items:            { workspaceId, captureClientId } unique, partial (string only)
 ```
 
 **Ownership rule:** every query on every collection is scoped by `workspaceId`, derived from the authenticated user — never from request input.

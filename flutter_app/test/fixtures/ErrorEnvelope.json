@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "VERSION_CONFLICT",
+    "message": "Item changed elsewhere",
+    "details": {
+      "currentVersion": 4
+    },
+    "requestId": "req-123"
+  }
+}

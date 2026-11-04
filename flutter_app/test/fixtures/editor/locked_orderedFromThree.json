@@ -1,0 +1,37 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "orderedList",
+      "attrs": {
+        "start": 3,
+        "type": null
+      },
+      "content": [
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "third"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "x"
+        }
+      ]
+    }
+  ]
+}

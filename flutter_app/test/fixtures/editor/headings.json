@@ -1,0 +1,53 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 1,
+        "anchorId": "a1"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Title"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "anchorId": "b2"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Section"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 3,
+        "anchorId": "c3"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Sub"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Body"
+        }
+      ]
+    }
+  ]
+}

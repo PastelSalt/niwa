@@ -35,6 +35,11 @@ export const itemRepo = {
     return ItemModel.findOne({ _id: id, workspaceId, deletedAt: null }).lean<ItemDoc>().exec();
   },
 
+  /** The item an earlier capture with this client id created (deleted ones included). */
+  findByCaptureClientId(workspaceId: Wid, clientId: string): Promise<ItemDoc | null> {
+    return ItemModel.findOne({ workspaceId, captureClientId: clientId }).lean<ItemDoc>().exec();
+  },
+
   findByIdIncludingDeleted(workspaceId: Wid, id: Oid): Promise<ItemDoc | null> {
     return ItemModel.findOne({ _id: id, workspaceId }).lean<ItemDoc>().exec();
   },

@@ -162,23 +162,39 @@ export const itemService = {
   /** Quick capture — specs §12.8, CONCEPT.md §3.1. Lands in the Inbox, outside the tree. */
   async capture(workspaceId: string, input: CaptureInput): Promise<Item> {
     const wid = toObjectId(workspaceId);
+    // Idempotent retries from offline queues: the same clientId returns the first capture.
+    if (input.clientId) {
+      const earlier = await itemRepo.findByCaptureClientId(wid, input.clientId);
+      if (earlier) return toItem(earlier);
+    }
     assertContentSize(input.content);
     let suggestedParentId: Types.ObjectId | null = null;
     if (input.suggestedParentId) {
       const parent = await itemRepo.findById(wid, input.suggestedParentId);
       if (parent && !parent.inboxedAt) suggestedParentId = parent._id;
     }
-    const doc = await itemRepo.create({
-      workspaceId: wid,
-      parentId: null,
-      title: input.title,
-      type: input.type,
-      content: input.content ?? null,
-      contentPlainText: extractPlainText(input.content),
-      orderKey: keyBetween(null, null), // inbox order is by inboxedAt; a key is assigned on filing
-      inboxedAt: new Date(),
-      suggestedParentId,
-    });
+    let doc: ItemDoc;
+    try {
+      doc = await itemRepo.create({
+        workspaceId: wid,
+        parentId: null,
+        title: input.title,
+        type: input.type,
+        content: input.content ?? null,
+        contentPlainText: extractPlainText(input.content),
+        orderKey: keyBetween(null, null), // inbox order is by inboxedAt; a key is assigned on filing
+        inboxedAt: new Date(),
+        suggestedParentId,
+        captureClientId: input.clientId ?? null,
+      });
+    } catch (err) {
+      // Two copies of the same retry raced; the other one won.
+      if (input.clientId && (err as { code?: number }).code === 11000) {
+        const winner = await itemRepo.findByCaptureClientId(wid, input.clientId);
+        if (winner) return toItem(winner);
+      }
+      throw err;
+    }
     if (input.content) await linkService.syncFromContent(wid, doc, extractContentLinks(input.content));
     return toItem(doc);
   },

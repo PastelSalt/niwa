@@ -1,0 +1,15 @@
+{
+  "id": "6745f0c2a1b2c3d4e5f60730",
+  "kind": "block",
+  "itemId": "6745f0c2a1b2c3d4e5f60718",
+  "title": "",
+  "startAt": "2026-11-04T01:00:00.000Z",
+  "endAt": "2026-11-04T02:30:00.000Z",
+  "isAllDay": false,
+  "color": "#59765C",
+  "recurrence": "weekly",
+  "seriesId": "series-1",
+  "seriesIndex": 0,
+  "createdAt": "2026-11-03T09:30:00.000Z",
+  "updatedAt": "2026-11-03T09:30:00.000Z"
+}

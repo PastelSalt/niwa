@@ -1,0 +1,52 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "blockquote",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "quoted"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "second quoted paragraph"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "language": null
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "const a = 1;\nconst b = 2;"
+        }
+      ]
+    },
+    {
+      "type": "horizontalRule"
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "after rule"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "language": "ts"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "let x: number;"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "x"
+        }
+      ]
+    }
+  ]
+}
