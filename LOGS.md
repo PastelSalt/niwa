@@ -631,3 +631,25 @@
   - `scripts/deploy/deploy.env.example` (the real file is git-ignored); `.vercelignore`; `render.yaml` pins `NODE_VERSION=24` (corepack).
   - OPS §12 documents it. GAPS "On hold" records the uncommitted MA9 and the owner's MongoDB connection trouble, which blocks the backend deploy.
 - **Verified:** both scripts pass `bash -n`; a copy of the tracked files minus `.vercelignore` paths installs (`--frozen-lockfile --filter @niwa/web...`) and builds like Vercel will. Nothing was deployed: no tokens yet, Render Blueprint not created, MongoDB unreachable.
+
+### 2026-11-04 — Web app deployed to Vercel (ahead of the backend)
+- **Actions:**
+  - Committed MA9 + deploy scripts as `7a39bc9` (local; not pushed).
+  - Created the Vercel project `niwa` through the Vercel connector, with the same settings as `scripts/deploy/vercel.sh` (no `VERCEL_TOKEN` in `deploy.env` yet): Vite, root `web_app`, filtered frozen pnpm install, corepack, `VITE_*` env, GitHub `PastelSalt/niwa`.
+  - Production deploy from GitHub `main` (`703d233`) → READY. Project Node pinned to 24.x (it defaulted to 26.x, which has no corepack); `vercel.sh` now sets it too.
+  - The owner approved connector access to the `pastelsalts-projects` scope. The per-deployment API still returned 403, but project and deployment listings work.
+- **Verified:** https://niwa-delta.vercel.app returns 200 for `/` and `/knowledge` (SPA routes); `/api/v1/health` returns 404 from the not-yet-existing Render target, as expected. Team-scoped aliases redirect to Vercel login (Vercel Authentication on non-production-domain URLs).
+- **Next:** fix MongoDB → Render Blueprint → `scripts/deploy/render.sh` → `CORS_ORIGINS=https://niwa-delta.vercel.app`.
+
+### 2026-11-04 — Plan B-01 drafted (public site, legal pages, visual polish)
+- **Actions:** Created `NIWA-PLAN-B-01.md`, which covers:
+  - B0 owner decisions;
+  - B1 public shell and routes;
+  - B2 landing page at `/`;
+  - B3 Privacy, Terms, EULA, Cookies and Licenses pages;
+  - B4 delete account and export;
+  - B5 visual polish;
+  - B6 quality.
+  The plan opens with a table of the data the service actually handles, checked against the code, as input for the Privacy Policy. Credit: solo developed by Moeko Works (https://moekoworks.vercel.app/).
+- **Verified:** every file and section the plan cites exists. No code changed.
+- **Next:** the owner answers B0 (registration mode, contact email, jurisdiction, code licence, legal review).

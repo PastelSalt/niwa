@@ -271,6 +271,17 @@ bash scripts/deploy/render.sh --env-only  # after adding the Vercel origin to CO
   default `niwa-api.onrender.com`, it rewrites `web_app/vercel.json` — commit that change.
 - `.vercelignore` keeps CLI uploads small (no `flutter_app/`); workspace members stay so the lockfile matches.
 
+### 12.1 Current deployment (2026-11-04)
+
+| | |
+|---|---|
+| Vercel project | `niwa` (`prj_uwTxGuD5RJZO4OOyZaeXj4MRRlis`), scope `pastelsalts-projects`, Git-connected to `PastelSalt/niwa` (`main` → production) |
+| Production URL | **https://niwa-delta.vercel.app** (public); `niwa-pastelsalts-projects.vercel.app` and per-deployment URLs sit behind Vercel Authentication |
+| Settings | Vite, root `web_app`, `pnpm install --frozen-lockfile --filter @niwa/web...`, Node 24.x, corepack on, `VITE_API_BASE=/api/v1` |
+| Backend | not deployed (MongoDB connection issue, GAPS "On hold"); `/api/*` rewrites to `niwa-api.onrender.com`, which 404s until Render is up |
+
+When Render is live, set `CORS_ORIGINS=https://niwa-delta.vercel.app` (and update the rewrite if the service URL differs).
+
 ## Open questions for owner
 
 - [ ] Long-term backup copies: nightly archives live 14 days as encrypted workflow artifacts — add a bucket (e.g. Cloudflare R2 / B2) for weekly copies, or move to Atlas M10?

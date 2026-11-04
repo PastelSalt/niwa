@@ -26,7 +26,8 @@ date + `LOGS.md` entry when closed. Plans: `NIWA-PLAN-A-01.md` (web/backend), `N
 
 ### Carried from earlier milestones
 - [ ] **Hosting accounts** (M1/M2) — Atlas, Render, Vercel not created yet; `vercel.json` Render hostname is a placeholder.
-      Deploys are scripted (`scripts/deploy/`, OPS §12); waiting on the MongoDB connection (see On hold).
+      Deploys are scripted (`scripts/deploy/`, OPS §12). **Web is live** at https://niwa-delta.vercel.app (2026-11-04);
+      the backend waits on the MongoDB connection (see On hold), so sign-in and data calls fail until then.
       Vercel root directory is now `web_app` (renamed from `frontend`).
 - [ ] **Month drag on touch** (M5) — native drag-and-drop doesn't work on touch; use the dialog.
 - [ ] **Overlapping all-day events in week view** (M5) — stack rather than span.

@@ -29,7 +29,7 @@ vercel_api() { # method path [json-body] → prints body; returns the HTTP statu
   cat "$out"; rm -f "$out"
 }
 
-SETTINGS='{"framework":"vite","rootDirectory":"web_app","installCommand":"pnpm install --frozen-lockfile --filter @niwa/web...","buildCommand":"pnpm build","outputDirectory":"dist","sourceFilesOutsideRootDirectory":true}'
+SETTINGS='{"framework":"vite","rootDirectory":"web_app","installCommand":"pnpm install --frozen-lockfile --filter @niwa/web...","buildCommand":"pnpm build","outputDirectory":"dist","sourceFilesOutsideRootDirectory":true,"nodeVersion":"24.x"}'
 
 vercel_api GET "/v9/projects/$PROJECT" >/dev/null
 if [[ "$STATUS" == 404 ]]; then

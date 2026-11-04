@@ -14,6 +14,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ PROJECT-SPECS.md          ✅ concept source of truth
 ├─ NIWA-PLAN-A-01.md         ✅ milestones → phases → tasks (backend, web, desktop)
 ├─ NIWA-PLAN-A-02.md         ✅ mobile (Flutter) plan MA0–MA11 — current priority
+├─ NIWA-PLAN-B-01.md         ⬜ public site plan — landing page, legal pages, visual polish (B0–B6)
 ├─ GAPS.md                   ✅ deferred / unverified items (add when skipping, tick when closed)
 ├─ CODEMAP.md                ✅ this file
 ├─ LOGS.md                   ✅ action log
