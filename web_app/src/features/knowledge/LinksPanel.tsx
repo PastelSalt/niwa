@@ -1,12 +1,12 @@
 import CloseRounded from '@mui/icons-material/CloseRounded';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
-import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { useMemo, useState } from 'react';
+import { RowSkeletons } from '../items/RowSkeletons.tsx';
 import { SectionHeader } from '../../components/SectionHeader.tsx';
 import { ItemRow, ItemRowList } from '../items/ItemRow.tsx';
 import { messageOf } from '../../api/client.ts';
@@ -53,7 +53,7 @@ export function LinksPanel({ itemId }: { itemId: string }) {
     }
   };
 
-  if (isLoading) return <Skeleton variant="rounded" height={96} />;
+  if (isLoading) return <RowSkeletons rows={2} />;
 
   const outgoing = (data?.outgoing ?? []) as Row[];
   const backlinks = (data?.backlinks ?? []) as Row[];

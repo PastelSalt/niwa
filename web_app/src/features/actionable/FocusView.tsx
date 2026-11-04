@@ -3,10 +3,10 @@ import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
-import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import type { FocusResponse, ItemSummary } from '@niwa/contracts';
 import { useMemo, useState } from 'react';
+import { RowSkeletons } from '../items/RowSkeletons.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { useNotify } from '../../components/Notifier.tsx';
@@ -46,7 +46,7 @@ export function FocusView() {
         What matters across every project, today ({formatDay(today)}).
       </Typography>
 
-      {isLoading && [1, 2, 3].map((k) => <Skeleton key={k} variant="rounded" height={96} sx={{ mb: 2 }} />)}
+      {isLoading && <RowSkeletons rows={4} />}
 
       {empty && (
         <EmptyState

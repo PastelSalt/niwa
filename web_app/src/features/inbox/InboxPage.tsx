@@ -5,11 +5,11 @@ import InboxOutlined from '@mui/icons-material/InboxOutlined';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
-import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { useState } from 'react';
+import { RowSkeletons } from '../items/RowSkeletons.tsx';
 import { Page } from '../../components/Page.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
@@ -88,7 +88,7 @@ export function InboxPage() {
         </Paper>
       )}
 
-      {isLoading && <Skeleton variant="rounded" height={160} />}
+      {isLoading && <RowSkeletons />}
       {error && <Alert severity="error">{messageOf(error)}</Alert>}
       {items && list.length === 0 && (
         <EmptyState

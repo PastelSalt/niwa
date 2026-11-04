@@ -182,6 +182,11 @@ export function createNiwaTheme(themeId: ThemeId = DEFAULT_THEME, fontId: FontId
     components: {
       MuiCssBaseline: {
         styleOverrides: `${fontFacesFor(fontId)}
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -190,6 +195,17 @@ export function createNiwaTheme(themeId: ThemeId = DEFAULT_THEME, fontId: FontId
     scroll-behavior: auto !important;
   }
 }`,
+      },
+      // One visible focus ring for every button-like control (V6), in the theme's primary colour.
+      MuiButtonBase: {
+        styleOverrides: {
+          root: ({ theme }) => ({
+            '&.Mui-focusVisible': {
+              outline: `2px solid ${(theme.vars ?? theme).palette.primary.main}`,
+              outlineOffset: 2,
+            },
+          }),
+        },
       },
       MuiButton: { defaultProps: { disableElevation: true } },
       MuiPaper: { defaultProps: { elevation: 0 } },

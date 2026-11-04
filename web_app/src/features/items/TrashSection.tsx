@@ -1,10 +1,10 @@
 import DeleteForeverOutlined from '@mui/icons-material/DeleteForeverOutlined';
 import RestoreFromTrashOutlined from '@mui/icons-material/RestoreFromTrashOutlined';
 import Alert from '@mui/material/Alert';
-import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
+import { RowSkeletons } from './RowSkeletons.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import { useItemDialogs } from './ItemDialogs.tsx';
@@ -57,7 +57,7 @@ export function TrashSection() {
         Deleted items wait here with everything that was inside them. Restoring puts them back where they
         were.
       </Typography>
-      {isLoading && <Skeleton variant="rounded" height={120} />}
+      {isLoading && <RowSkeletons />}
       {error && <Alert severity="error">{messageOf(error)}</Alert>}
       {data && data.length === 0 && (
         <Typography variant="body2" color="text.secondary">
