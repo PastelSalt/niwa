@@ -1,7 +1,7 @@
 # NIWA — Code Map
 
 **Role of this file:** the map of the codebase. Check here before creating or moving files; update it whenever a folder, module, or key file is added, moved, or removed.
-**Last updated:** 2026-11-03
+**Last updated:** 2026-11-04
 
 **Legend:** ✅ exists · 🔜 planned (not created yet) · `M#` = milestone in `NIWA-PLAN-A-01.md` that creates it
 
@@ -15,7 +15,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ NIWA-PLAN-A-01.md         🟨 backend, web, desktop — M1–M7 done; M8 AI paused; M9/M11/M12 open
 ├─ NIWA-PLAN-A-02.md         🟨 mobile (Flutter) — MA0–MA9 done; MA10 (quality + web parity), MA11 (release) next
 ├─ NIWA-PLAN-B-01.md         🟨 public site — B0–B3, B5 done; B4/B6/B7 have small leftovers
-├─ NIWA-PLAN-B-02.md         ⬜ web UI/UX refinement, pastel themes + font picker (default Fredoka), interactive landing — V0–V11, current focus
+├─ NIWA-PLAN-B-02.md         🟨 web UI/UX refinement, pastel themes + font picker (default Fredoka), interactive landing — V0–V11 built; owner approval of theme colours + manual phone pass open
 ├─ LICENSE                   ✅ MIT, © 2026 Moeko Works
 ├─ GAPS.md                   ✅ deferred / unverified items (add when skipping, tick when closed)
 ├─ CODEMAP.md                ✅ this file
@@ -101,8 +101,8 @@ Rule: **a new endpoint is added here first** (schema + `add(...)` in `openapi.ts
 ## 4. `packages/tokens/` — design tokens (`@niwa/tokens`)
 
 ```text
-packages/tokens/src/index.ts ✅ palettes (light/dark), typeColors, typography, shape, spacingUnit
-packages/tokens/src/contrast.test.ts ✅ WCAG contrast guarantees for both themes (text, buttons, status, block fills)
+packages/tokens/src/index.ts ✅ palettes (light/dark; mobile), typeColors, typography, shape, spacingUnit · B-02: typeScale + fonts (per-font tuning), contentWidth, layout thresholds, gaps, iconSize, motion, elevation, status/priority roles, five pastel `themes` (ThemePalette with containers)
+packages/tokens/src/contrast.test.ts ✅ WCAG contrast guarantees for every theme × mode (text, primary ink, pastel containers, status/priority roles, type colours, block fills) + type scale minimums
 packages/tokens/scripts/generate-dart.ts ✅ writes flutter_app/lib/core/theme/tokens.g.dart (`pnpm tokens:dart`, `--check` in CI)
 ```
 
@@ -214,6 +214,8 @@ web_app/
 ├─ licenses.plugin.ts        ✅ `virtual:licenses` — production dependency licences read at build time (B-01 B3.P5)
 ├─ vercel.json               ✅ /api/* → niwa-api.onrender.com rewrite + SPA fallback
 ├─ playwright.config.ts      ✅ starts in-memory API (4100) + Vite (5174); desktop + phone projects
+├─ scripts/visual-audit.mjs  ✅ B-02 V0: seeds an account, screenshots 24 screens × 1440/820/390/360 × light/dark into .visual-audit/ (ignored), flags overlapping/spilling/squeezed text; `--mock` (no MongoDB), `--theme/--font`, `--landing-shots`
+├─ scripts/audit-mock-api.mjs ✅ routes /api/v1 to the playground's MemoryWorkspace for `--mock`
 ├─ .env.example              ✅
 ├─ e2e/
 │  ├─ fixtures.ts            ✅ throwaway test account for the in-memory backend
@@ -223,14 +225,16 @@ web_app/
 │  ├─ inbox-search.spec.ts   ✅ capture → file → tree; search highlights (desktop + phone)
 │  ├─ a11y.spec.ts           ✅ axe WCAG 2.1 A/AA audit of the landing page and every main screen + capture dialog, light and dark (desktop)
 │  ├─ knowledge.spec.ts      ✅ editor, outline, [[ section links, backlinks, promote, broken section, review (desktop)
-│  └─ account.spec.ts        ✅ tour once per account + replay, export, change password, delete; public pages + 404
+│  ├─ account.spec.ts        ✅ tour once per account + replay, export, change password, delete; public pages + 404
+│  └─ playground.spec.ts     ✅ landing playground: tick, capture, switch lens/theme, start fresh — zero /api requests
 └─ src/
-   ├─ main.tsx               ✅ entry
+   ├─ main.tsx               ✅ entry (`/playground` boots the playground instead of the app)
    ├─ app/
-   │  ├─ App.tsx             ✅ ThemeProvider + CssBaseline + QueryClient + AuthProvider + RouterProvider
+   │  ├─ App.tsx             ✅ AppearanceProvider + CssBaseline + QueryClient + AuthProvider + RouterProvider
+   │  ├─ appearance.tsx      ✅ B-02: theme id + font id at runtime; useUserAppearance (account prefs, local cache, light/dark), useSavePreferences; public pages keep Garden + Fredoka
    │  ├─ router.tsx          ✅ route tree (CONCEPT.md §1.3): `/` HomeRoute, guest routes, protected shell routes; secondary screens lazy-loaded; RouteError boundaries
-   │  ├─ theme.ts            ✅ MUI theme from @niwa/tokens (colorSchemes light/dark, CSS vars); fonts via CssBaseline
-   │  └─ fonts.ts            ✅ self-hosted @font-face: Inter variable (Latin/Latin Ext) + Noto Sans JP slice for 庭
+   │  ├─ theme.ts            ✅ createNiwaTheme(themeId, fontId): type scale → variants (+ `lead`), theme.niwa (widths, gaps, icons, motion), status/priority/container palette roles, pastel contained buttons, focus rings, 44 px touch targets, reduced motion
+   │  └─ fonts.ts            ✅ self-hosted @font-face for the chosen font only (Fredoka/Inter/Atkinson; System = none) + Noto Sans JP 庭 slice + JetBrains Mono; ensureFontLoaded()
    ├─ assets/fonts/          ✅ vendored Noto Sans JP slice + OFL licence
    ├─ api/client.ts          ✅ app-wide `api` instance + messageOf(err)
    ├─ auth/
@@ -239,20 +243,28 @@ web_app/
    │  ├─ AuthLayout.tsx      ✅
    │  ├─ LoginPage.tsx       ✅
    │  ├─ RegisterPage.tsx    ✅
+   │  ├─ PasswordField.tsx   ✅ show/hide toggle
    │  └─ auth.test.tsx       ✅
    ├─ public/               ✅ signed-out pages (NIWA-PLAN-B-01)
    │  ├─ HomeRoute.tsx       ✅ `/`: landing for visitors, → /knowledge when signed in
    │  ├─ PublicLayout.tsx    ✅ header (Log in / Create account) + SiteFooter (Moeko Works credit)
-   │  ├─ LandingPage.tsx     ✅ hero + example tree, three lenses, capture, privacy, maker (own lazy chunk)
+   │  ├─ LandingPage.tsx     ✅ hero + playground, three lenses, screenshots, capture, privacy, maker (own lazy chunk)
+   │  ├─ Playground.tsx      ✅ B-02 V11: lazy iframe of /playground + "Make it yours" panel (themes, fonts, light/dark; postMessage)
    │  ├─ site.ts             ✅ public facts (name, tagline, maker link) + useDocumentTitle
    │  ├─ PrivacyPage.tsx · TermsPage.tsx · EulaPage.tsx ✅ approved policy pages (B3; source text in docs/LEGAL-DRAFTS.md)
    │  ├─ CookiesPage.tsx · LicensesPage.tsx · LegalPage.tsx ✅ policy pages (B3)
    │  ├─ useRegistrationOpen.ts ✅ `GET /auth/config` → hide sign-up when closed
    │  └─ public.test.tsx     ✅
+   ├─ playground/            ✅ B-02 V11 — the real app on an in-memory example garden
+   │  ├─ memoryApi.ts        ✅ MemoryWorkspace: in-browser stand-in for /api/v1 (also the audit's --mock)
+   │  ├─ exampleWorkspace.ts ✅ invented example content, dated relative to today
+   │  ├─ PlaygroundApp.tsx   ✅ boot: in-memory storage, memory router, message bridge
+   │  └─ protocol.ts         ✅ landing ⇄ iframe messages (same origin)
    ├─ layout/
    │  ├─ AppShell.tsx        ✅ `noindex` meta; Notifier + ItemDialogs providers; rail | tree | main | detail; phone: tree as lens home
    │  ├─ destinations.tsx    ✅ the six destinations (label, path, icon, shortcut, showsTree)
-   │  ├─ NavRail.tsx         ✅ NavRail (≥ md) + BottomNav (< md)
+   │  ├─ useLayout.ts        ✅ useShellLayout(): single (< 720) · panes (720–1280, details overlay) · docked (≥ 1280)
+   │  ├─ NavRail.tsx         ✅ NavRail (two-pane+) + BottomNav (single pane)
    │  ├─ TopBar.tsx          ✅ title, search, capture (disabled until M6), detail toggle, account menu
    │  ├─ TreePane.tsx        ✅ lens-filtered SimpleTreeView, drag-and-drop zones, keyboard moves, hover actions
    │  ├─ DetailPanel.tsx     ✅ selected item's ItemFields (docked ≥ lg, drawer otherwise)
@@ -264,7 +276,10 @@ web_app/
    │  │  ├─ queries.ts       ✅ TanStack Query hooks: tree, item, focus, trash, tags + mutations; storeItem() keeps item + tree caches in step; latestVersion() for writes
    │  │  ├─ treeModel.ts     ✅ buildTree, ancestors, lensView (visible/dimmed), moveUp/Down, indent/outdent, dropMove
    │  │  ├─ itemMeta.tsx     ✅ labels, type icons/colors, LENS_PATH, todayLocal, formatDay
-   │  │  ├─ ItemView.tsx     ✅ main item view: breadcrumbs, editable title, chips, children; editor lazy-loaded
+   │  │  ├─ ItemView.tsx     ✅ main item view: breadcrumbs (no repeated title), responsive title, chips, Inside rows; editor preloaded + text-shaped placeholder
+   │  │  ├─ ItemRow.tsx      ✅ B-02 V3: one row for every list (select, completion circle, title/meta/extra, chips that wrap, actions → ⋯ on phones) + ItemRowList, CompleteToggle
+   │  │  ├─ chips.tsx        ✅ Status/Priority/Due/Tag/Hint chips (deep text, role-coloured dot)
+   │  │  ├─ RowSkeletons.tsx ✅ list loading pattern
    │  │  ├─ ItemFields.tsx   ✅ editable fields (detail panel / inline on phone)
    │  │  ├─ ItemMenu.tsx     ✅ per-item command menu
    │  │  ├─ ItemDialogs.tsx  ✅ create / move-to / confirm dialogs (context)
@@ -272,8 +287,10 @@ web_app/
    │  │  ├─ TrashSection.tsx ✅ Settings → Trash
    │  │  ├─ EditableTitle.tsx · useSelectedItemId.ts ✅
    │  │  └─ treeModel.test.ts ✅
-   │  ├─ actionable/FocusView.tsx ✅ Focus sections with completion checkbox (optimistic)
-   │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance (theme), account, ai (M8), trash, help (replay tour); About credit
+   │  ├─ actionable/FocusView.tsx ✅ Focus sections (each task once, collapsible) on ItemRow; focusSections.ts (+ test)
+   │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance, account, ai (M8), trash, help (replay tour); About credit
+   │  ├─ settings/AppearanceSection.tsx ✅ B-02 V10: theme swatches, font picker (each in its own face), light/dark, reset — saved on the account
+   │  ├─ settings/Section.tsx ✅ titled card
    │  ├─ settings/AccountActions.tsx ✅ change password, export my data, delete account (B-01 B4)
    │  ├─ onboarding/          ✅ OnboardingProvider (welcome + MUI Popper tour), tour.ts (steps, TOUR_VERSION), examples.ts (B-01 B7)
    │  ├─ knowledge/
@@ -290,9 +307,9 @@ web_app/
    │  │  └─ queries.ts          ✅ links, review, create/remove link
    │  ├─ scheduler/
    │  │  ├─ SchedulerPage.tsx   ✅ /scheduler/:view/:date — header, view switch, dialogs, drag saves; SchedulerHome redirect
-   │  │  ├─ MonthView.tsx       ✅ 6-week grid, chips, all-day bars, drag to another day
+   │  │  ├─ MonthView.tsx       ✅ 6-week grid, chips, all-day bars, drag to another day; phones: dots + selected day's list
    │  │  ├─ TimeGridView.tsx    ✅ week/day grid: pointer create/move/resize, overlap columns, now line
-   │  │  ├─ EntryDialog.tsx     ✅ create/edit event or block, repeat, colour, scope, delete
+   │  │  ├─ EntryDialog.tsx     ✅ create/edit event or block, repeat (summary in words — repeatSummary.ts), colour, scope, delete
    │  │  ├─ ItemScheduleSection.tsx ✅ item details: upcoming blocks + Schedule time
    │  │  ├─ layout.ts · entryDisplay.ts · queries.ts ✅
    │  │  └─ scheduler.test.ts   ✅
@@ -303,10 +320,11 @@ web_app/
    │  │  └─ queries.ts          ✅ inbox, capture, file
    │  ├─ search/SearchPage.tsx  ✅ URL-synced search, filters, Highlight
    │  └─ ai (M8) · graph (M11)   🔜
-   ├─ components/            ✅ Wordmark, EmptyState, FullPageLoader, NotFoundPage, Notifier (snackbar + Undo), RouteError (stale chunk → reload)
+   ├─ components/            ✅ Wordmark, EmptyState, FullPageLoader ("waking up" after 4 s), NotFoundPage, Notifier (snackbar + Undo), RouteError (stale chunk → reload) · B-02: Page (centred token-width column), SectionHeader, DateField (pure-MUI date input + calendar, + test)
    ├─ lib/dates.ts           ✅ local grid math, all-day UTC date keys, input/format helpers
    ├─ lib/forms.ts           ✅ muiField(): RHF register → TextField inputRef
    ├─ lib/a11y.ts            ✅ visuallyHidden, contrastRatio, readableOn (text colour for a fill)
+   ├─ lib/friendlyTime.ts    ✅ friendlyDate / timeAgo / exactTime (+ test)
    ├─ lib/usePersistentState.ts ✅ localStorage-backed UI state (expanded nodes, toggles)
    └─ test/                  ✅ setup.ts (jest-dom, matchMedia), renderApp.tsx (real routes + mocked fetch)
 ```

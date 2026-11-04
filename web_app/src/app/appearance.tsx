@@ -40,6 +40,10 @@ export function toAppearance(raw: { theme?: unknown; font?: unknown } | null | u
   };
 }
 
+/** Signed-in screens (where the account's appearance applies) — everything under the six destinations. */
+const APP_PATHS = /^\/(knowledge|actionable|scheduler|inbox|search|settings|items)(\/|$)/;
+export const isAppPath = (pathname: string) => APP_PATHS.test(pathname);
+
 export function readCachedAppearance(): Appearance {
   try {
     return toAppearance(JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as Partial<Appearance> | null);
@@ -75,10 +79,14 @@ export function AppearanceProvider({
   children: ReactNode;
   defaultMode?: 'light' | 'dark' | 'system';
 }) {
-  const [active, setActive] = useState<Appearance>(DEFAULT_APPEARANCE);
+  // On app routes, start from this browser's last choice so the first paint (and its font download) is
+  // already right; public routes start on the defaults.
+  const [active, setActive] = useState<Appearance>(() =>
+    isAppPath(window.location.pathname) ? readCachedAppearance() : DEFAULT_APPEARANCE,
+  );
   const theme = useMemo(() => createNiwaTheme(active.theme, active.font), [active.theme, active.font]);
   // The latest request wins when fonts finish loading out of order.
-  const latest = useRef<Appearance>(DEFAULT_APPEARANCE);
+  const latest = useRef<Appearance>(active);
   // Stable, so effects that call it don't re-run when the theme changes.
   const apply = useCallback((a: Appearance | null) => {
     const next = a ?? DEFAULT_APPEARANCE;
@@ -87,9 +95,12 @@ export function AppearanceProvider({
       if (latest.current !== next) return;
       setActive((prev) => (prev.theme === next.theme && prev.font === next.font ? prev : next));
     };
-    // Same font: switch now. New font: wait until it's loaded so text doesn't flash.
-    if (next.font === DEFAULT_FONT || typeof FontFace === 'undefined') commit();
-    else void ensureFontLoaded(next.font).then(commit);
+    // Wait until the font is loaded so text doesn't flash (instant when it already is, or for System).
+    if (typeof FontFace === 'undefined') return commit();
+    // A microtask later, so a request that's immediately superseded (unmount + remount) loads nothing.
+    queueMicrotask(() => {
+      if (latest.current === next) void ensureFontLoaded(next.font).then(commit);
+    });
   }, []);
   const value = useMemo(() => ({ active, apply }), [active, apply]);
   return (
