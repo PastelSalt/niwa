@@ -977,3 +977,12 @@
 - **Tests:** web 61 → 80, tokens 8 → 62.
 - **Open:** see GAPS › B-02 (theme approval, real-phone pass, landscape/200 % zoom, axe runs in CI, phone LCP,
   image captions declined, mobile preferences).
+
+### 2026-11-05 — B-01: B8 public holidays by country planned
+- **Owner:** wants a country selector so the Scheduler shows real public holidays.
+- **`NIWA-PLAN-B-01.md`:** new milestone B8 with proposed decisions: the offline `date-holidays` library
+  (ISC code, CC BY 3.0 data) running on the backend, no default country (a suggestion comes from the time zone),
+  and observances off by default.
+  - Phases: contract/backend, Settings › Calendar + read-only holidays in the Scheduler, credits and Privacy
+    Policy, tests.
+- **Verified:** docs only; nothing built.

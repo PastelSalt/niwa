@@ -82,6 +82,7 @@ row here and a new section in the policy before release.
 | B5 | Visual polish of the signed-in app | ✅ | — (can run in parallel) |
 | B6 | Quality: accessibility, performance, SEO hygiene, tests | 🟨 | B1–B5, B7 |
 | B7 | Onboarding tour for new users (skippable, replayable) | 🟨 | B1; B5 for final visuals; backend state (`GAPS.md`) |
+| B8 | Public holidays in the Scheduler, by country (owner request 2026-11-05) | ⬜ | B-02 V10 (preferences on the account) |
 
 **Exit criteria (whole plan):** a signed-out visitor at `/` sees an accurate description of NIWA and can reach
 sign-in, sign-up and every legal page; a new account is offered the onboarding tour, can skip it, and can replay
@@ -317,6 +318,60 @@ who doesn't want a tour can skip it and bring it back later.
 
 ---
 
+## B8 — Public holidays in the Scheduler, by country
+
+**Goal (owner, 2026-11-05):** each user picks their country, and the Scheduler shows that country's real public
+holidays, so the calendar matches the days off they actually have.
+
+### Decisions (proposed — confirm in B8.P0)
+| Question | Proposal | Why |
+|---|---|---|
+| Where the holiday dates come from | The **`date-holidays`** npm package (v3.x, ISC; holiday data CC BY 3.0): rules for ~200 countries plus their states/regions, including moving holidays (Easter-based, lunar, "first Monday of…"), with local and English names | Works offline: no third-party API to call, rate-limit or lose. The rules are maintained upstream, so updating the package refreshes the data |
+| Where it runs | On the **backend**: `GET /holidays?from&to` answers for the account's country | Its data is large (~11 MB unpacked), so it stays out of the web bundle; web and mobile get the same answer from one place |
+| Rejected | A hosted API (e.g. Nager.Date) | It's an external dependency on every calendar view, it would see users' countries, and it covers fewer countries |
+| Default | **No country** until the user picks one; the picker suggests one from the browser's time zone/locale (e.g. Asia/Manila → Philippines) | Showing the wrong country's holidays is worse than showing none |
+| Which holidays | Public holidays by default; an option adds observances (e.g. Valentine's Day) | Most people want only the days off |
+
+### B8.P0 — Owner check
+- [ ] Confirm the decisions above (library, backend, no default country, observances off by default).
+
+### B8.P1 — Contract & backend
+- [ ] `preferences.holidays { country: string | null, region: string | null, observances: boolean }` (contract
+      first → OpenAPI); `PUT /account/preferences` validates the country and region against the library's own list.
+- [ ] `GET /holidays/countries`: codes plus English names (for the picker). Regions are listed per country.
+- [ ] `GET /holidays?from&to` (≤ 62 days, like `/schedule`): `{ date, name, localName, type }`, date-only (no
+      time-zone shifting — same rule as all-day entries, `docs/SCHEDULER.md` §2). Cached in memory per
+      country/region/year.
+- [ ] Backend tests: known 2026 dates for the Philippines (Independence Day 12 Jun, Rizal Day 30 Dec), a
+      country with regions, an unknown code → 400, and no country → empty list.
+
+### B8.P2 — Web
+- [ ] Settings › Calendar (new section, beside Appearance): a country autocomplete with the suggestion from
+      the time zone, an optional region, and "Also show observances". Saved on the account.
+- [ ] Scheduler: holidays show as read-only all-day labels in a distinct quiet style (not entries: they can't
+      be dragged, edited or deleted, and they don't count as "nothing scheduled"). Month: a label in the cell,
+      or a holiday dot on phones; Week/Day: a band in the all-day row; the date header gets a subtle tint.
+- [ ] Clicking a holiday shows its name, its local name and "Public holiday in <country>", plus a link to
+      change the country.
+- [ ] Playground (B-02 V11): the example garden shows a sample holiday; the memory API answers `/holidays`.
+
+### B8.P3 — Legal, licences, docs
+- [ ] Licences page: credit `date-holidays` (ISC) and its data (CC BY 3.0). It's a backend dependency, so it's
+      listed by hand like the Noto Sans JP slice.
+- [ ] Privacy Policy: the country (and region) is stored on the account and only used to show holidays
+      (truth rule). Update `docs/DATA_MODEL.md`.
+- [ ] Mobile (A-02) reads the same fields and endpoint later; note it in `NIWA-PLAN-A-02.md`.
+
+### B8.P4 — Tests & checks
+- [ ] Web unit tests (picker, holiday rendering, read-only), the scheduler e2e with a country set, axe on
+      Settings › Calendar, and the visual audit at the four widths.
+
+**Exit criteria:** a user picks Philippines, and the Scheduler shows Rizal Day on 30 Dec 2026 in month, week and
+day views at every width. Changing the country updates the holidays on every device. Holidays can't be edited
+like entries. Credits and the Privacy Policy are updated.
+
+---
+
 ## Open questions for owner
 
 1. ~~Registration~~ — decided 2026-11-04: open to everyone (B0).
@@ -326,3 +381,4 @@ who doesn't want a tour can skip it and bring it back later.
    listings)
 5. ~~Legal review~~ — waived by the owner (2026-11-04).
 6. Email provider for password reset — skipped for now (2026-11-04).
+7. B8 holidays: confirm the proposed decisions (B8.P0).
