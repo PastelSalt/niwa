@@ -12,7 +12,7 @@ describe('route guards', () => {
 
   it('restores a session from the refresh cookie and skips login', async () => {
     const { router } = renderApp('/login', { 'POST /auth/refresh': authOk });
-    await waitFor(() => expect(router.state.location.pathname).toBe('/knowledge'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/today'));
   });
 });
 
@@ -36,9 +36,9 @@ describe('login', () => {
       email: 'gardener@niwa.test',
       password: 'garden-password-123',
     });
-    // Shell with all six destinations
+    // Shell with the four places (+ Settings at the rail's foot)
     const nav = await screen.findByRole('navigation', { name: 'Main' });
-    for (const label of ['Knowledge', 'Actionable', 'Scheduler', 'Inbox', 'Search', 'Settings']) {
+    for (const label of ['Today', 'Garden', 'Calendar', 'Inbox', 'Settings']) {
       expect(nav).toHaveTextContent(label);
     }
   });

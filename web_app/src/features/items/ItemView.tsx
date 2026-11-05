@@ -19,8 +19,9 @@ import { Link as RouterLink } from 'react-router';
 import { useShellLayout } from '../../layout/useLayout.ts';
 import { SectionHeader } from '../../components/SectionHeader.tsx';
 import { Page } from '../../components/Page.tsx';
-import { DueChip, HintChip, PriorityChip, StatusChip, TagChip } from './chips.tsx';
-import { ItemRow, ItemRowList } from './ItemRow.tsx';
+import { DueChip, PriorityChip } from './chips.tsx';
+import { CompleteToggle, ItemRow, ItemRowList } from './ItemRow.tsx';
+import { FieldBar } from './FieldBar.tsx';
 import { messageOf } from '../../api/client.ts';
 import { EmptyState } from '../../components/EmptyState.tsx';
 import { useNotify } from '../../components/Notifier.tsx';
@@ -28,6 +29,7 @@ import { FileDialog } from '../inbox/FileDialog.tsx';
 import { EditorPlaceholder } from '../knowledge/editor/EditorPlaceholder.tsx';
 import { preloadNoteEditor } from '../knowledge/editor/preload.ts';
 import { LinksPanel } from '../knowledge/LinksPanel.tsx';
+import { useLinks } from '../knowledge/queries.ts';
 // The editor (TipTap) is the heaviest dependency; it's preloaded when a tree shows (see preload.ts).
 const NoteEditor = lazy(async () => ({ default: (await preloadNoteEditor()).NoteEditor }));
 import { EditableTitle } from './EditableTitle.tsx';
@@ -114,26 +116,34 @@ export function ItemView({ id }: { id: string }) {
         ))}
       </Breadcrumbs>
 
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-        <ItemTypeIcon
-          type={item.type}
-          completed={item.status === 'completed'}
-          fontSize="feature"
-          sx={{ mt: 0.5 }}
-        />
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
+        {/* Tasks get the same completion circle as everywhere else (B-01 B11). */}
+        {item.nature === 'actionable' ? (
+          <Box sx={{ mt: 0.25 }}>
+            <CompleteToggle
+              done={item.status === 'completed'}
+              title={item.title}
+              onToggle={() =>
+                update.mutate(
+                  {
+                    id: item.id,
+                    input: {
+                      version: item.version,
+                      status: item.status === 'completed' ? 'in_progress' : 'completed',
+                    },
+                  },
+                  { onError: (err) => notify(messageOf(err), { severity: 'error' }) },
+                )
+              }
+            />
+          </Box>
+        ) : (
+          <ItemTypeIcon type={item.type} fontSize="feature" sx={{ mt: 0.5, ml: 0.5 }} />
+        )}
         <EditableTitle value={item.title} onCommit={rename} sx={{ typography: 'h2' }} />
       </Stack>
 
-      {/* The type lives in Details (one place); the chips are the same quiet set the lists use (V3/V4). */}
-      <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap', mt: 1.5, mb: 4 }}>
-        {item.nature === 'actionable' && <StatusChip status={item.status} />}
-        <PriorityChip priority={item.priority} />
-        {item.dueAt && <DueChip due={item.dueAt} today={today} done={item.status === 'completed'} />}
-        {item.archivedAt && <HintChip label="Archived" />}
-        {item.tags.map((t) => (
-          <TagChip key={t} tag={t} />
-        ))}
-      </Stack>
+      <FieldBar item={item} today={today} />
 
       {item.inboxedAt && (
         <Alert
@@ -159,7 +169,7 @@ export function ItemView({ id }: { id: string }) {
       </Box>
 
       <SectionHeader
-        title="Inside"
+        title="Pages inside"
         count={children.length}
         action={
           <Button
@@ -167,13 +177,13 @@ export function ItemView({ id }: { id: string }) {
             startIcon={<AddRounded />}
             onClick={() => actions.openCreate({ parentId: item.id, type: DEFAULT_TYPE_FOR[item.nature] })}
           >
-            Add child
+            Add inside
           </Button>
         }
       />
       {children.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
-          Nothing inside yet. Children are for anything that deserves its own title, status or link.
+          Nothing inside yet. Add a page or task here when something deserves its own title, date or link.
         </Typography>
       ) : (
         <ItemRowList label="Children">
@@ -211,9 +221,33 @@ export function ItemView({ id }: { id: string }) {
         </Accordion>
       )}
 
-      <Box sx={{ mt: 4 }}>
-        <LinksPanel itemId={item.id} />
-      </Box>
+      <Connections itemId={item.id} />
     </Page>
+  );
+}
+
+/** Links and backlinks in one collapsed section (B-01 B11): there when you want them, quiet otherwise. */
+function Connections({ itemId }: { itemId: string }) {
+  const { data } = useLinks(itemId);
+  const count = (data?.outgoing.length ?? 0) + (data?.backlinks.length ?? 0);
+  return (
+    <Accordion
+      variant="outlined"
+      disableGutters
+      sx={{ mt: 4, borderRadius: 1, '&::before': { display: 'none' } }}
+      slotProps={{ transition: { unmountOnExit: true } }}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreRounded />}>
+        <Typography variant="subtitle2" component="h2">
+          Connections
+          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.75 }}>
+            {count}
+          </Typography>
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <LinksPanel itemId={itemId} />
+      </AccordionDetails>
+    </Accordion>
   );
 }

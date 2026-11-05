@@ -11,7 +11,7 @@ import type { ItemNature, ItemPriority, ItemStatus, ItemType } from '@niwa/contr
 export const TYPE_LABEL: Record<ItemType, string> = {
   project: 'Project',
   task: 'Task',
-  note: 'Note',
+  note: 'Page',
   idea: 'Idea',
 };
 
@@ -31,6 +31,17 @@ export const PRIORITY_LABEL: Record<ItemPriority, string> = {
 };
 
 export const DEFAULT_TYPE_FOR: Record<ItemNature, ItemType> = { knowledge: 'note', actionable: 'task' };
+
+/**
+ * What a new item starts as (B-01 B11): no type picker — inside a task or project, or in Garden › Tasks, it's a
+ * task; anywhere else a page (note). "Turn into…" changes it later.
+ */
+export function newItemType(
+  parent: { nature: ItemNature } | null | undefined,
+  filter?: 'all' | ItemNature | null,
+): ItemType {
+  return parent?.nature === 'actionable' || filter === 'actionable' ? 'task' : 'note';
+}
 
 export const LENS_PATH: Record<ItemNature, string> = { knowledge: '/knowledge', actionable: '/actionable' };
 

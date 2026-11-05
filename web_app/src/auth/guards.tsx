@@ -5,7 +5,17 @@ import { PublicLayout } from '../public/PublicLayout.tsx';
 import { useAuth } from './AuthProvider.tsx';
 
 /** Signed-in screens; anything else under the guard is a 404. */
-const APP_PATHS = ['/knowledge', '/actionable', '/scheduler', '/inbox', '/search', '/settings', '/items'];
+const APP_PATHS = [
+  '/today',
+  '/garden',
+  '/knowledge',
+  '/actionable',
+  '/scheduler',
+  '/inbox',
+  '/search',
+  '/settings',
+  '/items',
+];
 
 /** Usability only — the API enforces authorization on every request (specs §13). */
 export function RequireAuth() {

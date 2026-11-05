@@ -8,11 +8,11 @@ import { PublicLayout } from './PublicLayout.tsx';
 // Own chunk: signed-in users never download the landing page, and visitors don't download the app.
 const LandingPage = lazy(async () => ({ default: (await import('./LandingPage.tsx')).LandingPage }));
 
-/** `/` — the landing page for visitors, Knowledge for signed-in users (NIWA-PLAN-B-01 B1.P1). */
+/** `/` — the landing page for visitors, Today for signed-in users (NIWA-PLAN-B-01 B1.P1, B9). */
 export function HomeRoute() {
   const { status } = useAuth();
   if (status === 'loading') return <FullPageLoader />;
-  if (status === 'authenticated') return <Navigate to="/knowledge" replace />;
+  if (status === 'authenticated') return <Navigate to="/today" replace />;
   return (
     <PublicLayout>
       {/* Keep the footer below the fold while the chunk loads, so it doesn't jump (CLS, B-01 B6). */}

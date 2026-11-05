@@ -79,7 +79,7 @@ function Hero() {
           </Typography>
           <Typography variant="lead" color="text.secondary" sx={{ mt: 2.5 }}>
             NIWA keeps your notes, ideas, tasks and schedule in one tree. Plant an idea, grow it into a
-            project, and look at it through three lenses — without copying anything between apps.
+            project, and see it as notes, tasks or a calendar — without copying anything between apps.
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 4 }}>
             {registrationOpen && (
@@ -144,35 +144,35 @@ function Lenses() {
   return (
     <Section
       id="lenses-title"
-      title="One tree, three lenses"
-      intro="Every note, idea, project and task lives in a single tree, nested as deep as you like. Each lens shows the same tree from a different angle."
+      title="One garden, three ways to look at it"
+      intro="Every page, idea, project and task lives in one tree, nested as deep as you like. Today brings together what's on and what's next."
     >
       <Box sx={grid}>
         <FeatureCard
           icon={<MenuBookOutlined />}
-          title="Knowledge"
+          title="Notes"
           points={[
-            'Rich notes with headings, lists and images',
-            'Link related notes and see backlinks',
+            'Rich pages with headings, lists and images',
+            'Link pages together and see what links back',
             'A review queue for notes you want to revisit',
           ]}
         />
         <FeatureCard
           icon={<TaskAltOutlined />}
-          title="Actionable"
+          title="Tasks"
           points={[
             'Projects and tasks with status, priority and due dates',
-            'Focus: in progress, high priority, overdue and upcoming work across every project',
+            'Next up: what is overdue, in progress, urgent or due soon, across every project',
             'Move and reorder anything, at any depth',
           ]}
         />
         <FeatureCard
           icon={<CalendarMonthOutlined />}
-          title="Scheduler"
+          title="Calendar"
           points={[
             'Month, week and day views',
-            'Drag to plan time blocks for your tasks, or add standalone events',
-            'Repeating entries',
+            'Give your tasks time, or add events that repeat',
+            "Your country's public holidays",
           ]}
         />
       </Box>
@@ -188,13 +188,13 @@ function Screens() {
   const shots = [
     {
       src: '/screens/knowledge-light.webp',
-      alt: 'A course note open in the Knowledge lens, light theme: the tree on the left, the note with headings and a list in the middle, and its details on the right.',
-      caption: 'Knowledge, light theme',
+      alt: 'A course note open in the garden, light theme: the tree on the left, the note with headings and a list in the middle, and its details on the right.',
+      caption: 'A page in the garden, light theme',
     },
     {
       src: '/screens/focus-dark.webp',
       alt: 'The Focus view in dark theme: overdue, in-progress, high-priority and upcoming tasks from different projects, each shown once with its priority and due date.',
-      caption: 'Focus, dark theme',
+      caption: 'Tasks, dark theme',
     },
   ];
   return (
@@ -243,13 +243,16 @@ function Capture() {
             title="Inbox"
             points={[
               'Quick capture from anywhere in the app',
-              'File captures into the tree one by one or in bulk',
+              'Sort captures into your garden one at a time, or in bulk',
             ]}
           />
           <FeatureCard
             icon={<SearchOutlined />}
             title="Search"
-            points={['One search across titles, tags and note text', 'Narrow the results to one lens']}
+            points={[
+              'Press Ctrl K to find, open or create anything',
+              'One search across titles, tags and page text',
+            ]}
           />
         </Box>
       </Section>

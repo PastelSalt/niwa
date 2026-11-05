@@ -147,8 +147,8 @@ export function SearchPage() {
           aria-label="Base"
         >
           <ToggleButton value="all">All</ToggleButton>
-          <ToggleButton value="knowledge">Knowledge</ToggleButton>
-          <ToggleButton value="actionable">Actionable</ToggleButton>
+          <ToggleButton value="knowledge">Notes</ToggleButton>
+          <ToggleButton value="actionable">Tasks</ToggleButton>
         </ToggleButtonGroup>
         <FormControlLabel
           control={

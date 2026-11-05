@@ -1,19 +1,30 @@
 import type { ApiClient } from '@niwa/api-client';
+import { ROOT_CONTAINERS } from '@niwa/contracts';
 
 /**
- * Optional sample content from the welcome dialog (B-01 B7): a small subtree under Knowledge, clearly
- * titled "Example", that can be deleted like any item. Never added unless the user ticks the box.
+ * Optional starting content from the welcome dialog (B-01 B7, B14). Never added unless the user ticks the box.
+ */
+
+/** The classic top-level folders — Knowledge, Projects, College, Personal — skipping any that exist. */
+export async function addClassicFolders(api: ApiClient): Promise<void> {
+  const { items } = await api.items.tree();
+  const existing = new Set(items.filter((i) => i.parentId === null).map((i) => i.title));
+  for (const title of ROOT_CONTAINERS) {
+    if (!existing.has(title)) await api.items.create({ parentId: null, type: 'note', title });
+  }
+}
+
+/**
+ * A small subtree clearly titled "Example", under Knowledge if it exists, else the first top-level folder;
+ * deletable like any item.
  */
 export async function addExampleNotes(api: ApiClient): Promise<void> {
   const { items } = await api.items.tree();
-  const knowledge = items.find((i) => i.parentId === null && i.title === 'Knowledge');
-  if (!knowledge) return;
+  const roots = items.filter((i) => i.parentId === null);
+  const home = roots.find((i) => i.title === 'Knowledge') ?? roots[0];
+  if (!home) return;
 
-  const root = await api.items.create({
-    parentId: knowledge.id,
-    type: 'note',
-    title: 'Example: getting started',
-  });
+  const root = await api.items.create({ parentId: home.id, type: 'note', title: 'Example: getting started' });
   await api.items.create({
     parentId: root.item.id,
     type: 'idea',
@@ -27,6 +38,6 @@ export async function addExampleNotes(api: ApiClient): Promise<void> {
   await api.items.create({
     parentId: root.item.id,
     type: 'note',
-    title: 'Example note: delete me when done',
+    title: 'Example page: delete me when done',
   });
 }

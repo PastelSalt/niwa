@@ -1,4 +1,6 @@
 import AutoStoriesOutlined from '@mui/icons-material/AutoStoriesOutlined';
+import FolderOutlined from '@mui/icons-material/FolderOutlined';
+import LocalFloristOutlined from '@mui/icons-material/LocalFloristOutlined';
 import SchoolOutlined from '@mui/icons-material/SchoolOutlined';
 import SpaOutlined from '@mui/icons-material/SpaOutlined';
 import WorkOutlineRounded from '@mui/icons-material/WorkOutlineRounded';
@@ -9,16 +11,27 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { ROOT_CONTAINERS, type ItemNature, type ItemSummary } from '@niwa/contracts';
+import { ROOT_CONTAINERS, type ItemSummary } from '@niwa/contracts';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-import { useEffect, useMemo, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from 'react';
-import { useNavigate } from 'react-router';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+  type DragEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router';
 import { messageOf } from '../api/client.ts';
 import { preloadNoteEditorWhenIdle } from '../features/knowledge/editor/preload.ts';
-import { DEFAULT_TYPE_FOR, ItemTypeIcon, LENS_PATH, STATUS_LABEL } from '../features/items/itemMeta.tsx';
+import { ItemTypeIcon, LENS_PATH, newItemType, STATUS_LABEL } from '../features/items/itemMeta.tsx';
+import { GARDEN_FILTERS, type GardenFilter } from './destinations.tsx';
 import { ItemMenu } from '../features/items/ItemMenu.tsx';
 import { useTree } from '../features/items/queries.ts';
 import {
@@ -50,20 +63,24 @@ const ROOT_ICON: Record<(typeof ROOT_CONTAINERS)[number], typeof AutoStoriesOutl
   College: SchoolOutlined,
   Personal: SpaOutlined,
 };
-const isRootContainer = (item: ItemSummary): item is ItemSummary & { title: keyof typeof ROOT_ICON } =>
-  item.parentId === null && (ROOT_CONTAINERS as readonly string[]).includes(item.title);
+/** Every top-level item is a folder (B-01 B14); the classic names and My garden keep their own icons. */
+function folderIcon(item: ItemSummary): ReactNode {
+  if (item.parentId !== null) return null;
+  const Icon =
+    item.title === 'My garden'
+      ? LocalFloristOutlined
+      : (ROOT_CONTAINERS as readonly string[]).includes(item.title)
+        ? ROOT_ICON[item.title as keyof typeof ROOT_ICON]
+        : FolderOutlined;
+  return <Icon fontSize="small" sx={{ color: 'primary.main' }} />;
+}
 const DRAG_TYPE = 'application/x-niwa-item';
 
-/** Lens-scoped item tree — CONCEPT.md §2. One tree, filtered per lens with dimmed context ancestors. */
-export function TreePane({
-  lens,
-  label,
-  fullWidth = false,
-}: {
-  lens: ItemNature;
-  label: string;
-  fullWidth?: boolean;
-}) {
+/**
+ * Garden's tree — CONCEPT.md §2, B-01 B9. One tree with an All · Notes · Tasks filter; the Notes and Tasks
+ * filters dim the ancestors shown only for context.
+ */
+export function TreePane({ lens, fullWidth = false }: { lens: GardenFilter; fullWidth?: boolean }) {
   const [showArchived, setShowArchived] = usePersistentState('niwa.tree.showArchived', false);
   const { data: items, isLoading, error } = useTree(showArchived);
   const model = useMemo(() => buildTree(items ?? []), [items]);
@@ -87,7 +104,7 @@ export function TreePane({
   return (
     <Box
       component="aside"
-      aria-label={`${label} tree`}
+      aria-label="Garden tree"
       data-tour="tree"
       sx={{
         width: fullWidth ? '100%' : TREE_WIDTH.base,
@@ -102,13 +119,22 @@ export function TreePane({
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', px: 2, pt: 1, pb: 0.5, gap: 0.5 }}>
-        <Typography
-          variant="overline"
-          color="text.secondary"
-          sx={{ flex: 1, fontWeight: 700, letterSpacing: '0.08em' }}
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={lens}
+          aria-label="Show in the garden"
+          sx={{
+            flex: 1,
+            '& .MuiToggleButton-root': { flex: 1, py: 0.25, typography: 'caption', fontWeight: 600 },
+          }}
         >
-          {label}
-        </Typography>
+          {GARDEN_FILTERS.map((f) => (
+            <ToggleButton key={f.key} value={f.key} component={RouterLink} to={f.path}>
+              {f.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
         <Tooltip title={showArchived ? 'Hide archived' : 'Show archived'}>
           <IconButton
             size="small"
@@ -124,7 +150,7 @@ export function TreePane({
           <IconButton
             size="small"
             aria-label="New top-level item"
-            onClick={() => actions.openCreate({ parentId: null, type: DEFAULT_TYPE_FOR[lens] })}
+            onClick={() => actions.openCreate({ parentId: null, type: newItemType(null, lens) })}
           >
             <AddRounded fontSize="small" />
           </IconButton>
@@ -146,7 +172,7 @@ export function TreePane({
         )}
         {items && (
           <SimpleTreeView
-            aria-label={`${label} items`}
+            aria-label="Garden"
             expandedItems={expanded}
             onExpandedItemsChange={(_, ids) => setExpanded(ids)}
             selectedItems={selectedId && view.visible.has(selectedId) ? selectedId : null}
@@ -184,7 +210,7 @@ interface NodesProps {
   parentId: string | null;
   model: TreeModel;
   view: LensView;
-  lens: ItemNature;
+  lens: GardenFilter;
   onExpand: (id: string) => void;
 }
 
@@ -249,7 +275,7 @@ function TreeNodes({ parentId, model, view, lens, onExpand }: NodesProps) {
 interface LabelProps {
   item: ItemSummary;
   model: TreeModel;
-  lens: ItemNature;
+  lens: GardenFilter;
   dimmed: boolean;
   onExpand: (id: string) => void;
 }
@@ -266,8 +292,8 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
   };
 
   const stop = (e: MouseEvent) => e.stopPropagation();
-  const root = isRootContainer(item);
-  const RootIcon = root ? ROOT_ICON[item.title] : null;
+  const folder = folderIcon(item);
+  const root = !!folder;
 
   return (
     <Box
@@ -318,8 +344,8 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
         '.Mui-focused & .node-actions': { opacity: 1 },
       })}
     >
-      {RootIcon ? (
-        <RootIcon fontSize="small" sx={{ color: 'primary.main' }} />
+      {folder ? (
+        folder
       ) : (
         <ItemTypeIcon type={item.type} completed={item.status === 'completed'} fontSize="small" />
       )}
@@ -371,7 +397,7 @@ function NodeLabel({ item, model, lens, dimmed, onExpand }: LabelProps) {
           aria-label={`Add child to ${item.title}`}
           onClick={(e) => {
             stop(e);
-            actions.openCreate({ parentId: item.id, type: DEFAULT_TYPE_FOR[lens] });
+            actions.openCreate({ parentId: item.id, type: newItemType(item, lens) });
           }}
           sx={{ p: 0.25 }}
         >

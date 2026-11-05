@@ -60,7 +60,7 @@ function HelpSection() {
     <Stack spacing={3}>
       <Section
         title="Tour"
-        description="A one-minute walk through capture, the tree, the three lenses and search."
+        description="A one-minute walk through capture, Today, the garden, the calendar and the command box."
       >
         <Button variant="outlined" onClick={startTour}>
           Replay the tour

@@ -10,16 +10,23 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /**
- * `g k` / `g a` / `g s` / `g i` navigate, `/` focuses search, `c` captures (CONCEPT.md §1.4).
+ * `g t` Today · `g g` Garden · `g c` Calendar · `g i` Inbox · `g s` Search; `/` or Ctrl+K opens the command box;
+ * `c` captures (CONCEPT.md §1.4, B-01 B9).
  * Ignored while typing in a field or the editor.
  */
-export function useGlobalShortcuts(focusSearch: () => void, capture: () => void) {
+export function useGlobalShortcuts(openCommand: () => void, capture: () => void) {
   const navigate = useNavigate();
 
   useEffect(() => {
     let pendingG: number | null = null;
 
     const onKey = (e: KeyboardEvent) => {
+      // Ctrl+K / ⌘K opens the command box from anywhere, even while typing.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openCommand();
+        return;
+      }
       if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
 
       if (pendingG !== null) {
@@ -36,7 +43,7 @@ export function useGlobalShortcuts(focusSearch: () => void, capture: () => void)
         pendingG = window.setTimeout(() => (pendingG = null), SEQUENCE_TIMEOUT_MS);
       } else if (e.key === '/') {
         e.preventDefault();
-        focusSearch();
+        openCommand();
       } else if (e.key === 'c' && !document.querySelector('[role="dialog"]')) {
         e.preventDefault();
         capture();
@@ -48,5 +55,5 @@ export function useGlobalShortcuts(focusSearch: () => void, capture: () => void)
       window.removeEventListener('keydown', onKey);
       if (pendingG !== null) window.clearTimeout(pendingG);
     };
-  }, [navigate, focusSearch, capture]);
+  }, [navigate, openCommand, capture]);
 }

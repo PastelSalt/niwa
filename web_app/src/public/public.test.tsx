@@ -10,7 +10,7 @@ describe('landing page', () => {
       await screen.findByRole('heading', { level: 1, name: 'A garden for your ideas.' }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/');
-    for (const lens of ['Knowledge', 'Actionable', 'Scheduler']) {
+    for (const lens of ['Notes', 'Tasks', 'Calendar']) {
       expect(screen.getByRole('heading', { level: 3, name: lens })).toBeInTheDocument();
     }
   });
@@ -27,9 +27,9 @@ describe('landing page', () => {
     expect(within(panel).getByText(/saved to your account after you sign up/)).toBeInTheDocument();
   });
 
-  it('sends signed-in users to Knowledge', async () => {
+  it('sends signed-in users to Today', async () => {
     const { router } = renderApp('/', { 'POST /auth/refresh': authOk });
-    await waitFor(() => expect(router.state.location.pathname).toBe('/knowledge'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/today'));
   });
 
   it('links to sign-up and log-in', async () => {

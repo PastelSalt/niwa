@@ -7,15 +7,16 @@ import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { NavLink, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { Wordmark } from '../components/Wordmark.tsx';
 import { useInbox } from '../features/inbox/queries.ts';
 import { DESTINATIONS, destinationForPath, type Destination } from './destinations.tsx';
 
 export const RAIL_WIDTH = 76;
 
-/** Permanent mini rail (≥ md). */
+/** Permanent mini rail (two panes and up): the four places, Settings at the foot. */
 export function NavRail() {
+  const current = destinationForPath(useLocation().pathname)?.key;
   return (
     <Drawer
       variant="permanent"
@@ -40,7 +41,7 @@ export function NavRail() {
         <Box sx={{ height: 40, display: 'grid', placeItems: 'center', mb: 1 }}>
           <Wordmark size="small" />
         </Box>
-        {DESTINATIONS.map((d) => (
+        {DESTINATIONS.filter((d) => d.inNav || d.key === 'settings').map((d) => (
           <Tooltip
             key={d.key}
             title={d.shortcut ? `${d.label}  ·  g ${d.shortcut}` : d.label}
@@ -48,8 +49,11 @@ export function NavRail() {
             describeChild
           >
             <ButtonBase
-              component={NavLink}
+              component={Link}
               to={d.path}
+              // Active by place, not exact path: Garden is active on its Notes and Tasks filters too.
+              className={current === d.key ? 'active' : ''}
+              aria-current={current === d.key ? 'page' : undefined}
               data-tour={`nav-${d.key}`}
               sx={(theme) => ({
                 width: 60,
@@ -81,11 +85,11 @@ export function NavRail() {
   );
 }
 
-/** Phone navigation (< md) — CONCEPT.md §1.2. */
+/** Phone navigation (single pane) — the four places. */
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const items = DESTINATIONS.filter((d) => d.inBottomNav);
+  const items = DESTINATIONS.filter((d) => d.inNav);
   const current = destinationForPath(location.pathname)?.key ?? false;
 
   return (
@@ -103,7 +107,11 @@ export function BottomNav() {
         zIndex: 'appBar',
       }}
     >
-      <BottomNavigation value={current} onChange={(_, key: string) => navigate(`/${key}`)} showLabels>
+      <BottomNavigation
+        value={items.some((d) => d.key === current) ? current : false}
+        onChange={(_, key: string) => navigate(items.find((d) => d.key === key)!.path)}
+        showLabels
+      >
         {items.map((d) => (
           <BottomNavigationAction
             key={d.key}

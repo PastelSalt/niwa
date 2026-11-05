@@ -99,7 +99,7 @@ export function FocusView() {
   );
 }
 
-function FocusRow({
+export function FocusRow({
   item,
   model,
   today,
@@ -108,7 +108,7 @@ function FocusRow({
   item: ItemSummary;
   model: TreeModel;
   today: string;
-  section: keyof FocusResponse;
+  section?: keyof FocusResponse;
 }) {
   const update = useUpdateItem();
   const notify = useNotify();

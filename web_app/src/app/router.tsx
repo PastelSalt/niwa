@@ -5,7 +5,7 @@ import { LoginPage } from '../auth/LoginPage.tsx';
 import { RegisterPage } from '../auth/RegisterPage.tsx';
 import { NotFoundPage } from '../components/NotFoundPage.tsx';
 import { RouteError } from '../components/RouteError.tsx';
-import { ActionablePage, ItemRedirect, KnowledgePage } from '../features/pages.tsx';
+import { ActionablePage, GardenPage, ItemRedirect, KnowledgePage } from '../features/pages.tsx';
 import { AppShell } from '../layout/AppShell.tsx';
 import { HomeRoute } from '../public/HomeRoute.tsx';
 import { PublicLayout } from '../public/PublicLayout.tsx';
@@ -15,6 +15,7 @@ import { PublicLayout } from '../public/PublicLayout.tsx';
 const named = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
   lazy(async () => ({ default: (await load())[name] }));
 
+const TodayPage = named(() => import('../features/today/TodayPage.tsx'), 'TodayPage');
 const InboxPage = named(() => import('../features/inbox/InboxPage.tsx'), 'InboxPage');
 const SearchPage = named(() => import('../features/search/SearchPage.tsx'), 'SearchPage');
 const ReviewQueue = named(() => import('../features/knowledge/ReviewQueue.tsx'), 'ReviewQueue');
@@ -62,6 +63,8 @@ export const routes: RouteObject[] = [
                 // A crashing screen renders the error inside the shell, so navigation still works.
                 errorElement: <RouteError />,
                 children: [
+                  { path: '/today', element: <TodayPage /> },
+                  { path: '/garden/:itemId?', element: <GardenPage /> },
                   { path: '/knowledge/review', element: <ReviewQueue /> },
                   { path: '/knowledge/:itemId?', element: <KnowledgePage /> },
                   { path: '/actionable/:itemId?', element: <ActionablePage /> },

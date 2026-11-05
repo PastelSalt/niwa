@@ -34,34 +34,44 @@ function MetaChip({ tone, label, ...props }: { tone?: string; label: string } & 
   );
 }
 
-export function StatusChip({ status }: { status: ItemStatus }) {
-  return <MetaChip tone={`status.${status}`} label={STATUS_LABEL[status]} />;
+/** Optional click (the item page opens the field's editor, B-01 B11). */
+type Clickable = Pick<ChipProps, 'onClick'> & { 'aria-label'?: string };
+
+export function StatusChip({ status, ...rest }: { status: ItemStatus } & Clickable) {
+  return <MetaChip tone={`status.${status}`} label={STATUS_LABEL[status]} {...rest} />;
 }
 
-export function PriorityChip({ priority }: { priority: ItemPriority }) {
+export function PriorityChip({ priority, ...rest }: { priority: ItemPriority } & Clickable) {
   if (priority === 'none') return null;
-  return <MetaChip tone={`priority.${priority}`} label={PRIORITY_LABEL[priority]} />;
+  return <MetaChip tone={`priority.${priority}`} label={PRIORITY_LABEL[priority]} {...rest} />;
 }
 
 const DAY = 86_400_000;
 const dayNumber = (d: string) => Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / DAY;
 
 /** Due date: overdue / today / soon (≤ 3 days) get their own wording and tone; done items stay neutral. */
-export function DueChip({ due, today, done = false }: { due: string; today: string; done?: boolean }) {
+export function DueChip({
+  due,
+  today,
+  done = false,
+  ...rest
+}: { due: string; today: string; done?: boolean } & Clickable) {
   const days = dayNumber(due) - dayNumber(today);
-  if (done) return <MetaChip label={`Due ${formatDay(due)}`} />;
-  if (days < 0) return <MetaChip tone="error.main" label={`Overdue · ${formatDay(due)}`} />;
-  if (days === 0) return <MetaChip tone="warning.main" label="Due today" />;
-  if (days === 1) return <MetaChip tone="info.main" label="Due tomorrow" />;
-  if (days <= 3) return <MetaChip tone="info.main" label={`Due ${formatDay(due)}`} />;
-  return <MetaChip label={`Due ${formatDay(due)}`} />;
+  if (done) return <MetaChip label={`Due ${formatDay(due)}`} {...rest} />;
+  if (days < 0) return <MetaChip tone="error.main" label={`Overdue · ${formatDay(due)}`} {...rest} />;
+  if (days === 0) return <MetaChip tone="warning.main" label="Due today" {...rest} />;
+  if (days === 1) return <MetaChip tone="info.main" label="Due tomorrow" {...rest} />;
+  if (days <= 3) return <MetaChip tone="info.main" label={`Due ${formatDay(due)}`} {...rest} />;
+  return <MetaChip label={`Due ${formatDay(due)}`} {...rest} />;
 }
 
-export function TagChip({ tag }: { tag: string }) {
-  return <MetaChip label={`#${tag}`} sx={{ bgcolor: 'action.hover', borderColor: 'transparent' }} />;
+export function TagChip({ tag, ...rest }: { tag: string } & Clickable) {
+  return (
+    <MetaChip label={`#${tag}`} sx={{ bgcolor: 'action.hover', borderColor: 'transparent' }} {...rest} />
+  );
 }
 
-/** A plain hint chip (e.g. the Inbox's suggested place). */
-export function HintChip({ label }: { label: string }) {
-  return <MetaChip label={label} />;
+/** A plain hint chip (e.g. the Inbox's suggested place); also the item page's other set fields. */
+export function HintChip({ label, ...rest }: { label: string } & Clickable) {
+  return <MetaChip label={label} {...rest} />;
 }

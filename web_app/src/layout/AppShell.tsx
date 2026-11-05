@@ -2,8 +2,7 @@ import Box from '@mui/material/Box';
 import LinearProgress from '@mui/material/LinearProgress';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import type { ItemNature } from '@niwa/contracts';
-import { Suspense, useCallback, useRef, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { useUserAppearance } from '../app/appearance.tsx';
 import { NotifierProvider } from '../components/Notifier.tsx';
@@ -12,7 +11,8 @@ import { ItemDialogsProvider } from '../features/items/ItemDialogs.tsx';
 import { OnboardingProvider } from '../features/onboarding/OnboardingProvider.tsx';
 import { useSelectedItemId } from '../features/items/useSelectedItemId.ts';
 import { DetailPanel } from './DetailPanel.tsx';
-import { destinationForPath, type Destination } from './destinations.tsx';
+import { destinationForPath, gardenFilterFor, type GardenFilter } from './destinations.tsx';
+import { CommandBoxProvider, useCommandBox } from './CommandBox.tsx';
 import { BottomNav, NavRail } from './NavRail.tsx';
 import { TopBar } from './TopBar.tsx';
 import { TreePane } from './TreePane.tsx';
@@ -34,7 +34,9 @@ export function AppShell() {
       <ItemDialogsProvider>
         <CaptureProvider>
           <OnboardingProvider>
-            <ShellLayout />
+            <CommandBoxProvider>
+              <ShellLayout />
+            </CommandBoxProvider>
           </OnboardingProvider>
         </CaptureProvider>
       </ItemDialogsProvider>
@@ -42,30 +44,19 @@ export function AppShell() {
   );
 }
 
-const lensOf = (d: Destination | undefined): ItemNature | null =>
-  d?.key === 'knowledge' || d?.key === 'actionable' ? d.key : null;
-
 function ShellLayout() {
   const shell = useShellLayout();
   const isPhone = shell === 'single';
   const isWide = shell === 'docked';
   const location = useLocation();
   const destination = destinationForPath(location.pathname);
-  const lens = lensOf(destination);
+  const lens = gardenFilterFor(location.pathname);
   const selectedId = useSelectedItemId();
+  // Closed by default (B-01 B11): the item page shows what's set; the panel is there when asked for.
   const [detailOpen, setDetailOpen] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  const focusSearch = useCallback(() => searchRef.current?.focus(), []);
+  const command = useCommandBox();
   const capture = useQuickCapture();
-  useGlobalShortcuts(focusSearch, capture.open);
-
-  // Selecting a new item reveals its details where there's room for a docked panel.
-  const [revealedFor, setRevealedFor] = useState<string | undefined>();
-  if (selectedId && isWide && selectedId !== revealedFor) {
-    setRevealedFor(selectedId);
-    setDetailOpen(true);
-  }
+  useGlobalShortcuts(command.open, capture.open);
 
   const showTreePane = !isPhone && !!lens;
   const phoneTree = isPhone && !!lens && !selectedId;
@@ -78,15 +69,15 @@ function ShellLayout() {
           title={destination?.label ?? 'niwa'}
           titleHidden={destination?.namedOnScreen}
           compact={isPhone}
-          searchRef={searchRef}
+          onOpenCommand={command.open}
           detailOpen={detailOpen}
           onToggleDetail={() => setDetailOpen((v) => !v)}
         />
         <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-          {showTreePane && lens && <TreePane lens={lens} label={destination!.label} />}
+          {showTreePane && lens && <TreePane lens={lens} />}
           <Box component="main" sx={{ flex: 1, minWidth: 0, overflow: 'auto', pb: isPhone ? 9 : 0 }}>
             <Suspense fallback={<LinearProgress aria-label="Loading" sx={{ height: 2 }} />}>
-              {phoneTree && lens ? <PhoneLensHome lens={lens} label={destination!.label} /> : <Outlet />}
+              {phoneTree && lens ? <PhoneLensHome lens={lens} /> : <Outlet />}
             </Suspense>
           </Box>
           {!isPhone && (
@@ -104,17 +95,17 @@ function ShellLayout() {
   );
 }
 
-/** Phones have no side pane: the lens home is the tree (Actionable adds a Focus tab). */
-function PhoneLensHome({ lens, label }: { lens: ItemNature; label: string }) {
+/** Phones have no side pane: Garden's home is the tree (Tasks adds a Focus tab). */
+function PhoneLensHome({ lens }: { lens: GardenFilter }) {
   const [tab, setTab] = useState<'focus' | 'tree'>('focus');
-  if (lens === 'knowledge') return <TreePane lens={lens} label={label} fullWidth />;
+  if (lens !== 'actionable') return <TreePane lens={lens} fullWidth />;
   return (
     <>
       <Tabs value={tab} onChange={(_, v: 'focus' | 'tree') => setTab(v)} variant="fullWidth">
         <Tab value="focus" label="Focus" />
         <Tab value="tree" label="Tree" />
       </Tabs>
-      {tab === 'focus' ? <Outlet /> : <TreePane lens={lens} label={label} fullWidth />}
+      {tab === 'focus' ? <Outlet /> : <TreePane lens={lens} fullWidth />}
     </>
   );
 }

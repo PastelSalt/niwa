@@ -13,16 +13,17 @@ import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
-import type { ItemNature, ItemSummary } from '@niwa/contracts';
+import type { ItemSummary } from '@niwa/contracts';
 import type { ReactNode } from 'react';
-import { DEFAULT_TYPE_FOR } from './itemMeta.tsx';
+import type { GardenFilter } from '../../layout/destinations.tsx';
+import { newItemType } from './itemMeta.tsx';
 import { indent, moveDown, moveUp, outdent, type TreeModel } from './treeModel.ts';
 import { useItemActions } from './useItemActions.ts';
 
 interface ItemMenuProps {
   item: ItemSummary;
   model: TreeModel;
-  lens: ItemNature;
+  lens: GardenFilter;
   anchorEl: HTMLElement | null;
   onClose: () => void;
 }
@@ -68,7 +69,7 @@ export function ItemMenu({ item, model, lens, anchorEl, onClose }: ItemMenuProps
       slotProps={{ list: { dense: true } }}
     >
       {entry('Add child', <AddRounded fontSize="small" />, () =>
-        actions.openCreate({ parentId: item.id, type: DEFAULT_TYPE_FOR[lens] }),
+        actions.openCreate({ parentId: item.id, type: newItemType(item, lens) }),
       )}
       <Divider />
       {entry('Move up', <ArrowUpwardRounded fontSize="small" />, () => void actions.move(up), {

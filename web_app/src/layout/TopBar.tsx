@@ -7,9 +7,8 @@ import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import InputBase from '@mui/material/InputBase';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -17,7 +16,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
-import { useState, type RefObject } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { visuallyHidden } from '../lib/a11y.ts';
 import { useAuth } from '../auth/AuthProvider.tsx';
@@ -29,26 +28,28 @@ import HelpOutlineRounded from '@mui/icons-material/HelpOutlineRounded';
 interface TopBarProps {
   title: string;
   compact: boolean;
-  searchRef: RefObject<HTMLInputElement | null>;
+  /** Opens the command box (search, jump, create). */
+  onOpenCommand: () => void;
   /** The screen shows its own name, so the title is for screen readers only. */
   titleHidden?: boolean;
   detailOpen: boolean;
   onToggleDetail: () => void;
 }
 
-export function TopBar({ title, titleHidden, compact, searchRef, detailOpen, onToggleDetail }: TopBarProps) {
+export function TopBar({
+  title,
+  titleHidden,
+  compact,
+  onOpenCommand,
+  detailOpen,
+  onToggleDetail,
+}: TopBarProps) {
   const { user, logout } = useAuth();
   const capture = useQuickCapture();
   const onboarding = useOnboarding();
   const navigate = useNavigate();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-  const [query, setQuery] = useState('');
-
-  const submitSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = query.trim();
-    navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
-  };
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
   return (
     <AppBar position="sticky" sx={{ bgcolor: 'background.default', borderBottom: 1, borderColor: 'divider' }}>
@@ -65,35 +66,40 @@ export function TopBar({ title, titleHidden, compact, searchRef, detailOpen, onT
           {title}
         </Typography>
 
-        <Box
-          component="form"
-          role="search"
+        {/* Looks like a search field; opens the command box, which searches, jumps and creates (B-01 B9). */}
+        <ButtonBase
           data-tour="search"
-          onSubmit={submitSearch}
+          onClick={onOpenCommand}
+          aria-label="Search or jump to"
+          aria-keyshortcuts="Control+K /"
           // A control's width, not a content width.
-          sx={{ flex: 1, maxWidth: 480, mx: 'auto' }}
+          sx={{
+            flex: 1,
+            maxWidth: 480,
+            mx: 'auto',
+            justifyContent: 'flex-start',
+            gap: 1,
+            px: 1.5,
+            py: 0.75,
+            borderRadius: 2,
+            bgcolor: 'action.hover',
+            color: 'text.secondary',
+            typography: 'body1',
+          }}
         >
-          <InputBase
-            inputRef={searchRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={compact ? 'Search' : 'Search everything  ( / )'}
-            inputProps={{ 'aria-label': 'Search' }}
-            startAdornment={
-              <InputAdornment position="start">
-                <SearchRounded fontSize="small" />
-              </InputAdornment>
-            }
-            sx={{
-              width: '100%',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 2,
-              bgcolor: 'action.hover',
-              '&.Mui-focused': { bgcolor: 'background.paper', outline: 2, outlineColor: 'primary.main' },
-            }}
-          />
-        </Box>
+          <SearchRounded fontSize="small" />
+          <Box component="span" sx={{ flex: 1, textAlign: 'left' }}>
+            {compact ? 'Search' : 'Search or jump to…'}
+          </Box>
+          {!compact && (
+            <Box
+              component="kbd"
+              sx={{ typography: 'caption', px: 0.75, borderRadius: 0.5, border: 1, borderColor: 'divider' }}
+            >
+              {isMac ? '⌘K' : 'Ctrl K'}
+            </Box>
+          )}
+        </ButtonBase>
 
         <Tooltip title="Quick capture  ·  c">
           {compact ? (

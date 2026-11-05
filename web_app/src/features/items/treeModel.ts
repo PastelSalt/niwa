@@ -47,9 +47,11 @@ export interface LensView {
   dimmed: Set<string>;
 }
 
-export function lensView(model: TreeModel, nature: ItemNature): LensView {
+export function lensView(model: TreeModel, nature: ItemNature | 'all'): LensView {
   const visible = new Set<string>();
   const dimmed = new Set<string>();
+  // Garden › All (B-01 B9): the whole tree, nothing dimmed.
+  if (nature === 'all') return { visible: new Set(model.byId.keys()), dimmed };
   for (const item of model.byId.values()) {
     if (item.parentId === null) visible.add(item.id);
     if (item.nature !== nature) continue;

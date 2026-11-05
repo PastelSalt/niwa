@@ -41,7 +41,7 @@ export function toAppearance(raw: { theme?: unknown; font?: unknown } | null | u
 }
 
 /** Signed-in screens (where the account's appearance applies) — everything under the six destinations. */
-const APP_PATHS = /^\/(knowledge|actionable|scheduler|inbox|search|settings|items)(\/|$)/;
+const APP_PATHS = /^\/(today|garden|knowledge|actionable|scheduler|inbox|search|settings|items)(\/|$)/;
 export const isAppPath = (pathname: string) => APP_PATHS.test(pathname);
 
 export function readCachedAppearance(): Appearance {

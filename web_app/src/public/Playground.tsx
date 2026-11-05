@@ -97,7 +97,7 @@ export function Playground() {
           component="iframe"
           ref={frame}
           src={PLAYGROUND_PATH}
-          title="NIWA with an example garden — try ticking a task, capturing an idea or switching lens"
+          title="NIWA with an example garden — try ticking a task, capturing an idea or opening the garden"
           loading="lazy"
           sx={{
             display: 'block',

@@ -35,7 +35,22 @@ const STATUSES: ItemStatus[] = ['not_started', 'in_progress', 'blocked', 'comple
 const PRIORITIES: ItemPriority[] = ['none', 'low', 'medium', 'high', 'critical'];
 
 /** Editable item fields for the detail panel. Every change is a version-checked PATCH. */
-export function ItemFields({ item }: { item: Item }) {
+/** Fields an item page can show on their own (B-01 B11: a chip's editor reuses these). */
+export type FieldKey =
+  | 'type'
+  | 'status'
+  | 'priority'
+  | 'due'
+  | 'estimate'
+  | 'review'
+  | 'tags'
+  | 'source'
+  | 'schedule'
+  | 'actions'
+  | 'timestamps';
+
+export function ItemFields({ item, fields }: { item: Item; fields?: FieldKey[] }) {
+  const show = (k: FieldKey) => !fields || fields.includes(k);
   const update = useUpdateItem();
   const notify = useNotify();
   const actions = useItemActions();
@@ -53,59 +68,69 @@ export function ItemFields({ item }: { item: Item }) {
 
   return (
     <Stack spacing={2.25} sx={{ p: 2 }}>
-      <TextField
-        select
-        size="small"
-        label="Type"
-        value={item.type}
-        onChange={(e) => save({ type: e.target.value as ItemType })}
-      >
-        {TYPES.map((t) => (
-          <MenuItem key={t} value={t}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ItemTypeIcon type={t} fontSize="small" /> {TYPE_LABEL[t]}
-            </Box>
-          </MenuItem>
-        ))}
-      </TextField>
+      {show('type') && (
+        <TextField
+          select
+          size="small"
+          label="Type"
+          value={item.type}
+          onChange={(e) => save({ type: e.target.value as ItemType })}
+        >
+          {TYPES.map((t) => (
+            <MenuItem key={t} value={t}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ItemTypeIcon type={t} fontSize="small" /> {TYPE_LABEL[t]}
+              </Box>
+            </MenuItem>
+          ))}
+        </TextField>
+      )}
 
       {actionable && (
         <>
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={item.status}
-            onChange={(e) => save({ status: e.target.value as ItemStatus })}
-          >
-            {STATUSES.map((s) => (
-              <MenuItem key={s} value={s}>
-                {STATUS_LABEL[s]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Priority"
-            value={item.priority}
-            onChange={(e) => save({ priority: e.target.value as ItemPriority })}
-          >
-            {PRIORITIES.map((p) => (
-              <MenuItem key={p} value={p}>
-                {PRIORITY_LABEL[p]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <DateField size="small" label="Due" value={item.dueAt} onChange={(dueAt) => save({ dueAt })} />
-          <EstimateField
-            value={item.estimatedMinutes}
-            onCommit={(estimatedMinutes) => save({ estimatedMinutes })}
-          />
+          {show('status') && (
+            <TextField
+              select
+              size="small"
+              label="Status"
+              value={item.status}
+              onChange={(e) => save({ status: e.target.value as ItemStatus })}
+            >
+              {STATUSES.map((s) => (
+                <MenuItem key={s} value={s}>
+                  {STATUS_LABEL[s]}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+          {show('priority') && (
+            <TextField
+              select
+              size="small"
+              label="Priority"
+              value={item.priority}
+              onChange={(e) => save({ priority: e.target.value as ItemPriority })}
+            >
+              {PRIORITIES.map((p) => (
+                <MenuItem key={p} value={p}>
+                  {PRIORITY_LABEL[p]}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+          {show('due') && (
+            <DateField size="small" label="Due" value={item.dueAt} onChange={(dueAt) => save({ dueAt })} />
+          )}
+          {show('estimate') && (
+            <EstimateField
+              value={item.estimatedMinutes}
+              onCommit={(estimatedMinutes) => save({ estimatedMinutes })}
+            />
+          )}
         </>
       )}
 
-      {!actionable && (
+      {!actionable && show('review') && (
         <DateField
           size="small"
           label="Review on"
@@ -114,79 +139,85 @@ export function ItemFields({ item }: { item: Item }) {
         />
       )}
 
-      <Autocomplete
-        multiple
-        freeSolo
-        size="small"
-        options={tags.map((t) => t.tag)}
-        value={item.tags}
-        onChange={(_, next) => {
-          const clean = [...new Set(next.map(normalizeTag).filter(isValidTag))];
-          if (clean.join() !== item.tags.join()) save({ tags: clean });
-        }}
-        renderValue={(value, getItemProps) =>
-          value.map((tag, index) => {
-            const { key, ...rest } = getItemProps({ index });
-            return <Chip key={key} size="small" label={`#${tag}`} {...rest} />;
-          })
-        }
-        renderInput={(params) => <TextField {...params} label="Tags" placeholder="Add tag" />}
-      />
-
-      <UrlField value={item.sourceUrl} onCommit={(sourceUrl) => save({ sourceUrl })} />
-
-      <ItemScheduleSection item={item} />
-
-      <Divider />
-
-      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-        <Button size="small" startIcon={<DriveFileMoveOutlined />} onClick={() => actions.openMove(item)}>
-          Move
-        </Button>
-        {item.archivedAt ? (
-          <Button
-            size="small"
-            startIcon={<UnarchiveOutlined />}
-            onClick={() => void actions.setArchived(item, false)}
-          >
-            Unarchive
-          </Button>
-        ) : (
-          <Button
-            size="small"
-            startIcon={<ArchiveOutlined />}
-            onClick={() => void actions.setArchived(item, true)}
-          >
-            Archive
-          </Button>
-        )}
-        <Button
+      {show('tags') && (
+        <Autocomplete
+          multiple
+          freeSolo
           size="small"
-          color="error"
-          startIcon={<DeleteOutlineRounded />}
-          onClick={() => void actions.remove(item, childCount)}
-        >
-          Delete
-        </Button>
-      </Stack>
+          options={tags.map((t) => t.tag)}
+          value={item.tags}
+          onChange={(_, next) => {
+            const clean = [...new Set(next.map(normalizeTag).filter(isValidTag))];
+            if (clean.join() !== item.tags.join()) save({ tags: clean });
+          }}
+          renderValue={(value, getItemProps) =>
+            value.map((tag, index) => {
+              const { key, ...rest } = getItemProps({ index });
+              return <Chip key={key} size="small" label={`#${tag}`} {...rest} />;
+            })
+          }
+          renderInput={(params) => <TextField {...params} label="Tags" placeholder="Add tag" />}
+        />
+      )}
 
-      <Typography variant="caption" color="text.secondary">
-        <time dateTime={item.createdAt} title={exactTime(item.createdAt)}>
-          Created {friendlyDate(item.createdAt, undefined, true)}
-        </time>
-        {' · '}
-        <time dateTime={item.updatedAt} title={exactTime(item.updatedAt)}>
-          edited {timeAgo(item.updatedAt)}
-        </time>
-        {item.completedAt && (
-          <>
-            {' · '}
-            <time dateTime={item.completedAt} title={exactTime(item.completedAt)}>
-              completed {timeAgo(item.completedAt)}
-            </time>
-          </>
-        )}
-      </Typography>
+      {show('source') && <UrlField value={item.sourceUrl} onCommit={(sourceUrl) => save({ sourceUrl })} />}
+
+      {show('schedule') && <ItemScheduleSection item={item} />}
+
+      {show('actions') && <Divider />}
+
+      {show('actions') && (
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          <Button size="small" startIcon={<DriveFileMoveOutlined />} onClick={() => actions.openMove(item)}>
+            Move
+          </Button>
+          {item.archivedAt ? (
+            <Button
+              size="small"
+              startIcon={<UnarchiveOutlined />}
+              onClick={() => void actions.setArchived(item, false)}
+            >
+              Unarchive
+            </Button>
+          ) : (
+            <Button
+              size="small"
+              startIcon={<ArchiveOutlined />}
+              onClick={() => void actions.setArchived(item, true)}
+            >
+              Archive
+            </Button>
+          )}
+          <Button
+            size="small"
+            color="error"
+            startIcon={<DeleteOutlineRounded />}
+            onClick={() => void actions.remove(item, childCount)}
+          >
+            Delete
+          </Button>
+        </Stack>
+      )}
+
+      {show('timestamps') && (
+        <Typography variant="caption" color="text.secondary">
+          <time dateTime={item.createdAt} title={exactTime(item.createdAt)}>
+            Created {friendlyDate(item.createdAt, undefined, true)}
+          </time>
+          {' · '}
+          <time dateTime={item.updatedAt} title={exactTime(item.updatedAt)}>
+            edited {timeAgo(item.updatedAt)}
+          </time>
+          {item.completedAt && (
+            <>
+              {' · '}
+              <time dateTime={item.completedAt} title={exactTime(item.completedAt)}>
+                completed {timeAgo(item.completedAt)}
+              </time>
+            </>
+          )}
+        </Typography>
+      )}
     </Stack>
   );
 }

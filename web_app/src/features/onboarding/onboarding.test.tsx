@@ -13,18 +13,18 @@ const recorded = (status: 'completed' | 'skipped') => () =>
   json(200, { user: { ...testUser, onboarding: { status, version: 1, at: '2026-11-04T00:00:00.000Z' } } });
 
 describe('onboarding tour', () => {
-  it('welcomes a new account once; Skip is saved on the account', async () => {
+  it("welcomes a new account once; Let's go is saved on the account", async () => {
     const { fetch } = renderApp('/knowledge', {
       ...signedInAs(newUser),
       'PUT /account/onboarding': recorded('skipped'),
     });
     const welcome = await screen.findByRole('dialog', { name: 'Welcome to your garden' });
-    await userEvent.click(within(welcome).getByRole('button', { name: 'Skip' }));
+    await userEvent.click(within(welcome).getByRole('button', { name: 'Let’s go' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     const put = fetch.mock.calls.find(([u]) => String(u).endsWith('/account/onboarding'));
     expect(JSON.parse(String(put?.[1]?.body))).toEqual({ status: 'skipped', version: 1 });
-    // No example notes unless asked for.
+    // No folders or example pages unless asked for.
     expect(
       fetch.mock.calls.some(([u, init]) => String(u).endsWith('/items') && init?.method === 'POST'),
     ).toBe(false);
@@ -56,5 +56,24 @@ describe('onboarding tour', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'Capture first' })).not.toBeInTheDocument(),
     );
+  });
+});
+
+describe('welcome options (B-01 B14)', () => {
+  it('adds the classic folders only when ticked', async () => {
+    const created: string[] = [];
+    renderApp('/today', {
+      ...signedInAs(newUser),
+      'PUT /account/onboarding': recorded('skipped'),
+      'GET /tree': () => json(200, { items: [] }),
+      'POST /items': (_u, init) => {
+        created.push((JSON.parse(String(init.body)) as { title: string }).title);
+        return json(201, { item: { id: 'x'.repeat(24) } });
+      },
+    });
+    const welcome = await screen.findByRole('dialog', { name: 'Welcome to your garden' });
+    await userEvent.click(within(welcome).getByLabelText(/Start with folders/));
+    await userEvent.click(within(welcome).getByRole('button', { name: 'Let’s go' }));
+    await waitFor(() => expect(created).toEqual(['Knowledge', 'Projects', 'College', 'Personal']));
   });
 });

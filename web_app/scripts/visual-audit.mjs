@@ -344,6 +344,17 @@ function screens(ids) {
     { name: 'login', path: '/login', account: 'none' },
     { name: 'register', path: '/register', account: 'none' },
     { name: 'privacy', path: '/privacy', account: 'none' },
+    { name: 'today', path: '/today' },
+    { name: 'garden', path: '/garden' },
+    {
+      name: 'command-box',
+      path: '/today',
+      open: async (page) => {
+        await page.keyboard.press('Control+k');
+        await page.keyboard.type('week');
+        await page.getByRole('dialog').waitFor();
+      },
+    },
     { name: 'knowledge', path: '/knowledge' },
     { name: 'note', path: `/knowledge/${ids.week3}`, wait: '.ProseMirror' },
     { name: 'course', path: `/knowledge/${ids.course}` },
@@ -372,6 +383,7 @@ function screens(ids) {
         await page.getByRole('dialog').waitFor();
       },
     },
+    { name: 'empty-today', path: '/today', account: 'empty' },
     { name: 'empty-knowledge', path: '/knowledge', account: 'empty' },
     { name: 'empty-focus', path: '/actionable', account: 'empty' },
     { name: 'empty-scheduler', path: `/scheduler/week/${today}`, account: 'empty' },

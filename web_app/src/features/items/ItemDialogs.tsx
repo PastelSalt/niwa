@@ -1,12 +1,15 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
+import RadioButtonUncheckedRounded from '@mui/icons-material/RadioButtonUncheckedRounded';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -15,7 +18,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import { useNavigate } from 'react-router';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
-import { ItemTypeIcon, LENS_PATH, TYPE_LABEL } from './itemMeta.tsx';
+import { ItemTypeIcon, LENS_PATH } from './itemMeta.tsx';
 import { useCreateItem, useMoveItem, useTree } from './queries.ts';
 import { ancestorsOf, buildTree, isDescendant } from './treeModel.ts';
 
@@ -85,8 +88,6 @@ export function ItemDialogsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const TYPES: ItemType[] = ['note', 'idea', 'task', 'project'];
-
 function CreateItemDialog({ request, onClose }: { request: CreateRequest; onClose: () => void }) {
   const [title, setTitle] = useState('');
   const [type, setType] = useState<ItemType>(request.type);
@@ -112,10 +113,15 @@ function CreateItemDialog({ request, onClose }: { request: CreateRequest; onClos
     }
   };
 
+  const isTask = type === 'task' || type === 'project';
+
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
       <form onSubmit={submit}>
-        <DialogTitle>{parent ? `New item in “${parent.title}”` : 'New top-level item'}</DialogTitle>
+        <DialogTitle>
+          {isTask ? 'New task' : 'New page'}
+          {parent ? ` in “${parent.title}”` : ''}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
@@ -125,15 +131,18 @@ function CreateItemDialog({ request, onClose }: { request: CreateRequest; onClos
               autoFocus
               slotProps={{ htmlInput: { maxLength: 300 } }}
             />
-            <TextField select label="Type" value={type} onChange={(e) => setType(e.target.value as ItemType)}>
-              {TYPES.map((t) => (
-                <MenuItem key={t} value={t}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ItemTypeIcon type={t} fontSize="small" /> {TYPE_LABEL[t]}
-                  </Box>
-                </MenuItem>
-              ))}
-            </TextField>
+            {/* No type picker (B-01 B11): a page or a task; "Turn into…" on the page covers the rest. */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isTask}
+                  onChange={(e) => setType(e.target.checked ? 'task' : 'note')}
+                  icon={<RadioButtonUncheckedRounded />}
+                  checkedIcon={<CheckCircleRounded />}
+                />
+              }
+              label="This is a task (something to do, with a date and status)"
+            />
           </Stack>
         </DialogContent>
         <DialogActions>

@@ -10,7 +10,14 @@ import { useItem } from './items/queries.ts';
 export function KnowledgePage() {
   const { itemId } = useParams();
   if (itemId) return <ItemView key={itemId} id={itemId} />;
-  return <KnowledgeHome />;
+  return <KnowledgeHome filter="knowledge" />;
+}
+
+/** Garden › All (B-01 B9): an item, or what was edited last across the whole garden. */
+export function GardenPage() {
+  const { itemId } = useParams();
+  if (itemId) return <ItemView key={itemId} id={itemId} />;
+  return <KnowledgeHome filter="all" />;
 }
 
 export function ActionablePage() {
@@ -24,7 +31,7 @@ export function ItemRedirect() {
   const { id } = useParams();
   const { hash } = useLocation(); // keep #h-<anchor> section targets
   const { data: item, error } = useItem(id);
-  if (error) return <Navigate to="/knowledge" replace />;
+  if (error) return <Navigate to="/garden" replace />;
   if (!item) return null;
   return <Navigate to={`${LENS_PATH[item.nature]}/${item.id}${hash}`} replace />;
 }

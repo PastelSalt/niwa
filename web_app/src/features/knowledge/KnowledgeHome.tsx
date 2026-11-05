@@ -3,7 +3,6 @@ import EventRepeatOutlined from '@mui/icons-material/EventRepeatOutlined';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { ROOT_CONTAINERS } from '@niwa/contracts';
 import { useMemo } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { EmptyState } from '../../components/EmptyState.tsx';
@@ -19,8 +18,11 @@ import { useReview } from './queries.ts';
 
 const RECENT = 8;
 
-/** Knowledge landing: what's due for review and what you were last working on (B-02 V6). */
-export function KnowledgeHome() {
+/**
+ * Garden home (B-02 V6, B-01 B9): what's due for review and what you were last working on — notes only
+ * under the Notes filter, everything under All.
+ */
+export function KnowledgeHome({ filter = 'knowledge' }: { filter?: 'all' | 'knowledge' }) {
   const { data: due = [] } = useReview(todayLocal());
   const { data: items, isLoading } = useTree();
   const model = useMemo(() => buildTree(items ?? []), [items]);
@@ -29,12 +31,13 @@ export function KnowledgeHome() {
       (items ?? [])
         .filter(
           (i) =>
-            i.nature === 'knowledge' &&
-            !(i.parentId === null && (ROOT_CONTAINERS as readonly string[]).includes(i.title)),
+            (filter === 'all' || i.nature === 'knowledge') &&
+            // Top-level items are folders, not things you were editing.
+            i.parentId !== null,
         )
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
         .slice(0, RECENT),
-    [items],
+    [items, filter],
   );
 
   return (
@@ -81,8 +84,8 @@ export function KnowledgeHome() {
       {!isLoading && recent.length === 0 && (
         <EmptyState
           icon={<AutoStoriesOutlined />}
-          title="Your notebook garden"
-          description="Pick a topic in the tree or create one with +. Write with headings for an outline, and type [[ to link other notes."
+          title="Your garden"
+          description="Pick a folder in the tree or make a page with +. Write with headings for an outline, and type [[ to link other pages."
           action={
             <Button component={RouterLink} to="/knowledge/review" size="small">
               Open review queue

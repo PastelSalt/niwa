@@ -27,7 +27,7 @@ import {
 } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../../auth/AuthProvider.tsx';
-import { addExampleNotes } from './examples.ts';
+import { addClassicFolders, addExampleNotes } from './examples.ts';
 import { TOUR_STEPS, TOUR_VERSION } from './tour.ts';
 
 interface OnboardingContextValue {
@@ -48,6 +48,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
   const [step, setStep] = useState<number | null>(null);
   const [addExamples, setAddExamples] = useState(false);
+  const [classicFolders, setClassicFolders] = useState(false);
   const returnFocus = useRef<HTMLElement | null>(null);
 
   const showWelcome = !!user && user.onboarding === null && !welcomeDismissed && step === null;
@@ -76,10 +77,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const begin = async (take: boolean) => {
     setWelcomeDismissed(true);
-    if (addExamples) {
-      await addExampleNotes(api).catch(() => null);
-      void queryClient.invalidateQueries({ queryKey: ['tree'] });
-    }
+    if (classicFolders) await addClassicFolders(api).catch(() => null);
+    if (addExamples) await addExampleNotes(api).catch(() => null);
+    if (classicFolders || addExamples) void queryClient.invalidateQueries({ queryKey: ['tree'] });
     if (take) startTour();
     else record('skipped');
   };
@@ -93,19 +93,25 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         <DialogTitle id="welcome-title">Welcome to your garden</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            NIWA keeps notes, ideas, tasks and your schedule in one tree. Want a one-minute tour of where
-            things are? You can replay it any time from Settings › Help.
+            NIWA keeps notes, ideas, tasks and your calendar in one garden. Today shows what's on and what's
+            next, with a short Getting started list. Press Ctrl K any time to find or make anything.
           </DialogContentText>
           <FormControlLabel
             sx={{ mt: 2 }}
+            control={
+              <Checkbox checked={classicFolders} onChange={(e) => setClassicFolders(e.target.checked)} />
+            }
+            label="Start with folders: Knowledge, Projects, College and Personal"
+          />
+          <FormControlLabel
             control={<Checkbox checked={addExamples} onChange={(e) => setAddExamples(e.target.checked)} />}
-            label="Add a few example notes to explore (you can delete them)"
+            label="Add a few example pages to explore (you can delete them)"
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => void begin(false)}>Skip</Button>
-          <Button variant="contained" onClick={() => void begin(true)} autoFocus>
-            Take the tour
+          <Button onClick={() => void begin(true)}>Take the tour</Button>
+          <Button variant="contained" onClick={() => void begin(false)} autoFocus>
+            Let’s go
           </Button>
         </DialogActions>
       </Dialog>

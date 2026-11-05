@@ -56,7 +56,7 @@ export function NoteEditor({ item }: { item: Item }) {
             return headingsOf(target.content);
           },
         }),
-        Placeholder.configure({ placeholder: 'Write your notes…  Type [[ to link another item.' }),
+        Placeholder.configure({ placeholder: 'Write here…  Type [[ to link another page.' }),
       ],
       content: asEditorContent(item.content),
       onUpdate: () => scheduleRef.current(),
