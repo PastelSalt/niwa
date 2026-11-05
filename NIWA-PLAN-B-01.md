@@ -83,6 +83,13 @@ row here and a new section in the policy before release.
 | B6 | Quality: accessibility, performance, SEO hygiene, tests | 🟨 | B1–B5, B7 |
 | B7 | Onboarding tour for new users (skippable, replayable) | 🟨 | B1; B5 for final visuals; backend state (`GAPS.md`) |
 | B8 | Public holidays in the Scheduler, by country (owner request 2026-11-05) | ⬜ | B-02 V10 (preferences on the account) |
+| B9 | Calmer navigation: Today home, Garden, Calendar, Inbox; command box (Ctrl+K) | ⬜ | B-02 |
+| B10 | Plain words everywhere | ⬜ | B9 |
+| B11 | Item page: pages that grow into tasks, fields only when set, Connections | ⬜ | B9, B10 |
+| B12 | One way to add to the calendar; Plan my day | ⬜ | B9 |
+| B13 | Inbox triage, one item at a time | ⬜ | B10 |
+| B14 | Starter folders optional | ⬜ | B9 |
+| B15 | Getting started checklist instead of the tour | ⬜ | B9–B14 |
 
 **Exit criteria (whole plan):** a signed-out visitor at `/` sees an accurate description of NIWA and can reach
 sign-in, sign-up and every legal page; a new account is offered the onboarding tour, can skip it, and can replay
@@ -333,7 +340,7 @@ holidays, so the calendar matches the days off they actually have.
 | Which holidays | Public holidays by default; an option adds observances (e.g. Valentine's Day) | Most people want only the days off |
 
 ### B8.P0 — Owner check
-- [ ] Confirm the decisions above (library, backend, no default country, observances off by default).
+- [x] Decisions above confirmed by the owner (2026-11-05: "let's go with your suggestions").
 
 ### B8.P1 — Contract & backend
 - [ ] `preferences.holidays { country: string | null, region: string | null, observances: boolean }` (contract
@@ -372,6 +379,84 @@ like entries. Credits and the Privacy Policy are updated.
 
 ---
 
+## B9–B15 — Make NIWA calmer to use (owner request 2026-11-05)
+
+**Why:** the owner finds NIWA overwhelming while getting used to it. Each idea makes sense on its own, but a new
+user meets most of them at once: six destinations, two views of the same tree, four item types, the Details
+panel, links and backlinks, and two kinds of calendar entry. **Principle: show what's needed now and reveal the
+rest when it's asked for.** The owner approved major changes as long as the result makes more sense. Data and
+the API stay compatible: types, natures, blocks and events still exist underneath, so mobile (A-02) and the
+backend keep working, and old URLs redirect.
+
+**Decisions (assistant, owner delegated 2026-11-05)**
+| Question | Decision |
+|---|---|
+| Home | A new **Today** screen at `/today`; signed-in users land there, not on Knowledge |
+| Navigation | Four destinations: **Today · Garden · Calendar · Inbox**. Search becomes the **command box** (Ctrl+K or `/`, also the top-bar search field); **Settings** moves into the avatar menu |
+| One tree | **Garden** (`/garden`) is the single tree with an **All · Notes · Tasks** filter. `/knowledge` and `/actionable` stay as the Notes and Tasks filters (same lens logic), so links and e2e paths keep working |
+| Focus | Moves into Today ("Next up"); the full Focus list stays reachable as Garden › Tasks |
+| Words | Knowledge → **Notes**, Actionable → **Tasks**, Scheduler → **Calendar**, "lens" disappears, time block → **time for a task**, Inside → **Pages inside**, Links + Backlinks → **Connections** |
+| Types | New items start as a **page** (note) or a **task** depending on where they're made; the type picker moves into **Turn into…**. No silent automatic type changes |
+| Fields | Under the title, only the fields that are set show as chips, plus **+ Add** for the rest. The Details panel is **closed by default** (it can still be opened) |
+| Calendar entries | One **Add to calendar** dialog: a title plus an optional "For a task" field. With a task it saves a block, without one an event — the same data as before |
+| Starter folders | New accounts start with one top-level folder, **My garden**; the welcome dialog offers the classic four (Knowledge, Projects, College, Personal) as a one-click option. Existing accounts are unchanged |
+| Tour | Replaced by a **Getting started** checklist on Today (capture something, file it, plan a task, pick your look), dismissable; the tour stays replayable from Settings › Help |
+
+### B9 — Calmer navigation
+- [ ] `/today`: greeting + date; **Today's calendar** (agenda list with "now", holidays from B8); **Next up** (the
+      first 5 tasks from Focus, completion circle); **Inbox** card (count + "Sort now" → triage); **To review**
+      card; Getting started checklist (B15). Empty parts hide.
+- [ ] Rail and bottom nav: Today, Garden, Calendar, Inbox. Settings in the avatar menu (rail keeps a gear on
+      desktop); shortcuts `g t`, `g g`, `g c`, `g i`.
+- [ ] Garden: the tree with an **All · Notes · Tasks** filter; All shows everything, nothing dimmed; the home
+      pane shows Recently edited (All/Notes) or Focus (Tasks).
+- [ ] Command box (Ctrl+K, `/`, or the top-bar field): jump to any item by title; actions — New page, New
+      task, Capture, Add to calendar, go to Today/Garden/Calendar/Inbox/Settings; Enter on free text = search
+      (the Search page stays as the full results view).
+- [ ] Redirects: `/` (signed in) → `/today`; `/scheduler/*` stays (labelled Calendar); `/search` stays.
+
+### B10 — Plain words
+- [ ] Labels, headings, empty states, toasts, tour text and the landing page use the B9–B15 words.
+- [ ] Unit and e2e tests updated to the new names.
+
+### B11 — Item page
+- [ ] Create dialog: no type picker; the type follows the context (Tasks filter or a project/task parent →
+      task, else page) with a "This is a task" checkbox.
+- [ ] Title row: the completion circle for tasks, the type icon otherwise; **Turn into…** menu (page, task,
+      project, idea) beside it.
+- [ ] Field chips under the title (status, priority, due, review, tags, estimate, source) and **+ Add** with the
+      unset ones; each chip opens a small editor.
+- [ ] Details panel closed by default; the top-bar toggle still opens it.
+- [ ] **Pages inside** and **Connections (n)** (links + backlinks, collapsed) at the bottom.
+
+### B12 — Calendar
+- [ ] One **Add to calendar** dialog: title, optional **For a task** (item picker), when, repeat, colour.
+      Editing keeps the same dialog.
+- [ ] **Plan my day** side panel on Week/Day (desktop): open tasks due soon or in progress; drag one onto the
+      grid (or press "Add" for the next free hour) to give it time.
+
+### B13 — Inbox triage
+- [ ] **Sort** mode: one capture at a time with File (suggested place first), Make it a task, Keep as note,
+      Delete, Skip; a progress count; ends with "Inbox zero".
+- [ ] The list stays as the default view.
+
+### B14 — Starter folders
+- [ ] Backend: new accounts get **My garden** (contract `ROOT_CONTAINERS` → `STARTER_FOLDERS`); existing
+      accounts unchanged; backend test updated.
+- [ ] Welcome dialog: "Start with Knowledge, Projects, College and Personal folders" option.
+- [ ] Any top-level item looks like a folder in the tree (known names keep their icons).
+
+### B15 — Getting started
+- [ ] Checklist on Today: capture a thought · file it from the Inbox · give a task a date or time · pick a theme;
+      ticks itself from real state; "Hide" is saved on the account (onboarding state).
+- [ ] The tour remains in Settings › Help, updated to the new navigation.
+
+**Exit criteria (B9–B15):** a new user lands on Today and can capture, file, plan and find things without
+learning the words Knowledge, Actionable, lens or block; four nav items; old URLs still work; unit tests
+green; visual audit clean at the four widths in both modes.
+
+---
+
 ## Open questions for owner
 
 1. ~~Registration~~ — decided 2026-11-04: open to everyone (B0).
@@ -381,4 +466,4 @@ like entries. Credits and the Privacy Policy are updated.
    listings)
 5. ~~Legal review~~ — waived by the owner (2026-11-04).
 6. Email provider for password reset — skipped for now (2026-11-04).
-7. B8 holidays: confirm the proposed decisions (B8.P0).
+7. ~~B8 holidays~~ — decisions confirmed 2026-11-05.
