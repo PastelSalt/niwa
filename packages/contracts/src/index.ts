@@ -4,6 +4,7 @@ export * from './auth.ts';
 export * from './item.ts';
 export * from './link.ts';
 export * from './schedule.ts';
+export * from './holidays.ts';
 export * from './attachment.ts';
 export * from './search.ts';
 export * from './ai.ts';

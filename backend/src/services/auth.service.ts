@@ -1,6 +1,7 @@
 import {
   ACCOUNT_EXPORT_FORMAT,
   ROOT_CONTAINERS,
+  STARTER_FOLDERS,
   type AccountExport,
   type AuthConfig,
   type AuthResponse,
@@ -11,6 +12,7 @@ import {
   type RegisterInput,
 } from '@niwa/contracts';
 import { hash, verify } from '@node-rs/argon2';
+import { holidayService } from './holiday.service.ts';
 import type { AppConfig } from '../config/env.ts';
 import { AppError, unauthorized } from '../lib/errors.ts';
 import { AttachmentModel } from '../models/attachment.model.ts';
@@ -98,7 +100,10 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
       const passwordHash = await hash(input.password, ARGON_OPTS);
       const workspace = await workspaceRepo.create('My garden');
       try {
-        await itemRepo.createRootContainers(workspace._id, ROOT_CONTAINERS);
+        await itemRepo.createRootContainers(
+          workspace._id,
+          input.starter === 'simple' ? STARTER_FOLDERS : ROOT_CONTAINERS,
+        );
         const user = await userRepo.create({ email: input.email, passwordHash, workspaceId: workspace._id });
         return await startSession(user, client);
       } catch (err) {
@@ -154,7 +159,16 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
     async setPreferences(userId: string, input: PreferencesInput) {
       const current = await userRepo.findById(userId);
       if (!current) throw unauthorized();
-      const user = await userRepo.update(userId, { preferences: { ...current.preferences, ...input } });
+      const { holidays: holidayInput, ...rest } = input;
+      const holidays = holidayInput && { ...current.preferences?.holidays, ...holidayInput };
+      if (holidays) {
+        // A new country clears a region that belonged to the old one.
+        if (holidayInput.country !== undefined && holidayInput.region === undefined) holidays.region = null;
+        holidayService.validate({ country: holidays.country ?? null, region: holidays.region ?? null });
+      }
+      const user = await userRepo.update(userId, {
+        preferences: { ...current.preferences, ...rest, ...(holidays && { holidays }) },
+      });
       if (!user) throw unauthorized();
       return toPublicUser(user);
     },

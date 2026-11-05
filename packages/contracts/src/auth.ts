@@ -9,8 +9,17 @@ export const Email = z
 
 export const Password = z.string().min(12, 'At least 12 characters').max(256);
 
-export const RegisterInput = z.object({ email: Email, password: Password }).meta({ id: 'RegisterInput' });
-export type RegisterInput = z.infer<typeof RegisterInput>;
+export const RegisterInput = z
+  .object({
+    email: Email,
+    password: Password,
+    starter: z.enum(['simple', 'classic']).default('classic').meta({
+      description:
+        'simple: one "My garden" folder (web, B-01 B14) · classic: Knowledge, Projects, College, Personal',
+    }),
+  })
+  .meta({ id: 'RegisterInput' });
+export type RegisterInput = z.input<typeof RegisterInput>;
 
 export const LoginInput = z
   .object({ email: Email, password: z.string().min(1).max(256) })
@@ -37,16 +46,32 @@ export const THEME_IDS = ['garden', 'blossom', 'lavender', 'sky', 'peach'] as co
 export const FONT_IDS = ['fredoka', 'inter', 'atkinson', 'system'] as const;
 export const ColorModePreference = z.enum(['system', 'light', 'dark']).meta({ id: 'ColorModePreference' });
 
+/** Public holidays shown in the Calendar (NIWA-PLAN-B-01 B8). */
+export const HolidayPreference = z
+  .object({
+    country: z.string().nullable().meta({ description: 'ISO 3166-1 alpha-2 code, or null for no holidays' }),
+    region: z.string().nullable().meta({ description: 'State/region code within the country, or null' }),
+    observances: z.boolean().meta({ description: 'Also show observances (not days off)' }),
+  })
+  .meta({ id: 'HolidayPreference' });
+export type HolidayPreference = z.infer<typeof HolidayPreference>;
+
 export const Preferences = z
   .object({
     theme: z.string().meta({ description: `One of ${THEME_IDS.join(', ')}; clients fall back to garden` }),
     font: z.string().meta({ description: `One of ${FONT_IDS.join(', ')}; clients fall back to fredoka` }),
     mode: ColorModePreference,
+    holidays: HolidayPreference,
   })
-  .meta({ id: 'Preferences', description: 'Appearance choices that follow the account across devices' });
+  .meta({ id: 'Preferences', description: 'Appearance and calendar choices that follow the account' });
 export type Preferences = z.infer<typeof Preferences>;
 
-export const DEFAULT_PREFERENCES: Preferences = { theme: 'garden', font: 'fredoka', mode: 'system' };
+export const DEFAULT_PREFERENCES: Preferences = {
+  theme: 'garden',
+  font: 'fredoka',
+  mode: 'system',
+  holidays: { country: null, region: null, observances: false },
+};
 
 /** Partial update; only known ids are accepted. */
 export const PreferencesInput = z
@@ -54,6 +79,18 @@ export const PreferencesInput = z
     theme: z.enum(THEME_IDS).optional(),
     font: z.enum(FONT_IDS).optional(),
     mode: ColorModePreference.optional(),
+    holidays: z
+      .object({
+        country: z
+          .string()
+          .regex(/^[A-Z]{2}$/)
+          .nullable()
+          .optional(),
+        region: z.string().max(10).nullable().optional(),
+        observances: z.boolean().optional(),
+      })
+      .optional()
+      .meta({ description: 'Country/region are checked against the server holiday list' }),
   })
   .meta({ id: 'PreferencesInput' });
 export type PreferencesInput = z.infer<typeof PreferencesInput>;

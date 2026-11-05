@@ -6,6 +6,7 @@ import * as auth from './auth.ts';
 import { ErrorEnvelope, HealthResponse, IdParams } from './common.ts';
 import * as item from './item.ts';
 import * as link from './link.ts';
+import * as holidays from './holidays.ts';
 import * as schedule from './schedule.ts';
 import * as search from './search.ts';
 import { Workspace } from './workspace.ts';
@@ -317,6 +318,23 @@ export function buildRegistry(): OpenAPIRegistry {
     summary: 'Upcoming time blocks for an item (its derived scheduled time)',
     params: IdParams,
     response: schedule.ScheduleListResponse,
+  });
+  add('get', '/holidays', {
+    tag: 'Scheduler',
+    summary: "Public holidays in a date range for the account's country (empty when none is set)",
+    query: holidays.HolidayQuery,
+    response: holidays.HolidayListResponse,
+  });
+  add('get', '/holidays/countries', {
+    tag: 'Scheduler',
+    summary: 'Countries with holiday data (code + English name)',
+    response: holidays.HolidayPlacesResponse,
+  });
+  add('get', '/holidays/regions', {
+    tag: 'Scheduler',
+    summary: 'States/regions of a country with their own holidays',
+    query: holidays.HolidayRegionsQuery,
+    response: holidays.HolidayPlacesResponse,
   });
   add('get', '/schedule', {
     tag: 'Scheduler',

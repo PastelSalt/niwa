@@ -49,6 +49,39 @@ const addDays = (day: string, n: number) => {
   return localDay(n, new Date(y, m - 1, d));
 };
 
+/**
+ * Real public holidays for the Philippines, 2026–2027, generated from `date-holidays` (the backend's source,
+ * ISC; data CC BY 3.0). The playground can't carry the whole data set, so the example garden is set to PH.
+ */
+const PH_HOLIDAYS: [date: string, name: string, localName: string][] = [
+  ['2026-01-01', "New Year's Day", "New Year's Day"],
+  ['2026-03-20', 'End of Ramadan (Eid al-Fitr)', 'End of Ramadan (Eid al-Fitr)'],
+  ['2026-04-02', 'Maundy Thursday', 'Maundy Thursday'],
+  ['2026-04-03', 'Good Friday', 'Good Friday'],
+  ['2026-04-05', 'Easter Sunday', 'Easter Sunday'],
+  ['2026-04-09', 'Day of Valor', 'Day of Valor'],
+  ['2026-05-01', 'Labour Day', 'Labour Day'],
+  ['2026-05-27', 'Feast of the Sacrifice (Eid al-Adha)', 'Feast of the Sacrifice (Eid al-Adha)'],
+  ['2026-06-12', 'Independence Day', 'Independence Day'],
+  ['2026-08-31', "National Heroes' Day", "National Heroes' Day"],
+  ['2026-11-30', 'Bonifacio Day', 'Bonifacio Day'],
+  ['2026-12-25', 'Christmas Day', 'Christmas Day'],
+  ['2026-12-30', 'Rizal Day', 'Rizal Day'],
+  ['2027-01-01', "New Year's Day", "New Year's Day"],
+  ['2027-03-09', 'End of Ramadan (Eid al-Fitr)', 'End of Ramadan (Eid al-Fitr)'],
+  ['2027-03-25', 'Maundy Thursday', 'Maundy Thursday'],
+  ['2027-03-26', 'Good Friday', 'Good Friday'],
+  ['2027-03-28', 'Easter Sunday', 'Easter Sunday'],
+  ['2027-04-09', 'Day of Valor', 'Day of Valor'],
+  ['2027-05-01', 'Labour Day', 'Labour Day'],
+  ['2027-05-16', 'Feast of the Sacrifice (Eid al-Adha)', 'Feast of the Sacrifice (Eid al-Adha)'],
+  ['2027-06-12', 'Independence Day', 'Independence Day'],
+  ['2027-08-30', "National Heroes' Day", "National Heroes' Day"],
+  ['2027-11-30', 'Bonifacio Day', 'Bonifacio Day'],
+  ['2027-12-25', 'Christmas Day', 'Christmas Day'],
+  ['2027-12-30', 'Rizal Day', 'Rizal Day'],
+];
+
 export interface MemoryWorkspaceOptions {
   email?: string;
   onboarded?: boolean;
@@ -75,7 +108,13 @@ export class MemoryWorkspace {
       hasAiKey: false,
       createdAt: t,
       onboarding: onboarded ? { status: 'skipped', version: 1, at: t } : null,
-      preferences: { theme: 'garden', font: 'fredoka', mode: 'system', ...preferences },
+      preferences: {
+        theme: 'garden',
+        font: 'fredoka',
+        mode: 'system',
+        holidays: { country: null, region: null, observances: false },
+        ...preferences,
+      },
     };
     for (const title of ['Knowledge', 'Projects', 'College', 'Personal'])
       this.items.push(this.newItem({ parentId: null, title, type: 'note' }));
@@ -197,7 +236,11 @@ export class MemoryWorkspace {
     if (route === 'PUT /account/preferences') {
       this.user = {
         ...this.user,
-        preferences: { ...this.user.preferences, ...(body as Partial<Preferences>) },
+        preferences: {
+          ...this.user.preferences,
+          ...(body as Partial<Preferences>),
+          holidays: { ...this.user.preferences.holidays, ...(body as Partial<Preferences>).holidays },
+        },
       };
       return json(200, { user: this.user });
     }
@@ -286,6 +329,24 @@ export class MemoryWorkspace {
       }
       return json(200, { hits: hits.sort((a, b) => b.score - a.score) });
     }
+    if (route === 'GET /holidays') {
+      const { country } = this.user.preferences.holidays;
+      const from = query.get('from') ?? '';
+      const to = query.get('to') ?? '';
+      const holidays =
+        country === 'PH'
+          ? PH_HOLIDAYS.filter(([d]) => d >= from && d <= to).map(([date, name, localName]) => ({
+              date,
+              name,
+              localName,
+              type: 'public',
+            }))
+          : [];
+      return json(200, { country, holidays });
+    }
+    if (route === 'GET /holidays/countries')
+      return json(200, { places: [{ code: 'PH', name: 'Philippines' }] });
+    if (route === 'GET /holidays/regions') return json(200, { places: [] });
     if (route === 'GET /schedule') {
       const from = new Date(query.get('from')!);
       const to = new Date(query.get('to')!);

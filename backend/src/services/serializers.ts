@@ -31,6 +31,7 @@ export function toPublicUser(user: UserDoc): PublicUser {
       theme: user.preferences?.theme ?? DEFAULT_PREFERENCES.theme,
       font: user.preferences?.font ?? DEFAULT_PREFERENCES.font,
       mode: user.preferences?.mode ?? DEFAULT_PREFERENCES.mode,
+      holidays: { ...DEFAULT_PREFERENCES.holidays, ...user.preferences?.holidays },
     },
   };
 }

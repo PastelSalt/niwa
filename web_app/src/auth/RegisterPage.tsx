@@ -41,7 +41,8 @@ export function RegisterPage() {
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setError(null);
     try {
-      await createAccount({ email, password });
+      // One "My garden" folder; the welcome dialog offers the classic four (B-01 B14).
+      await createAccount({ email, password, starter: 'simple' });
     } catch (err) {
       setError(messageOf(err));
     }

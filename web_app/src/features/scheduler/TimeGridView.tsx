@@ -2,7 +2,7 @@ import RepeatRounded from '@mui/icons-material/RepeatRounded';
 import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
-import type { ScheduleEntry } from '@niwa/contracts';
+import type { Holiday, ScheduleEntry } from '@niwa/contracts';
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import {
   addDays,
@@ -17,6 +17,7 @@ import {
 } from '../../lib/dates.ts';
 import { visuallyHidden } from '../../lib/a11y.ts';
 import { entryBlockSx, useEntryLook } from './entryDisplay.ts';
+import { HolidayLabel } from './HolidayLabel.tsx';
 import { layoutDay, type Segment } from './layout.ts';
 
 const HOUR_PX = 48;
@@ -32,6 +33,8 @@ const LINE_PX = 16;
 interface TimeGridProps {
   days: Date[];
   entries: ScheduleEntry[];
+  /** Public holidays by day key (B-01 B8). */
+  holidays?: Map<string, Holiday[]>;
   onCreateRange: (start: Date, end: Date) => void;
   onCreateAllDay: (day: Date) => void;
   onOpen: (entry: ScheduleEntry) => void;
@@ -55,6 +58,7 @@ type Drag =
 export function TimeGridView({
   days,
   entries,
+  holidays,
   onCreateRange,
   onCreateAllDay,
   onOpen,
@@ -227,6 +231,9 @@ export function TimeGridView({
               onClick={(ev) => ev.target === ev.currentTarget && onCreateAllDay(d)}
               sx={{ flex: 1, minWidth: 0, borderLeft: 1, borderColor: 'divider', p: 0.25, cursor: 'pointer' }}
             >
+              {holidays?.get(dayKeys[i]!)?.map((h) => (
+                <HolidayLabel key={h.name} holiday={h} />
+              ))}
               {list.map((e) => {
                 const l = look(e);
                 return (

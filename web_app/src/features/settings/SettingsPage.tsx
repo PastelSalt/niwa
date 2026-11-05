@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 import { Navigate, Link as RouterLink, useNavigate, useParams } from 'react-router';
 import { AppearanceSection } from './AppearanceSection.tsx';
+import { CalendarSection } from './CalendarSection.tsx';
 import { Section } from './Section.tsx';
 import { Page } from '../../components/Page.tsx';
 import { useAuth } from '../../auth/AuthProvider.tsx';
@@ -19,6 +20,7 @@ import { ChangePassword, DeleteAccount, ExportData } from './AccountActions.tsx'
 
 const SECTIONS = [
   { key: 'appearance', label: 'Appearance' },
+  { key: 'calendar', label: 'Calendar' },
   { key: 'account', label: 'Account' },
   { key: 'ai', label: 'AI' },
   { key: 'trash', label: 'Trash' },
@@ -114,6 +116,7 @@ export function SettingsPage() {
 
   const body: Record<SectionKey, ReactNode> = {
     appearance: <AppearanceSection />,
+    calendar: <CalendarSection />,
     account: (
       <Stack spacing={3}>
         <AccountSection />

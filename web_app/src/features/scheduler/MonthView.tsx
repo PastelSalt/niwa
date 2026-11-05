@@ -6,11 +6,12 @@ import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-import type { ScheduleEntry } from '@niwa/contracts';
+import type { Holiday, ScheduleEntry } from '@niwa/contracts';
 import { useMemo, useState } from 'react';
 import { addDays, allDayKeys, dayKey, formatTime, weekdayNames } from '../../lib/dates.ts';
 import { visuallyHidden } from '../../lib/a11y.ts';
 import { entryBlockSx, useEntryLook } from './entryDisplay.ts';
+import { HolidayLabel } from './HolidayLabel.tsx';
 
 const MAX_CHIPS = 3;
 /** Phones: dots per day in the grid (V5), the day's titles in the list below. */
@@ -21,6 +22,8 @@ interface MonthViewProps {
   gridStart: Date;
   month: number;
   entries: ScheduleEntry[];
+  /** Public holidays by day key (B-01 B8). */
+  holidays?: Map<string, Holiday[]>;
   onCreate: (day: Date) => void;
   onOpen: (entry: ScheduleEntry) => void;
   /** Move by whole days, keeping time of day and duration (SCHEDULER.md §5). */
@@ -37,6 +40,7 @@ export function MonthView({
   gridStart,
   month,
   entries,
+  holidays,
   onCreate,
   onOpen,
   onMoveDays,
@@ -99,7 +103,14 @@ export function MonthView({
                         weekday: 'long',
                         month: 'long',
                         day: 'numeric',
-                      })}${entriesOn.length ? `, ${entriesOn.length} ${entriesOn.length === 1 ? 'entry' : 'entries'}` : ''}`}
+                      })}${
+                        holidays?.get(key)?.length
+                          ? `, ${holidays
+                              .get(key)!
+                              .map((h) => h.name)
+                              .join(', ')}`
+                          : ''
+                      }${entriesOn.length ? `, ${entriesOn.length} ${entriesOn.length === 1 ? 'entry' : 'entries'}` : ''}`}
                       sx={(t) => ({
                         width: '100%',
                         minHeight: 52,
@@ -116,6 +127,18 @@ export function MonthView({
                     >
                       <DayNumber day={day} isToday={key === today} inMonth={inMonth} />
                       <Box aria-hidden sx={{ display: 'flex', gap: 0.375, height: 6 }}>
+                        {/* A holiday is a ring, entries are dots. */}
+                        {holidays?.has(key) && (
+                          <Box
+                            sx={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              border: 1.5,
+                              borderColor: 'secondary.main',
+                            }}
+                          />
+                        )}
                         {entriesOn.slice(0, MAX_DOTS).map((e) => (
                           <Box
                             key={e.id}
@@ -140,6 +163,9 @@ export function MonthView({
               Add
             </Button>
           </Box>
+          {holidays?.get(selected)?.map((h) => (
+            <HolidayLabel key={h.name} holiday={h} />
+          ))}
           {list.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               Nothing planned.
@@ -256,6 +282,9 @@ export function MonthView({
                   <Box sx={{ mb: 0.25 }}>
                     <DayNumber day={day} isToday={key === today} inMonth={inMonth} />
                   </Box>
+                  {holidays?.get(key)?.map((h) => (
+                    <HolidayLabel key={h.name} holiday={h} />
+                  ))}
                   {list.slice(0, MAX_CHIPS).map((e) => {
                     const l = look(e);
                     return (

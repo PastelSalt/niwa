@@ -148,17 +148,40 @@ components:
           description: One of fredoka, inter, atkinson, system; clients fall back to fredoka
         mode:
           $ref: "#/components/schemas/ColorModePreference"
+        holidays:
+          $ref: "#/components/schemas/HolidayPreference"
       required:
         - theme
         - font
         - mode
-      description: Appearance choices that follow the account across devices
+        - holidays
+      description: Appearance and calendar choices that follow the account
     ColorModePreference:
       type: string
       enum:
         - system
         - light
         - dark
+    HolidayPreference:
+      type: object
+      properties:
+        country:
+          type:
+            - string
+            - "null"
+          description: ISO 3166-1 alpha-2 code, or null for no holidays
+        region:
+          type:
+            - string
+            - "null"
+          description: State/region code within the country, or null
+        observances:
+          type: boolean
+          description: Also show observances (not days off)
+      required:
+        - country
+        - region
+        - observances
     RegisterInput:
       type: object
       properties:
@@ -171,6 +194,13 @@ components:
           type: string
           minLength: 12
           maxLength: 256
+        starter:
+          type: string
+          enum:
+            - simple
+            - classic
+          default: classic
+          description: 'simple: one "My garden" folder (web, B-01 B14) · classic: Knowledge, Projects, College, Personal'
       required:
         - email
         - password
@@ -244,6 +274,22 @@ components:
             - system
         mode:
           $ref: "#/components/schemas/ColorModePreference"
+        holidays:
+          type: object
+          properties:
+            country:
+              type:
+                - string
+                - "null"
+              pattern: ^[A-Z]{2}$
+            region:
+              type:
+                - string
+                - "null"
+              maxLength: 10
+            observances:
+              type: boolean
+          description: Country/region are checked against the server holiday list
     ChangePasswordInput:
       type: object
       properties:
@@ -1079,6 +1125,69 @@ components:
         - daily
         - weekly
         - monthly
+    HolidayListResponse:
+      type: object
+      properties:
+        country:
+          type:
+            - string
+            - "null"
+        holidays:
+          type: array
+          items:
+            $ref: "#/components/schemas/Holiday"
+      required:
+        - country
+        - holidays
+      description: Empty when the account has no country
+    Holiday:
+      type: object
+      properties:
+        date:
+          type: string
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          example: 2026-11-03
+          description: Calendar day; never shifted by time zone
+        name:
+          type: string
+          description: English name
+        localName:
+          type: string
+          description: Name in the country's language (may equal name)
+        type:
+          $ref: "#/components/schemas/HolidayType"
+      required:
+        - date
+        - name
+        - localName
+        - type
+    HolidayType:
+      type: string
+      enum:
+        - public
+        - bank
+        - school
+        - optional
+        - observance
+    HolidayPlacesResponse:
+      type: object
+      properties:
+        places:
+          type: array
+          items:
+            $ref: "#/components/schemas/HolidayPlace"
+      required:
+        - places
+    HolidayPlace:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+      required:
+        - code
+        - name
     ScheduleEntryResponse:
       type: object
       properties:
@@ -3533,6 +3642,174 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ScheduleListResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /holidays:
+    get:
+      summary: Public holidays in a date range for the account's country (empty when none is set)
+      tags:
+        - Scheduler
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/DateOnly"
+          required: true
+          name: from
+          in: query
+        - schema:
+            $ref: "#/components/schemas/DateOnly"
+          required: true
+          name: to
+          in: query
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HolidayListResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /holidays/countries:
+    get:
+      summary: Countries with holiday data (code + English name)
+      tags:
+        - Scheduler
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HolidayPlacesResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Missing or invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Version conflict or duplicate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /holidays/regions:
+    get:
+      summary: States/regions of a country with their own holidays
+      tags:
+        - Scheduler
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            pattern: ^[A-Z]{2}$
+          required: true
+          name: country
+          in: query
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HolidayPlacesResponse"
         "400":
           description: Validation error
           content:

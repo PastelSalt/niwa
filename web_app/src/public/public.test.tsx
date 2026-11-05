@@ -90,13 +90,13 @@ describe('public pages', () => {
 
 describe('policy pages (B3)', () => {
   it.each([
-    ['/privacy', 'Privacy Policy', /zoletakyle\.1111@gmail\.com/],
-    ['/terms', 'Terms of Use', /laws of the Republic of the Philippines/],
-    ['/eula', 'App licence', /MIT licence/],
-  ])('%s shows %s with the agreed facts', async (path, title, fact) => {
+    ['/privacy', 'Privacy Policy', /zoletakyle\.1111@gmail\.com/, '5 November 2026'],
+    ['/terms', 'Terms of Use', /laws of the Republic of the Philippines/, '4 November 2026'],
+    ['/eula', 'App licence', /MIT licence/, '4 November 2026'],
+  ])('%s shows %s with the agreed facts', async (path, title, fact, updated) => {
     renderApp(path);
     expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();
-    expect(screen.getByText(/Last updated 4 November 2026/)).toBeInTheDocument();
+    expect(screen.getByText(`Last updated ${updated}`)).toBeInTheDocument();
     expect(document.body.textContent).toMatch(fact);
   });
 

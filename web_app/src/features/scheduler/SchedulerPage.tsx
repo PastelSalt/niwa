@@ -33,7 +33,7 @@ import {
 } from '../../lib/dates.ts';
 import { EntryDialog, type EntryDialogRequest } from './EntryDialog.tsx';
 import { MonthView } from './MonthView.tsx';
-import { useScheduleRange, useUpdateEntry } from './queries.ts';
+import { holidaysByDay, useHolidays, useScheduleRange, useUpdateEntry } from './queries.ts';
 import { TimeGridView } from './TimeGridView.tsx';
 
 type View = 'month' | 'week' | 'day';
@@ -90,6 +90,10 @@ export function SchedulerPage() {
   }, [view, params.date]);
 
   const { data: entries = [], isFetching, error } = useScheduleRange(from, to);
+  // Holidays are date-only: ask by local day keys covering the same span.
+  const span = from ? [dayKey(new Date(from)), dayKey(addDays(new Date(to), -1))] : ['', ''];
+  const { data: holidayList } = useHolidays(span[0]!, span[1]!);
+  const holidays = useMemo(() => holidaysByDay(holidayList), [holidayList]);
 
   if (!view || !date) return <Navigate to="/scheduler" replace />;
 
@@ -205,6 +209,7 @@ export function SchedulerPage() {
             gridStart={monthGridStart(date)}
             month={date.getMonth()}
             entries={entries}
+            holidays={holidays}
             onCreate={newEvent}
             onOpen={(entry) => setDialog({ mode: 'edit', entry })}
             onMoveDays={moveDays}
@@ -215,6 +220,7 @@ export function SchedulerPage() {
             key={from}
             days={days}
             entries={entries}
+            holidays={holidays}
             onCreateRange={(start, end) => setDialog({ mode: 'create', kind: 'event', start, end })}
             onCreateAllDay={(day) =>
               setDialog({ mode: 'create', kind: 'event', start: day, end: day, allDay: true })

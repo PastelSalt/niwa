@@ -47,6 +47,10 @@ const MOCK = Boolean(args.mock);
 const PREFS = {
   ...(typeof args.theme === 'string' && { theme: args.theme }),
   ...(typeof args.font === 'string' && { font: args.font }),
+  // Public holidays (B-01 B8); in --mock mode only PH has data.
+  ...(typeof args.country === 'string' && {
+    holidays: { country: args.country, region: null, observances: false },
+  }),
 };
 const SHOTS = !args['no-shots'];
 const OUT = join(

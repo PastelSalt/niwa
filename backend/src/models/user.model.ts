@@ -13,7 +13,13 @@ export interface UserDoc {
   /** First-run tour (NIWA-PLAN-B-01 B7); null until finished or skipped. */
   onboarding: { status: 'completed' | 'skipped'; version: number; at: Date } | null;
   /** Appearance (NIWA-PLAN-B-02 V10); null until first changed — the serializer fills the defaults. */
-  preferences: { theme?: string; font?: string; mode?: 'system' | 'light' | 'dark' } | null;
+  preferences: {
+    theme?: string;
+    font?: string;
+    mode?: 'system' | 'light' | 'dark';
+    /** Public holidays in the Calendar (B-01 B8). */
+    holidays?: { country?: string | null; region?: string | null; observances?: boolean };
+  } | null;
   /** Set by the operator (scripts/admin.ts) to block sign-in; never shown to other users. */
   disabledAt: Date | null;
   disabledReason: string | null;
@@ -47,6 +53,16 @@ const userSchema = new Schema<UserDoc>(
           theme: { type: String },
           font: { type: String },
           mode: { type: String, enum: ['system', 'light', 'dark'] },
+          holidays: {
+            type: new Schema(
+              {
+                country: { type: String, default: null },
+                region: { type: String, default: null },
+                observances: { type: Boolean, default: false },
+              },
+              { _id: false },
+            ),
+          },
         },
         { _id: false },
       ),

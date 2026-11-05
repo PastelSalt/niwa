@@ -208,3 +208,10 @@ Computed **server-side** on every content save from ProseMirror JSON.
 - [x] Trash auto-purge after 30 days — kept; published in the Privacy Policy (owner approved 2026-11-04).
 - [x] Orphan grace period of 7 days — kept; published in the Privacy Policy.
 - [x] Image size cap 10 MB — kept, plus a 200 MB per-account image quota (2026-11-04).
+
+## Account preferences (NIWA-PLAN-B-02 V10, B-01 B8)
+
+`users.preferences` (null until first changed; the API fills defaults): `theme`, `font`, `mode`
+(`system`/`light`/`dark`) and `holidays { country, region, observances }`. Country/region are validated against
+the server's `date-holidays` list and used only to compute public holidays (`GET /holidays`); nothing is sent to
+a third party. Deleted with the account.

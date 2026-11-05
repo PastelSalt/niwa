@@ -30,6 +30,11 @@ const COLLECTED: [what: string, why: string, where: string][] = [
   ],
   ['Images you add to notes', 'Shown inside your notes', 'Cloudinary (image hosting)'],
   [
+    'Your settings: colour theme, font, light or dark, and — if you pick one — your country and region for holidays',
+    'To show NIWA the way you chose on every device, and your public holidays in the Calendar',
+    'Database, with your account',
+  ],
+  [
     'Sign-in sessions: a hashed session token, the kind of app (web or mobile), and when it expires',
     'To keep you signed in and let you sign out everywhere',
     'Database',
@@ -54,7 +59,7 @@ const COLLECTED: [what: string, why: string, where: string][] = [
 export function PrivacyPage() {
   const mail = <Link href={`mailto:${site.contactEmail}`}>{site.contactEmail}</Link>;
   return (
-    <LegalPage title="Privacy Policy" updated={site.legalUpdated}>
+    <LegalPage title="Privacy Policy" updated={site.privacyUpdated}>
       <p>
         NIWA is a notes, tasks and planning app made and run by one person,{' '}
         <Link href={site.makerUrl} target="_blank" rel="noopener">

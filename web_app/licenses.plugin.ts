@@ -28,8 +28,21 @@ interface PackageJson {
 const VIRTUAL_ID = 'virtual:licenses';
 const RESOLVED_ID = '\0' + VIRTUAL_ID;
 
-// Assets copied into the repo rather than installed (see src/assets/fonts/).
+// Assets copied into the repo rather than installed (see src/assets/fonts/), and server-side data the web
+// app shows (B-01 B8: holiday dates come from the backend's date-holidays rules).
 const VENDORED: LicenseEntry[] = [
+  {
+    name: 'date-holidays (holiday rules, used by the NIWA server)',
+    version: '3.38.0',
+    license: 'ISC',
+    url: 'https://github.com/commenthol/date-holidays',
+  },
+  {
+    name: 'date-holidays data (holiday dates and names, used by the NIWA server)',
+    version: '3.38.0',
+    license: 'CC-BY-3.0',
+    url: 'https://github.com/commenthol/date-holidays/tree/master/data',
+  },
   {
     name: 'Noto Sans JP (one slice, for 庭)',
     version: '5.3.1',

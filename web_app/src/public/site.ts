@@ -11,6 +11,8 @@ export const site = {
   sourceUrl: 'https://github.com/PastelSalt/niwa',
   /** Date the Privacy Policy, Terms and app licence were published. */
   legalUpdated: '4 November 2026',
+  // The Privacy Policy changed on its own date (B-01 B8: settings and holiday country).
+  privacyUpdated: '5 November 2026',
 } as const;
 
 /** Sets the tab title while the page is mounted; the app's default title comes back afterwards. */

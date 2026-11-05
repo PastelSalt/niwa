@@ -33,6 +33,8 @@ import {
   type SearchQuery,
   type SearchResponse,
   type ScheduleEntry,
+  type HolidayListResponse,
+  type HolidayPlacesResponse,
   type UpdateScheduleEntryInput,
   type UpdateItemInput,
   type Attachment,
@@ -328,6 +330,14 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     search: (query: SearchQuery) => request<SearchResponse>('/search', { query }),
+
+    /** Public holidays for the account's country (B-01 B8); `from`/`to` are `YYYY-MM-DD`, inclusive. */
+    holidays: {
+      range: (from: string, to: string) => request<HolidayListResponse>('/holidays', { query: { from, to } }),
+      countries: () => request<HolidayPlacesResponse>('/holidays/countries'),
+      regions: (country: string) =>
+        request<HolidayPlacesResponse>('/holidays/regions', { query: { country } }),
+    },
 
     schedule: {
       range: (from: string, to: string) =>

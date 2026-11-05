@@ -26,7 +26,10 @@ const at = (days: number, hh: number, mm = 0) => {
 };
 
 export function exampleWorkspace(): MemoryWorkspace {
-  const ws = new MemoryWorkspace({ email: 'example@niwa.example' });
+  const ws = new MemoryWorkspace({
+    email: 'example@niwa.example',
+    preferences: { holidays: { country: 'PH', region: null, observances: false } },
+  });
   const add = ws.add.bind(ws);
 
   // College: a course with notes and a task.

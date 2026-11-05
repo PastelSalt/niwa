@@ -18,7 +18,12 @@ export const testUser = {
   createdAt: '2026-11-03T00:00:00.000Z',
   // Tour already seen, so it doesn't cover the screens other tests look at.
   onboarding: { status: 'completed', version: 1, at: '2026-11-03T00:00:00.000Z' },
-  preferences: { theme: 'garden', font: 'fredoka', mode: 'light' },
+  preferences: {
+    theme: 'garden',
+    font: 'fredoka',
+    mode: 'light',
+    holidays: { country: null, region: null, observances: false },
+  },
 };
 
 const json = (status: number, body: unknown) =>

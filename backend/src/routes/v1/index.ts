@@ -2,6 +2,7 @@ import { Router, type RequestHandler } from 'express';
 import type { AppConfig } from '../../config/env.ts';
 import { createAuthController } from '../../controllers/auth.controller.ts';
 import { itemController } from '../../controllers/item.controller.ts';
+import { holidayController } from '../../controllers/holiday.controller.ts';
 import { scheduleController } from '../../controllers/schedule.controller.ts';
 import { uploadController } from '../../controllers/upload.controller.ts';
 import { createSystemController } from '../../controllers/system.controller.ts';
@@ -85,6 +86,9 @@ export function createV1Router({ config, tokens, auth, limiters }: V1Deps): Rout
   router.delete('/attachments/:id', protect, uploadController.remove);
 
   // Scheduler (M5)
+  router.get('/holidays', protect, holidayController.range);
+  router.get('/holidays/countries', protect, holidayController.countries);
+  router.get('/holidays/regions', protect, holidayController.regions);
   router.get('/schedule', protect, scheduleController.range);
   router.post('/schedule', protect, scheduleController.create);
   router.patch('/schedule/:id', protect, scheduleController.update);

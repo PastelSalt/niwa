@@ -95,6 +95,57 @@ describe('PUT /account/preferences', () => {
   });
 });
 
+describe('holidays (B-01 B8)', () => {
+  it('follows the account country, validates it and lists places', async () => {
+    const app = buildApp();
+    const { token } = await signUp(app);
+    const auth = { Authorization: `Bearer ${token}` };
+    const range = '/api/v1/holidays?from=2026-12-01&to=2026-12-31';
+
+    expect((await request(app).get(range).set(auth).expect(200)).body).toEqual({
+      country: null,
+      holidays: [],
+    });
+    await request(app)
+      .put('/api/v1/account/preferences')
+      .set(auth)
+      .send({ holidays: { country: 'PH' } })
+      .expect(200);
+    const res = await request(app).get(range).set(auth).expect(200);
+    expect(res.body.country).toBe('PH');
+    expect(res.body.holidays).toContainEqual(
+      expect.objectContaining({ date: '2026-12-30', name: 'Rizal Day' }),
+    );
+
+    await request(app)
+      .put('/api/v1/account/preferences')
+      .set(auth)
+      .send({ holidays: { country: 'XX' } })
+      .expect(400);
+    await request(app).get('/api/v1/holidays?from=2026-01-01&to=2026-06-01').set(auth).expect(400);
+    const countries = (await request(app).get('/api/v1/holidays/countries').set(auth).expect(200)).body
+      .places;
+    expect(countries).toContainEqual({ code: 'PH', name: 'Philippines' });
+    const regions = (await request(app).get('/api/v1/holidays/regions?country=US').set(auth).expect(200)).body
+      .places;
+    expect(regions.length).toBeGreaterThan(40);
+  });
+});
+
+describe('starter folders (B-01 B14)', () => {
+  it("'simple' starts with one My garden folder; the default stays classic", async () => {
+    const app = buildApp({ REGISTRATION_MODE: 'open' });
+    const res = await request(app)
+      .post('/api/v1/auth/register')
+      .send({ email: 'simple@niwa.test', password: 'garden-password-123', starter: 'simple' })
+      .expect(201);
+    const tree = await request(app)
+      .get('/api/v1/tree')
+      .set('Authorization', `Bearer ${res.body.accessToken}`);
+    expect(tree.body.items.map((i: { title: string }) => i.title)).toEqual(['My garden']);
+  });
+});
+
 describe('POST /account/password', () => {
   it('needs the current password, then signs out other sessions and keeps this one', async () => {
     const app = buildApp();
