@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
+import { TEST_USER, openConnections, openDetails, skipWelcome, uniqueEmail } from './fixtures.ts';
 
 test.skip(({ isMobile }) => isMobile, 'Editor flows are exercised on desktop');
 
@@ -10,7 +10,7 @@ async function signUp(page: Page, tag: string) {
   await page.getByLabel('Confirm password').fill(TEST_USER.password);
   await page.getByRole('button', { name: 'Create account' }).click();
   await skipWelcome(page);
-  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page).toHaveURL(/\/today$/);
 }
 
 const tree = (page: Page) => page.getByRole('tree');
@@ -59,6 +59,7 @@ test('write, outline, link with [[, backlinks, deep link, promote, review', asyn
   await expect(body(page).locator('[data-niwa-link]')).toContainText('BGP');
   await expect(body(page).locator('[data-niwa-link]')).toContainText('Path selection');
   await waitSaved(page);
+  await openConnections(page);
   await expect(page.getByRole('region', { name: 'Related items' })).toContainText('BGP › Path selection');
 
   // Reload: content persisted.
@@ -69,6 +70,7 @@ test('write, outline, link with [[, backlinks, deep link, promote, review', asyn
   await body(page).locator('[data-niwa-link]').click();
   await expect(page).toHaveURL(/\/knowledge\/[a-f0-9]{24}#h-/);
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue('BGP');
+  await openConnections(page);
   await expect(page.getByRole('region', { name: 'Backlinks' })).toContainText('Networking');
   await expect(page.getByRole('region', { name: 'Backlinks' })).toContainText('Links to “Path selection”');
 
@@ -90,10 +92,7 @@ test('write, outline, link with [[, backlinks, deep link, promote, review', asyn
   await expect(page.getByText('The linked section no longer exists.')).toBeVisible();
 
   // Review queue.
-  await page
-    .getByRole('complementary', { name: 'Details' })
-    .getByLabel('Review on')
-    .fill(new Date().toISOString().slice(0, 10));
+  await (await openDetails(page)).getByLabel('Review on').fill(new Date().toISOString().slice(0, 10));
   await page.goto('/knowledge/review');
   await expect(page.getByRole('list', { name: 'Due for review' })).toContainText('BGP');
   await page.getByRole('button', { name: 'Done' }).click();

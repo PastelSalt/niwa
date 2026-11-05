@@ -188,13 +188,13 @@ function Screens() {
   const shots = [
     {
       src: '/screens/knowledge-light.webp',
-      alt: 'A course note open in the garden, light theme: the tree on the left, the note with headings and a list in the middle, and its details on the right.',
+      alt: 'A course note open in the garden, light theme: the tree with its All, Notes and Tasks filter on the left, and the page with its review date, tags, headings and a list.',
       caption: 'A page in the garden, light theme',
     },
     {
-      src: '/screens/focus-dark.webp',
-      alt: 'The Focus view in dark theme: overdue, in-progress, high-priority and upcoming tasks from different projects, each shown once with its priority and due date.',
-      caption: 'Tasks, dark theme',
+      src: '/screens/today-dark.webp',
+      alt: 'The Today screen in dark theme: a short getting-started list, today’s calendar and the next few tasks with their priority and due date.',
+      caption: 'Today, dark theme',
     },
   ];
   return (

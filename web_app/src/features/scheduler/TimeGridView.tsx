@@ -18,6 +18,7 @@ import {
 import { visuallyHidden } from '../../lib/a11y.ts';
 import { entryBlockSx, useEntryLook } from './entryDisplay.ts';
 import { HolidayLabel } from './HolidayLabel.tsx';
+import { PLAN_DRAG_TYPE } from './PlanMyDay.tsx';
 import { layoutDay, type Segment } from './layout.ts';
 
 const HOUR_PX = 48;
@@ -39,6 +40,8 @@ interface TimeGridProps {
   onCreateAllDay: (day: Date) => void;
   onOpen: (entry: ScheduleEntry) => void;
   onChange: (entry: ScheduleEntry, start: Date, end: Date) => void;
+  /** A task dropped from Plan my day (B-01 B12), at the dropped time. */
+  onDropTask?: (itemId: string, start: Date) => void;
 }
 
 type Drag =
@@ -63,6 +66,7 @@ export function TimeGridView({
   onCreateAllDay,
   onOpen,
   onChange,
+  onDropTask,
 }: TimeGridProps) {
   const look = useEntryLook();
   const gridRef = useRef<HTMLDivElement>(null);
@@ -305,6 +309,18 @@ export function TimeGridView({
                   key={dayKeys[i]}
                   role="gridcell"
                   data-day={dayKeys[i]}
+                  onDragOver={(e) => {
+                    if (!onDropTask || !e.dataTransfer.types.includes(PLAN_DRAG_TYPE)) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                  }}
+                  onDrop={(e) => {
+                    const itemId = e.dataTransfer.getData(PLAN_DRAG_TYPE);
+                    if (!onDropTask || !itemId) return;
+                    e.preventDefault();
+                    const { minutes } = pointer(e as unknown as PointerEvent);
+                    onDropTask(itemId, atMinutes(day, Math.floor(minutes / 15) * 15));
+                  }}
                   onPointerDown={(e) => {
                     if (e.button !== 0) return;
                     const { minutes } = pointer(e);

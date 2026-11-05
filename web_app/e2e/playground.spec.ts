@@ -16,11 +16,12 @@ test('try NIWA on the landing page: tick, capture, switch lens and theme — all
   await region.scrollIntoViewIfNeeded();
   const app = page.frameLocator('iframe[title^="NIWA with an example garden"]');
 
-  // Tick a task in Focus: it's marked done and leaves the open sections.
-  await expect(app.getByRole('heading', { name: 'Focus' })).toBeVisible({ timeout: 20_000 });
-  await app.getByRole('checkbox', { name: 'Complete Book the train tickets' }).click();
+  // Today: tick a task in Next up; it's marked done and leaves the list.
+  await expect(app.getByRole('heading', { name: /^Good / })).toBeVisible({ timeout: 20_000 });
+  const nextUp = app.getByRole('list', { name: 'Next up' });
+  await nextUp.getByRole('checkbox', { name: 'Complete Book the train tickets' }).click();
   await expect(app.getByText('Completed “Book the train tickets”')).toBeVisible();
-  await expect(app.getByRole('region', { name: 'Overdue' })).toHaveCount(0);
+  await expect(nextUp).not.toContainText('Book the train tickets');
 
   // Capture an idea; it lands in the Inbox.
   await app.locator('body').press('c');
@@ -31,9 +32,9 @@ test('try NIWA on the landing page: tick, capture, switch lens and theme — all
   await app.getByRole('link', { name: /Inbox/ }).first().click();
   await expect(app.getByRole('list', { name: 'Inbox items' })).toContainText('Plant tulips in autumn');
 
-  // Switch lens.
-  await app.getByRole('link', { name: 'Knowledge' }).first().click();
-  await expect(app.getByRole('tree', { name: 'Knowledge items' })).toBeVisible();
+  // Open the garden; the holidays example shows in the calendar too (B-01 B8).
+  await app.getByRole('link', { name: 'Garden' }).first().click();
+  await expect(app.getByRole('tree', { name: 'Garden' })).toBeVisible();
 
   // Customise: only the preview changes.
   const before = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -44,7 +45,11 @@ test('try NIWA on the landing page: tick, capture, switch lens and theme — all
 
   // Start fresh: the example comes back.
   await region.getByRole('button', { name: 'Start fresh' }).click();
-  await expect(app.getByRole('checkbox', { name: 'Complete Book the train tickets' })).toBeVisible({
+  await expect(
+    app
+      .getByRole('list', { name: 'Next up' })
+      .getByRole('checkbox', { name: 'Complete Book the train tickets' }),
+  ).toBeVisible({
     timeout: 20_000,
   });
 

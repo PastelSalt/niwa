@@ -91,6 +91,7 @@ packages/contracts/
    ├─ schedule.ts            ✅ ScheduleEntry + inputs (provisional until SCHEDULER.md)
    ├─ attachment.ts          ✅ Cloudinary sign/confirm, Attachment, MIME/size limits
    ├─ search.ts              ✅ SearchQuery, SearchHit
+   ├─ holidays.ts            ✅ B-01 B8: Holiday, HolidayQuery, HolidayListResponse, HolidayPlace
    ├─ ai.ts                  ✅ key/settings/status, summarize/breakdown/autotag responses
    ├─ openapi.ts             ✅ registry: every path (46 ops) → generateOpenApiDocument()
    └─ contracts.test.ts      ✅
@@ -159,7 +160,8 @@ backend/
 │  ├─ services/
 │  │  ├─ admin.service.ts    ✅ list/disable/enable/delete accounts (used by scripts/admin.ts only)
 │  │  ├─ token.service.ts    ✅ access JWT sign/verify, refresh issue/rotate/revoke (reuse → family revoke)
-│  │  ├─ auth.service.ts     ✅ register (+workspace +root containers), login, refresh, logout, me
+│  │  ├─ auth.service.ts     ✅ register (+workspace +starter folders: classic or "My garden"), login, refresh, logout, me, preferences
+│  │  ├─ holiday.service.ts  ✅ B-01 B8: public holidays from offline `date-holidays` (cached), countries/regions, validation
 │  │  ├─ item.service.ts     ✅ item rules: create/update/move (cycles, server-minted keys, rebalance), archive, delete/restore/purge batches, focus, tags, review, promoteSection, capture, inbox, file; syncs content links on save
 │  │  ├─ schedule.service.ts ✅ range + materialization, create/update/delete with scopes, all-day normalisation, item blocks
 │  │  ├─ search.service.ts   ✅ text index + substring fallback, snippets, matchedIn
@@ -171,6 +173,7 @@ backend/
 │  ├─ controllers/
 │  │  ├─ auth.controller.ts  ✅ cookie vs native-client token transport, CSRF header check
 │  │  ├─ schedule.controller.ts ✅ /schedule, /items/:id/schedule
+│  │  ├─ holiday.controller.ts ✅ /holidays, /holidays/countries, /holidays/regions
 │  │  ├─ item.controller.ts  ✅ items, tree, trash, focus, tags, review, promote-section, links, inbox, file, search
 │  │  ├─ upload.controller.ts ✅ /uploads/config, /uploads/sign, /attachments
 │  │  └─ system.controller.ts ✅ health, workspace
@@ -255,6 +258,7 @@ web_app/
    │  ├─ CookiesPage.tsx · LicensesPage.tsx · LegalPage.tsx ✅ policy pages (B3)
    │  ├─ useRegistrationOpen.ts ✅ `GET /auth/config` → hide sign-up when closed
    │  └─ public.test.tsx     ✅
+   ├─ features/today/        ✅ B-01 B9/B15: TodayPage (calendar, Next up, Inbox/review cards), GettingStarted
    ├─ playground/            ✅ B-02 V11 — the real app on an in-memory example garden
    │  ├─ memoryApi.ts        ✅ MemoryWorkspace: in-browser stand-in for /api/v1 (also the audit's --mock)
    │  ├─ exampleWorkspace.ts ✅ invented example content, dated relative to today
@@ -262,7 +266,8 @@ web_app/
    │  └─ protocol.ts         ✅ landing ⇄ iframe messages (same origin)
    ├─ layout/
    │  ├─ AppShell.tsx        ✅ `noindex` meta; Notifier + ItemDialogs providers; rail | tree | main | detail; phone: tree as lens home
-   │  ├─ destinations.tsx    ✅ the six destinations (label, path, icon, shortcut, showsTree)
+   │  ├─ destinations.tsx    ✅ B-01 B9: Today · Garden · Calendar · Inbox (+ Search, Settings); Garden filters
+   │  ├─ CommandBox.tsx      ✅ B-01 B9: Ctrl+K / `/` command box (places, items, create, search)
    │  ├─ useLayout.ts        ✅ useShellLayout(): single (< 720) · panes (720–1280, details overlay) · docked (≥ 1280)
    │  ├─ NavRail.tsx         ✅ NavRail (two-pane+) + BottomNav (single pane)
    │  ├─ TopBar.tsx          ✅ title, search, capture (disabled until M6), detail toggle, account menu
@@ -277,6 +282,7 @@ web_app/
    │  │  ├─ treeModel.ts     ✅ buildTree, ancestors, lensView (visible/dimmed), moveUp/Down, indent/outdent, dropMove
    │  │  ├─ itemMeta.tsx     ✅ labels, type icons/colors, LENS_PATH, todayLocal, formatDay
    │  │  ├─ ItemView.tsx     ✅ main item view: breadcrumbs (no repeated title), responsive title, chips, Inside rows; editor preloaded + text-shaped placeholder
+   │  │  ├─ FieldBar.tsx     ✅ B-01 B11: Turn into…, field chips (click to edit), + Add
    │  │  ├─ ItemRow.tsx      ✅ B-02 V3: one row for every list (select, completion circle, title/meta/extra, chips that wrap, actions → ⋯ on phones) + ItemRowList, CompleteToggle
    │  │  ├─ chips.tsx        ✅ Status/Priority/Due/Tag/Hint chips (deep text, role-coloured dot)
    │  │  ├─ RowSkeletons.tsx ✅ list loading pattern
@@ -291,6 +297,7 @@ web_app/
    │  ├─ settings/SettingsPage.tsx ✅ tabs: appearance, account, ai (M8), trash, help (replay tour); About credit
    │  ├─ settings/AppearanceSection.tsx ✅ B-02 V10: theme swatches, font picker (each in its own face), light/dark, reset — saved on the account
    │  ├─ settings/Section.tsx ✅ titled card
+   │  ├─ settings/CalendarSection.tsx ✅ B-01 B8: holiday country/region/observances
    │  ├─ settings/AccountActions.tsx ✅ change password, export my data, delete account (B-01 B4)
    │  ├─ onboarding/          ✅ OnboardingProvider (welcome + MUI Popper tour), tour.ts (steps, TOUR_VERSION), examples.ts (B-01 B7)
    │  ├─ knowledge/
@@ -309,11 +316,14 @@ web_app/
    │  │  ├─ SchedulerPage.tsx   ✅ /scheduler/:view/:date — header, view switch, dialogs, drag saves; SchedulerHome redirect
    │  │  ├─ MonthView.tsx       ✅ 6-week grid, chips, all-day bars, drag to another day; phones: dots + selected day's list
    │  │  ├─ TimeGridView.tsx    ✅ week/day grid: pointer create/move/resize, overlap columns, now line
+   │  │  ├─ HolidayLabel.tsx    ✅ B-01 B8: read-only holiday label + popover
+   │  │  ├─ PlanMyDay.tsx       ✅ B-01 B12: open tasks to drag onto the grid / next free hour
    │  │  ├─ EntryDialog.tsx     ✅ create/edit event or block, repeat (summary in words — repeatSummary.ts), colour, scope, delete
    │  │  ├─ ItemScheduleSection.tsx ✅ item details: upcoming blocks + Schedule time
    │  │  ├─ layout.ts · entryDisplay.ts · queries.ts ✅
    │  │  └─ scheduler.test.ts   ✅
    │  ├─ inbox/
+   │  │  ├─ InboxTriage.tsx  ✅ B-01 B13: sort one capture at a time
    │  │  ├─ CaptureProvider.tsx ✅ quick capture dialog + useQuickCapture() (c / Capture button), queued saves
    │  │  ├─ InboxPage.tsx       ✅ newest-first list, multi-select, file / delete
    │  │  ├─ FileDialog.tsx      ✅ filing panel (parent with path, type, due, tags; bulk)

@@ -130,11 +130,17 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.getByLabel('Confirm password').fill(TEST_USER.password);
     await page.getByRole('button', { name: 'Create account' }).click();
     await skipWelcome(page);
-    await expect(page).toHaveURL(/\/knowledge$/);
+    await expect(page).toHaveURL(/\/today$/);
     const ids = await seed(page);
 
     const screens: [string, string, () => Promise<void>][] = [
-      ['knowledge home', '/knowledge', () => expect(page.getByText('Your notebook garden')).toBeVisible()],
+      ['today', '/today', () => expect(page.getByRole('heading', { name: /^Good / })).toBeVisible()],
+      ['garden home', '/garden', () => expect(page.getByLabel('Garden tree')).toBeVisible()],
+      [
+        'knowledge home',
+        '/knowledge',
+        () => expect(page.getByText(/Recently edited|Your garden/).first()).toBeVisible(),
+      ],
       [
         'note',
         `/knowledge/${ids.note}`,

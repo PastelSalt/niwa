@@ -8,7 +8,7 @@ async function signUp(page: Page, tag: string) {
   await page.getByLabel('Confirm password').fill(TEST_USER.password);
   await page.getByRole('button', { name: 'Create account' }).click();
   await skipWelcome(page);
-  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page).toHaveURL(/\/today$/);
 }
 
 test('capture → inbox → file (single and bulk) → it appears in the tree', async ({
@@ -50,7 +50,7 @@ test('capture → inbox → file (single and bulk) → it appears in the tree', 
     .first()
     .click();
   await dialog.getByLabel('Type').click();
-  await page.getByRole('option', { name: 'Note' }).click();
+  await page.getByRole('option', { name: 'Page' }).click();
   await dialog.getByRole('button', { name: 'File' }).click();
   await expect(page.getByText('Filed under “Knowledge”')).toBeVisible();
   await expect(list.getByRole('listitem')).toHaveCount(2);

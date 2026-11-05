@@ -25,16 +25,17 @@ test('landing → register → shell → reload keeps session → logout → log
   await page.getByRole('button', { name: 'Create account' }).click();
   await skipWelcome(page);
 
-  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page).toHaveURL(/\/today$/);
   const nav = page.getByRole('navigation', { name: 'Main' });
-  for (const label of ['Knowledge', 'Actionable', 'Scheduler', 'Inbox', 'Search']) {
+  for (const label of ['Today', 'Garden', 'Calendar', 'Inbox']) {
     await expect(nav.getByText(label, { exact: true })).toBeVisible();
   }
 
   // Access token is memory-only; a reload must restore the session from the HttpOnly cookie.
   await page.reload();
-  await expect(page).toHaveURL(/\/knowledge$/);
-  // Tree pane on desktop; on phones the tree is the Knowledge home.
+  await expect(page).toHaveURL(/\/today$/);
+  // Garden: tree pane on desktop; on phones the tree is Garden's home.
+  await page.goto('/garden');
   await expect(page.getByRole('tree')).toBeVisible();
 
   const cookies = await page.context().cookies();
@@ -48,7 +49,7 @@ test('landing → register → shell → reload keeps session → logout → log
 
   await fillAuthForm(page, user.email.toUpperCase(), user.password);
   await page.getByRole('button', { name: 'Log in' }).click();
-  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page).toHaveURL(/\/today$/);
 });
 
 test('settings theme toggle switches the color scheme', async ({ page }, info) => {
@@ -57,7 +58,7 @@ test('settings theme toggle switches the color scheme', async ({ page }, info) =
   await fillAuthForm(page, user.email, user.password, true);
   await page.getByRole('button', { name: 'Create account' }).click();
   await skipWelcome(page);
-  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page).toHaveURL(/\/today$/);
 
   await page.goto('/settings/appearance');
   await page.getByRole('button', { name: 'Dark' }).click();

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
+import { openDetails, skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
 
 test.skip(
   ({ isMobile }) => isMobile,
@@ -13,7 +13,7 @@ async function signUp(page: Page, tag: string) {
   await page.getByLabel('Confirm password').fill(TEST_USER.password);
   await page.getByRole('button', { name: 'Create account' }).click();
   await skipWelcome(page);
-  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page).toHaveURL(/\/today$/);
 }
 
 const tree = (page: Page) => page.getByRole('tree');
@@ -29,12 +29,15 @@ async function addChild(page: Page, parent: string, title: string, type?: string
     .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Title').fill(title);
-  if (type) {
-    await dialog.getByLabel('Type').click();
-    await page.getByRole('option', { name: type }).click();
-  }
+  // No type picker since B-01 B11: a page, or a task with one checkbox; "Turn into…" for the rest.
+  if (type) await dialog.getByLabel(/This is a task/).setChecked(type === 'Task' || type === 'Project');
   await dialog.getByRole('button', { name: 'Create' }).click();
   await expect(dialog).toBeHidden();
+  if (type === 'Project') {
+    await page.getByRole('button', { name: /turn into/ }).click();
+    await page.getByRole('menuitem', { name: /^Project/ }).click();
+    await expect(page.getByText('Now a project')).toBeVisible();
+  }
 }
 
 test('build a project, reorder with the keyboard, complete from Focus, delete and restore', async ({
@@ -50,7 +53,7 @@ test('build a project, reorder with the keyboard, complete from Focus, delete an
 
   await addChild(page, 'Projects', 'Garden site', 'Project');
   await expect(page).toHaveURL(/\/actionable\/[a-f0-9]{24}$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Actionable');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Garden');
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Garden site');
 
   await addChild(page, 'Garden site', 'Plant seeds');
@@ -73,12 +76,11 @@ test('build a project, reorder with the keyboard, complete from Focus, delete an
   // Details panel edits feed Focus.
   await label(page, 'Water daily').click();
   await expect(node(page, 'Water daily')).toHaveAttribute('aria-selected', 'true');
-  const details = page.getByRole('complementary', { name: 'Details' });
+  const details = await openDetails(page);
   await details.getByLabel('Status').click();
   await page.getByRole('option', { name: 'In progress' }).click();
   await expect(details.getByLabel('Status')).toHaveText('In progress');
 
-  await page.getByRole('link', { name: 'Actionable' }).click();
   await page.goto('/actionable');
   const inProgress = page.getByRole('region', { name: 'In progress' });
   await expect(inProgress.getByText('Water daily')).toBeVisible();
@@ -88,7 +90,7 @@ test('build a project, reorder with the keyboard, complete from Focus, delete an
 
   // Delete with cascade → Undo restores everything.
   await label(page, 'Garden site').click();
-  await page.getByRole('complementary', { name: 'Details' }).getByRole('button', { name: 'Delete' }).click();
+  await (await openDetails(page)).getByRole('button', { name: 'Delete' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Move to Trash' }).click();
   await expect(node(page, 'Garden site')).toHaveCount(0);
   await page.getByRole('button', { name: 'Undo' }).click();
@@ -96,7 +98,7 @@ test('build a project, reorder with the keyboard, complete from Focus, delete an
 
   // Delete again → restore from Settings → Trash.
   await label(page, 'Garden site').click();
-  await page.getByRole('complementary', { name: 'Details' }).getByRole('button', { name: 'Delete' }).click();
+  await (await openDetails(page)).getByRole('button', { name: 'Delete' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Move to Trash' }).click();
   await expect(node(page, 'Garden site')).toHaveCount(0); // let the delete finish before leaving the page
   await page.goto('/settings/trash');

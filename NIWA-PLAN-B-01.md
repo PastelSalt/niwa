@@ -82,14 +82,14 @@ row here and a new section in the policy before release.
 | B5 | Visual polish of the signed-in app | ✅ | — (can run in parallel) |
 | B6 | Quality: accessibility, performance, SEO hygiene, tests | 🟨 | B1–B5, B7 |
 | B7 | Onboarding tour for new users (skippable, replayable) | 🟨 | B1; B5 for final visuals; backend state (`GAPS.md`) |
-| B8 | Public holidays in the Scheduler, by country (owner request 2026-11-05) | ⬜ | B-02 V10 (preferences on the account) |
-| B9 | Calmer navigation: Today home, Garden, Calendar, Inbox; command box (Ctrl+K) | ⬜ | B-02 |
-| B10 | Plain words everywhere | ⬜ | B9 |
-| B11 | Item page: pages that grow into tasks, fields only when set, Connections | ⬜ | B9, B10 |
-| B12 | One way to add to the calendar; Plan my day | ⬜ | B9 |
-| B13 | Inbox triage, one item at a time | ⬜ | B10 |
-| B14 | Starter folders optional | ⬜ | B9 |
-| B15 | Getting started checklist instead of the tour | ⬜ | B9–B14 |
+| B8 | Public holidays in the Scheduler, by country (owner request 2026-11-05) | ✅ | B-02 V10 (preferences on the account) |
+| B9 | Calmer navigation: Today home, Garden, Calendar, Inbox; command box (Ctrl+K) | ✅ | B-02 |
+| B10 | Plain words everywhere | ✅ | B9 |
+| B11 | Item page: pages that grow into tasks, fields only when set, Connections | ✅ | B9, B10 |
+| B12 | One way to add to the calendar; Plan my day | ✅ | B9 |
+| B13 | Inbox triage, one item at a time | ✅ | B10 |
+| B14 | Starter folders optional | ✅ | B9 |
+| B15 | Getting started checklist instead of the tour | ✅ | B9–B14 |
 
 **Exit criteria (whole plan):** a signed-out visitor at `/` sees an accurate description of NIWA and can reach
 sign-in, sign-up and every legal page; a new account is offered the onboarding tour, can skip it, and can replay
@@ -343,35 +343,36 @@ holidays, so the calendar matches the days off they actually have.
 - [x] Decisions above confirmed by the owner (2026-11-05: "let's go with your suggestions").
 
 ### B8.P1 — Contract & backend
-- [ ] `preferences.holidays { country: string | null, region: string | null, observances: boolean }` (contract
+- [x] `preferences.holidays { country: string | null, region: string | null, observances: boolean }` (contract
       first → OpenAPI); `PUT /account/preferences` validates the country and region against the library's own list.
-- [ ] `GET /holidays/countries`: codes plus English names (for the picker). Regions are listed per country.
-- [ ] `GET /holidays?from&to` (≤ 62 days, like `/schedule`): `{ date, name, localName, type }`, date-only (no
+- [x] `GET /holidays/countries`: codes plus English names (for the picker). Regions are listed per country.
+- [x] `GET /holidays?from&to` (≤ 62 days, like `/schedule`): `{ date, name, localName, type }`, date-only (no
       time-zone shifting — same rule as all-day entries, `docs/SCHEDULER.md` §2). Cached in memory per
       country/region/year.
-- [ ] Backend tests: known 2026 dates for the Philippines (Independence Day 12 Jun, Rizal Day 30 Dec), a
+- [x] Backend tests: known 2026 dates for the Philippines (Independence Day 12 Jun, Rizal Day 30 Dec), a
       country with regions, an unknown code → 400, and no country → empty list.
 
 ### B8.P2 — Web
-- [ ] Settings › Calendar (new section, beside Appearance): a country autocomplete with the suggestion from
+- [x] Settings › Calendar (new section, beside Appearance): a country autocomplete with the suggestion from
       the time zone, an optional region, and "Also show observances". Saved on the account.
-- [ ] Scheduler: holidays show as read-only all-day labels in a distinct quiet style (not entries: they can't
+- [x] Scheduler: holidays show as read-only all-day labels in a distinct quiet style (not entries: they can't
       be dragged, edited or deleted, and they don't count as "nothing scheduled"). Month: a label in the cell,
       or a holiday dot on phones; Week/Day: a band in the all-day row; the date header gets a subtle tint.
-- [ ] Clicking a holiday shows its name, its local name and "Public holiday in <country>", plus a link to
+- [x] Clicking a holiday shows its name, its local name and "Public holiday in <country>", plus a link to
       change the country.
-- [ ] Playground (B-02 V11): the example garden shows a sample holiday; the memory API answers `/holidays`.
+- [x] Playground (B-02 V11): the example garden shows a sample holiday; the memory API answers `/holidays`.
 
 ### B8.P3 — Legal, licences, docs
-- [ ] Licences page: credit `date-holidays` (ISC) and its data (CC BY 3.0). It's a backend dependency, so it's
+- [x] Licences page: credit `date-holidays` (ISC) and its data (CC BY 3.0). It's a backend dependency, so it's
       listed by hand like the Noto Sans JP slice.
-- [ ] Privacy Policy: the country (and region) is stored on the account and only used to show holidays
+- [x] Privacy Policy: the country (and region) is stored on the account and only used to show holidays
       (truth rule). Update `docs/DATA_MODEL.md`.
 - [ ] Mobile (A-02) reads the same fields and endpoint later; note it in `NIWA-PLAN-A-02.md`.
 
 ### B8.P4 — Tests & checks
 - [ ] Web unit tests (picker, holiday rendering, read-only), the scheduler e2e with a country set, axe on
-      Settings › Calendar, and the visual audit at the four widths.
+      Settings › Calendar, and the visual audit at the four widths. *(2026-11-05: holiday rendering unit tests,
+      backend service tests and the visual audit done; e2e with a country and axe run in CI — GAPS.)*
 
 **Exit criteria:** a user picks Philippines, and the Scheduler shows Rizal Day on 30 Dec 2026 in month, week and
 day views at every width. Changing the country updates the holidays on every device. Holidays can't be edited
@@ -403,53 +404,57 @@ backend keep working, and old URLs redirect.
 | Tour | Replaced by a **Getting started** checklist on Today (capture something, file it, plan a task, pick your look), dismissable; the tour stays replayable from Settings › Help |
 
 ### B9 — Calmer navigation
-- [ ] `/today`: greeting + date; **Today's calendar** (agenda list with "now", holidays from B8); **Next up** (the
+- [x] `/today`: greeting + date; **Today's calendar** (agenda list with "now", holidays from B8); **Next up** (the
       first 5 tasks from Focus, completion circle); **Inbox** card (count + "Sort now" → triage); **To review**
       card; Getting started checklist (B15). Empty parts hide.
-- [ ] Rail and bottom nav: Today, Garden, Calendar, Inbox. Settings in the avatar menu (rail keeps a gear on
+- [x] Rail and bottom nav: Today, Garden, Calendar, Inbox. Settings in the avatar menu (rail keeps a gear on
       desktop); shortcuts `g t`, `g g`, `g c`, `g i`.
-- [ ] Garden: the tree with an **All · Notes · Tasks** filter; All shows everything, nothing dimmed; the home
+- [x] Garden: the tree with an **All · Notes · Tasks** filter; All shows everything, nothing dimmed; the home
       pane shows Recently edited (All/Notes) or Focus (Tasks).
-- [ ] Command box (Ctrl+K, `/`, or the top-bar field): jump to any item by title; actions — New page, New
+- [x] Command box (Ctrl+K, `/`, or the top-bar field): jump to any item by title; actions — New page, New
       task, Capture, Add to calendar, go to Today/Garden/Calendar/Inbox/Settings; Enter on free text = search
       (the Search page stays as the full results view).
-- [ ] Redirects: `/` (signed in) → `/today`; `/scheduler/*` stays (labelled Calendar); `/search` stays.
+- [x] Redirects: `/` (signed in) → `/today`; `/scheduler/*` stays (labelled Calendar); `/search` stays.
 
 ### B10 — Plain words
-- [ ] Labels, headings, empty states, toasts, tour text and the landing page use the B9–B15 words.
-- [ ] Unit and e2e tests updated to the new names.
+- [x] Labels, headings, empty states, toasts, tour text and the landing page use the B9–B15 words.
+- [x] Unit and e2e tests updated to the new names.
 
 ### B11 — Item page
-- [ ] Create dialog: no type picker; the type follows the context (Tasks filter or a project/task parent →
+- [x] Create dialog: no type picker; the type follows the context (Tasks filter or a project/task parent →
       task, else page) with a "This is a task" checkbox.
-- [ ] Title row: the completion circle for tasks, the type icon otherwise; **Turn into…** menu (page, task,
+- [x] Title row: the completion circle for tasks, the type icon otherwise; **Turn into…** menu (page, task,
       project, idea) beside it.
-- [ ] Field chips under the title (status, priority, due, review, tags, estimate, source) and **+ Add** with the
+- [x] Field chips under the title (status, priority, due, review, tags, estimate, source) and **+ Add** with the
       unset ones; each chip opens a small editor.
-- [ ] Details panel closed by default; the top-bar toggle still opens it.
-- [ ] **Pages inside** and **Connections (n)** (links + backlinks, collapsed) at the bottom.
+- [x] Details panel closed by default; the top-bar toggle still opens it.
+- [x] **Pages inside** and **Connections (n)** (links + backlinks, collapsed) at the bottom.
 
 ### B12 — Calendar
-- [ ] One **Add to calendar** dialog: title, optional **For a task** (item picker), when, repeat, colour.
+- [x] One **Add to calendar** dialog: title, optional **For a task** (item picker), when, repeat, colour.
       Editing keeps the same dialog.
-- [ ] **Plan my day** side panel on Week/Day (desktop): open tasks due soon or in progress; drag one onto the
+- [x] **Plan my day** side panel on Week/Day (desktop): open tasks due soon or in progress; drag one onto the
       grid (or press "Add" for the next free hour) to give it time.
 
 ### B13 — Inbox triage
-- [ ] **Sort** mode: one capture at a time with File (suggested place first), Make it a task, Keep as note,
+- [x] **Sort** mode: one capture at a time with File (suggested place first), Make it a task, Keep as note,
       Delete, Skip; a progress count; ends with "Inbox zero".
-- [ ] The list stays as the default view.
+- [x] The list stays as the default view.
 
 ### B14 — Starter folders
-- [ ] Backend: new accounts get **My garden** (contract `ROOT_CONTAINERS` → `STARTER_FOLDERS`); existing
-      accounts unchanged; backend test updated.
-- [ ] Welcome dialog: "Start with Knowledge, Projects, College and Personal folders" option.
-- [ ] Any top-level item looks like a folder in the tree (known names keep their icons).
+- [x] Backend: `POST /auth/register` takes `starter: 'simple' | 'classic'` (default classic, so mobile and older
+      clients are unchanged); the web sends simple → **My garden** (`STARTER_FOLDERS`); existing accounts unchanged;
+      backend test added.
+- [x] Welcome dialog: "Start with Knowledge, Projects, College and Personal folders" option.
+- [x] Any top-level item looks like a folder in the tree (known names keep their icons).
 
 ### B15 — Getting started
-- [ ] Checklist on Today: capture a thought · file it from the Inbox · give a task a date or time · pick a theme;
-      ticks itself from real state; "Hide" is saved on the account (onboarding state).
-- [ ] The tour remains in Settings › Help, updated to the new navigation.
+- [x] Checklist on Today: capture a thought · file it from the Inbox · give a task a date · pick a theme or
+      font; ticks itself from real state; hides when complete; "Hide" is remembered in this browser (per account).
+- [x] The tour remains in Settings › Help, updated to the new navigation.
+
+**Status (2026-11-05):** B8–B15 built. Backend tests and e2e specs were updated but can't run in this
+environment (no MongoDB binary) — CI runs them; the playground e2e ran here and passed.
 
 **Exit criteria (B9–B15):** a new user lands on Today and can capture, file, plan and find things without
 learning the words Knowledge, Actionable, lens or block; four nav items; old URLs still work; unit tests

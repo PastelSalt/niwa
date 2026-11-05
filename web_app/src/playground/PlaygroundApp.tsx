@@ -39,7 +39,7 @@ export function bootPlayground(el: HTMLElement) {
 
   const ws = exampleWorkspace();
   const api = createApiClient({ baseUrl: '/api/v1', fetch: ws.fetch });
-  const router = createMemoryRouter(routes, { initialEntries: ['/actionable'] });
+  const router = createMemoryRouter(routes, { initialEntries: ['/today'] });
   createRoot(el).render(
     <StrictMode>
       <PlaygroundApp api={api}>

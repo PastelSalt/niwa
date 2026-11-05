@@ -14,8 +14,8 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import type { ScheduleEntry } from '@niwa/contracts';
-import { useMemo, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
 import {
@@ -30,10 +30,16 @@ import {
   startOfWeek,
   utcDayKey,
   utcMidnight,
+  browserTimeZone,
+  startOfDay,
 } from '../../lib/dates.ts';
 import { EntryDialog, type EntryDialogRequest } from './EntryDialog.tsx';
 import { MonthView } from './MonthView.tsx';
-import { holidaysByDay, useHolidays, useScheduleRange, useUpdateEntry } from './queries.ts';
+import { holidaysByDay, useCreateEntry, useHolidays, useScheduleRange, useUpdateEntry } from './queries.ts';
+import { PlanMyDay } from './PlanMyDay.tsx';
+import { useShellLayout } from '../../layout/useLayout.ts';
+import { usePersistentState } from '../../lib/usePersistentState.ts';
+import ChecklistRounded from '@mui/icons-material/ChecklistRounded';
 import { TimeGridView } from './TimeGridView.tsx';
 
 type View = 'month' | 'week' | 'day';
@@ -90,6 +96,23 @@ export function SchedulerPage() {
   }, [view, params.date]);
 
   const { data: entries = [], isFetching, error } = useScheduleRange(from, to);
+  const isPhone = useShellLayout() === 'single';
+  const [searchParams, setSearchParams] = useSearchParams();
+  // The command box's "Add to calendar" lands here with ?new=1 (B-01 B12): open the dialog once per visit
+  // (state adjusted during render), then drop the flag from the URL.
+  const wantsNew = searchParams.get('new') === '1';
+  const [handledNew, setHandledNew] = useState<string | null>(null);
+  const navKey = useLocation().key;
+  if (wantsNew && handledNew !== navKey && isDayKey(params.date)) {
+    const day = parseDay(params.date);
+    setHandledNew(navKey);
+    setDialog({ mode: 'create', kind: 'event', start: atMinutes(day, 9 * 60), end: atMinutes(day, 10 * 60) });
+  }
+  useEffect(() => {
+    if (wantsNew) setSearchParams({}, { replace: true });
+  }, [wantsNew, setSearchParams]);
+  const [planOpen, setPlanOpen] = usePersistentState('niwa.calendar.plan', true);
+  const createEntry = useCreateEntry();
   // Holidays are date-only: ask by local day keys covering the same span.
   const span = from ? [dayKey(new Date(from)), dayKey(addDays(new Date(to), -1))] : ['', ''];
   const { data: holidayList } = useHolidays(span[0]!, span[1]!);
@@ -171,8 +194,25 @@ export function SchedulerPage() {
           <ToggleButton value="week">Week</ToggleButton>
           <ToggleButton value="day">Day</ToggleButton>
         </ToggleButtonGroup>
-        <Button size="small" variant="contained" startIcon={<AddRounded />} onClick={() => newEvent(date)}>
-          New
+        {view !== 'month' && !isPhone && (
+          <ToggleButton
+            value="plan"
+            size="small"
+            selected={planOpen}
+            onChange={() => setPlanOpen((v) => !v)}
+            aria-label="Plan my day"
+          >
+            <ChecklistRounded fontSize="small" sx={{ mr: 0.5 }} /> Plan
+          </ToggleButton>
+        )}
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<AddRounded />}
+          onClick={() => newEvent(date)}
+          aria-label="Add to calendar"
+        >
+          Add
         </Button>
       </Box>
       <Box sx={{ height: 2 }}>{isFetching && <LinearProgress sx={{ height: 2 }} />}</Box>
@@ -196,38 +236,57 @@ export function SchedulerPage() {
         >
           <EventAvailableOutlined fontSize="small" sx={{ color: 'primary.main' }} />
           <Typography variant="body2">
-            Nothing scheduled here yet. Use <strong>New</strong>,{' '}
+            Nothing scheduled here yet. Use <strong>Add</strong>,{' '}
             {view === 'month' ? 'or click a day' : 'or drag on the grid'} to add an event. Tasks can be given
             time from their details.
           </Typography>
         </Box>
       )}
 
-      <Box sx={{ flex: 1, minHeight: 0, overflow: view === 'month' ? 'auto' : 'hidden' }}>
-        {view === 'month' ? (
-          <MonthView
-            gridStart={monthGridStart(date)}
-            month={date.getMonth()}
-            entries={entries}
-            holidays={holidays}
-            onCreate={newEvent}
-            onOpen={(entry) => setDialog({ mode: 'edit', entry })}
-            onMoveDays={moveDays}
-            onShowDay={(d) => go('day', d)}
-          />
-        ) : (
-          <TimeGridView
-            key={from}
-            days={days}
-            entries={entries}
-            holidays={holidays}
-            onCreateRange={(start, end) => setDialog({ mode: 'create', kind: 'event', start, end })}
-            onCreateAllDay={(day) =>
-              setDialog({ mode: 'create', kind: 'event', start: day, end: day, allDay: true })
-            }
-            onOpen={(entry) => setDialog({ mode: 'edit', entry })}
-            onChange={(entry, start, end) => save(entry, start.toISOString(), end.toISOString())}
-          />
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
+        <Box sx={{ flex: 1, minWidth: 0, overflow: view === 'month' ? 'auto' : 'hidden' }}>
+          {view === 'month' ? (
+            <MonthView
+              gridStart={monthGridStart(date)}
+              month={date.getMonth()}
+              entries={entries}
+              holidays={holidays}
+              onCreate={newEvent}
+              onOpen={(entry) => setDialog({ mode: 'edit', entry })}
+              onMoveDays={moveDays}
+              onShowDay={(d) => go('day', d)}
+            />
+          ) : (
+            <TimeGridView
+              key={from}
+              days={days}
+              entries={entries}
+              holidays={holidays}
+              onCreateRange={(start, end) => setDialog({ mode: 'create', kind: 'event', start, end })}
+              onCreateAllDay={(day) =>
+                setDialog({ mode: 'create', kind: 'event', start: day, end: day, allDay: true })
+              }
+              onOpen={(entry) => setDialog({ mode: 'edit', entry })}
+              onChange={(entry, start, end) => save(entry, start.toISOString(), end.toISOString())}
+              onDropTask={(itemId, start) =>
+                createEntry.mutate(
+                  {
+                    kind: 'block',
+                    itemId,
+                    startAt: start.toISOString(),
+                    endAt: new Date(start.getTime() + 60 * 60_000).toISOString(),
+                    isAllDay: false,
+                    recurrence: 'none',
+                    timeZone: browserTimeZone(),
+                  },
+                  { onError: (err) => notify(messageOf(err), { severity: 'error' }) },
+                )
+              }
+            />
+          )}
+        </Box>
+        {view !== 'month' && !isPhone && planOpen && (
+          <PlanMyDay day={view === 'day' ? date : startOfDay(new Date())} entries={entries} />
         )}
       </Box>
 

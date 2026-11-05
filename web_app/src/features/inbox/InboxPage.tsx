@@ -1,4 +1,5 @@
 import AddRounded from '@mui/icons-material/AddRounded';
+import LowPriorityRounded from '@mui/icons-material/LowPriorityRounded';
 import DeleteOutlineRounded from '@mui/icons-material/DeleteOutlineRounded';
 import DriveFileMoveOutlined from '@mui/icons-material/DriveFileMoveOutlined';
 import InboxOutlined from '@mui/icons-material/InboxOutlined';
@@ -9,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { ItemSummary } from '@niwa/contracts';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { RowSkeletons } from '../items/RowSkeletons.tsx';
 import { Page } from '../../components/Page.tsx';
 import { messageOf } from '../../api/client.ts';
@@ -20,6 +22,7 @@ import { useTree } from '../items/queries.ts';
 import { useItemActions } from '../items/useItemActions.ts';
 import { useQuickCapture } from './CaptureProvider.tsx';
 import { FileDialog } from './FileDialog.tsx';
+import { InboxTriage } from './InboxTriage.tsx';
 import { useInbox } from './queries.ts';
 
 /** Compact capture time ("now", "5m", "3h", "Nov 3"); the full time is in the tooltip. */
@@ -53,6 +56,29 @@ export function InboxPage() {
   const chosen = list.filter((i) => selected.has(i.id));
   const titleOf = (id: string | null) => (id ? tree.find((t) => t.id === id)?.title : undefined);
 
+  // Sort mode (B-01 B13): one capture at a time; `total` is how many there were when it started.
+  const [params, setParams] = useSearchParams();
+  const sorting = params.get('sort') === '1';
+  const [sortTotal, setSortTotal] = useState<number | null>(null);
+  if (sorting && items && sortTotal === null) setSortTotal(list.length);
+  if (!sorting && sortTotal !== null) setSortTotal(null);
+  const setSorting = (on: boolean) => setParams(on ? { sort: '1' } : {}, { replace: true });
+
+  if (sorting && items) {
+    return (
+      <Page width="list">
+        <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
+          Sort your Inbox
+        </Typography>
+        <InboxTriage
+          items={list}
+          total={Math.max(sortTotal ?? list.length, list.length)}
+          onExit={() => setSorting(false)}
+        />
+      </Page>
+    );
+  }
+
   return (
     <Page width="list">
       <Stack direction="row" sx={{ alignItems: 'center', mb: 2, gap: 1, flexWrap: 'wrap' }}>
@@ -64,6 +90,11 @@ export function InboxPage() {
             </Typography>
           )}
         </Typography>
+        {list.length > 0 && (
+          <Button variant="outlined" startIcon={<LowPriorityRounded />} onClick={() => setSorting(true)}>
+            Sort one by one
+          </Button>
+        )}
         <Button variant="contained" startIcon={<AddRounded />} onClick={capture.open}>
           Capture
         </Button>

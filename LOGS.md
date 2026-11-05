@@ -986,3 +986,24 @@
   - Phases: contract/backend, Settings › Calendar + read-only holidays in the Scheduler, credits and Privacy
     Policy, tests.
 - **Verified:** docs only; nothing built.
+
+### 2026-11-05 — B-01 B8–B15 built: holidays by country + calmer UX
+- **Owner:** "let's go with your suggestions" — B8 decisions confirmed and B9–B15 planned in `NIWA-PLAN-B-01.md`,
+  then built.
+- **B8 holidays:** `preferences.holidays`, `GET /holidays` + countries/regions on the offline `date-holidays`
+  rules (3.38.0, ISC; data CC BY 3.0), validated on save. Settings › Calendar (with a suggestion from the browser
+  locale), read-only holiday labels in month/week/day and on Today. The playground ships real PH 2026–27 holidays.
+  Licences page credits the library and data; the Privacy Policy lists settings + holiday country (5 Nov 2026).
+- **B9:** Today home; four places (Today · Garden · Calendar · Inbox); Garden's All · Notes · Tasks filter;
+  command box (Ctrl+K, `/`, top-bar field).
+- **B10:** plain words across app, landing, tour and tests.
+- **B11:** page-or-task create dialog, "Turn into…", field chips + "+ Add", completion circle on the title,
+  Details closed by default, Connections.
+- **B12:** one "Add to calendar" dialog (optional "For a task"); Plan my day panel (drag or + next free hour).
+- **B13:** Inbox "Sort one by one" triage.
+- **B14:** `starter: simple` sign-up → "My garden"; welcome offers the classic four; every top-level item is a
+  folder.
+- **B15:** Getting started checklist on Today; welcome leads with "Let's go".
+- **Verified here:** web unit tests 82 → 86, backend holiday service tests (4), typecheck, lint, format,
+  OpenAPI check, build; visual audit **29 screens × 4 widths × 2 modes: 0 findings**; playground e2e passes.
+- **Not run here:** backend endpoint tests and the other e2e specs (updated for the new UI) — CI.

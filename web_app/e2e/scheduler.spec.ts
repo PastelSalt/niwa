@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
+import { openDetails, skipWelcome, TEST_USER, uniqueEmail } from './fixtures.ts';
 
 test.skip(({ isMobile }) => isMobile, 'Pointer drags on the time grid are exercised on desktop');
 // A fixed zone with no DST keeps wall-clock assertions deterministic.
@@ -12,7 +12,7 @@ async function signUp(page: Page, tag: string) {
   await page.getByLabel('Confirm password').fill(TEST_USER.password);
   await page.getByRole('button', { name: 'Create account' }).click();
   await skipWelcome(page);
-  await expect(page).toHaveURL(/\/knowledge$/);
+  await expect(page).toHaveURL(/\/today$/);
 }
 
 const cell = (page: Page, day: string) => page.locator(`[role="gridcell"][data-day="${day}"]`);
@@ -113,7 +113,7 @@ test('schedule a time block from an item and see it in the calendar', async ({ p
   await page.getByRole('dialog').getByLabel('Title').fill('Problem set 1');
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
-  const details = page.getByRole('complementary', { name: 'Details' });
+  const details = await openDetails(page);
   await details.getByRole('button', { name: 'Schedule time' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Date', { exact: true }).fill('2027-03-09');
@@ -121,7 +121,7 @@ test('schedule a time block from an item and see it in the calendar', async ({ p
   await dialog.getByLabel('End date').fill('2027-03-09');
   await dialog.getByLabel('End', { exact: true }).fill('15:30');
   await dialog.getByRole('button', { name: 'Save' }).click();
-  await expect(page.getByText('Scheduled “Problem set 1”')).toBeVisible();
+  await expect(page.getByText('Time set for “Problem set 1”')).toBeVisible();
   await expect(details).toContainText('2:00 PM – 3:30 PM');
 
   await page.goto('/scheduler/week/2027-03-09');

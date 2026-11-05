@@ -48,6 +48,14 @@ devices; images (Cloudinary) confirmed working 2026-11-04. Next: nightly backup 
 - Image captions in notes: the editor has no caption node (alt text only) — declined for now (V4).
 - Mobile (A-02) doesn't read `preferences` yet.
 
+**B-01 B8–B15 — holidays + calmer UX** · built 2026-11-05 on `claude/laughing-ride-f01job`
+- Backend tests (holiday endpoints, `starter`, preferences) and the updated e2e specs weren't run here (the
+  in-memory MongoDB can't download in this environment) — CI must run them; expect a few selector fixes.
+- Axe on Today, the command box, Settings › Calendar and Inbox triage — with the CI a11y spec.
+- Getting started "Hide" is per browser, not on the account (no contract field for it yet).
+- Plan my day: drag from the panel is mouse-only; keyboard users press + (next free hour).
+- Mobile (A-02) doesn't have Today, the command box, holidays or triage yet.
+
 **Decisions only the owner can make**
 - Email provider for password reset/verification (skipped for now).
 - When to build and run the mobile app on a device; when to do iOS.

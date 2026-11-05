@@ -16,12 +16,10 @@ import RadioGroup from '@mui/material/RadioGroup';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { EditScope, ItemSummary, Recurrence, ScheduleEntry, ScheduleKind } from '@niwa/contracts';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { DateField } from '../../components/DateField.tsx';
 import { messageOf } from '../../api/client.ts';
 import { useNotify } from '../../components/Notifier.tsx';
@@ -97,7 +95,10 @@ function initialState(req: EntryDialogRequest): FormState {
   };
 }
 
-/** Create / edit an event or time block — specs §4.3, SCHEDULER.md §4. */
+/**
+ * Create / edit a calendar entry — specs §4.3, SCHEDULER.md §4. One "Add to calendar" dialog (B-01 B12): a
+ * title and an optional "For a task"; with a task it saves a time block, without one an event (same data).
+ */
 export function EntryDialog({ request, onClose }: { request: EntryDialogRequest; onClose: () => void }) {
   const [f, setF] = useState<FormState>(() => initialState(request));
   const [scope, setScope] = useState<EditScope>('instance');
@@ -112,6 +113,14 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
   const recurring = !!editing?.seriesId;
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((s) => ({ ...s, [k]: v }));
   const item = f.itemId ? (tree.find((i) => i.id === f.itemId) ?? null) : null;
+  // Open tasks and projects first, then everything else (blocks can be for any item).
+  const options = useMemo(
+    () =>
+      [...tree]
+        .filter((i) => !(i.nature === 'actionable' && i.status === 'completed'))
+        .sort((a, b) => Number(b.nature === 'actionable') - Number(a.nature === 'actionable')),
+    [tree],
+  );
 
   const times = () => {
     if (f.allDay) {
@@ -127,8 +136,8 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
     setError(null);
     const { startAt, endAt } = times();
     if (new Date(endAt) <= new Date(startAt)) return setError('End must be after start.');
-    if (f.kind === 'event' && !f.title.trim()) return setError('Give the event a title.');
-    if (f.kind === 'block' && !f.itemId) return setError('Pick the item this time is for.');
+    if (f.kind === 'event' && !f.title.trim()) return setError('Give it a title, or pick the task it’s for.');
+    if (f.kind === 'block' && !f.itemId) return setError('Pick the task this time is for.');
     try {
       if (editing) {
         await update.mutateAsync({
@@ -158,7 +167,7 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
           recurrence: f.recurrence,
           timeZone: browserTimeZone(),
         });
-        notify(f.kind === 'block' ? `Scheduled “${item?.title ?? 'item'}”` : 'Event added');
+        notify(f.kind === 'block' ? `Time set for “${item?.title ?? 'task'}”` : 'Added to the calendar');
       }
       onClose();
     } catch (err) {
@@ -184,57 +193,45 @@ export function EntryDialog({ request, onClose }: { request: EntryDialogRequest;
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>
-        {editing
-          ? f.kind === 'block'
-            ? 'Time block'
-            : 'Event'
-          : f.kind === 'block'
-            ? 'New time block'
-            : 'New event'}
+        {editing ? (f.kind === 'block' ? 'Time for a task' : 'Event') : 'Add to calendar'}
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          {!editing && (
-            <ToggleButtonGroup
-              exclusive
-              size="small"
-              value={f.kind}
-              onChange={(_, v: ScheduleKind | null) => v && set('kind', v)}
-              aria-label="Entry kind"
-            >
-              <ToggleButton value="event">Event</ToggleButton>
-              <ToggleButton value="block">Time block for an item</ToggleButton>
-            </ToggleButtonGroup>
-          )}
-
-          {f.kind === 'block' && (
-            <Autocomplete<ItemSummary>
-              options={tree}
-              value={item}
-              disabled={!!editing}
-              onChange={(_, v) => set('itemId', v?.id ?? null)}
-              getOptionLabel={(o) => o.title}
-              isOptionEqualToValue={(a, b) => a.id === b.id}
-              renderOption={(props, o) => {
-                const { key, ...rest } = props;
-                return (
-                  <li key={key} {...rest}>
-                    <ItemTypeIcon type={o.type} fontSize="small" sx={{ mr: 1 }} />
-                    {o.title}
-                  </li>
-                );
-              }}
-              renderInput={(params) => <TextField {...params} label="Item" autoFocus={!editing} />}
-            />
-          )}
-
           <TextField
-            label={f.kind === 'block' ? 'Label (optional)' : 'Title'}
+            label={f.kind === 'block' ? 'Title (optional)' : 'Title'}
             value={f.title}
             onChange={(e) => set('title', e.target.value)}
-            autoFocus={f.kind === 'event' && !editing}
+            autoFocus={!editing && !f.itemId}
+            helperText={f.kind === 'block' ? 'Leave empty to show the task’s name.' : undefined}
             slotProps={{ htmlInput: { maxLength: 300 } }}
+          />
+
+          {/* With a task this is time for it (a block); without, an event (B-01 B12). */}
+          <Autocomplete<ItemSummary>
+            options={options}
+            value={item}
+            disabled={!!editing}
+            onChange={(_, v) => setF((s) => ({ ...s, itemId: v?.id ?? null, kind: v ? 'block' : 'event' }))}
+            getOptionLabel={(o) => o.title}
+            groupBy={(o) => (o.nature === 'actionable' ? 'Tasks and projects' : 'Pages')}
+            isOptionEqualToValue={(a, b) => a.id === b.id}
+            renderOption={(props, o) => {
+              const { key, ...rest } = props;
+              return (
+                <li key={key} {...rest}>
+                  <ItemTypeIcon type={o.type} fontSize="small" sx={{ mr: 1 }} />
+                  {o.title}
+                </li>
+              );
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="For a task (optional)"
+                helperText={editing ? undefined : 'Pick one to give that task time on your calendar.'}
+              />
+            )}
           />
 
           <Typography variant="overline" color="text.secondary" component="p" sx={{ mb: -1 }}>

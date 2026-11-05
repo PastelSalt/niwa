@@ -364,6 +364,7 @@ function screens(ids) {
     { name: 'week', path: `/scheduler/week/${today}` },
     { name: 'day', path: `/scheduler/day/${today}` },
     { name: 'inbox', path: '/inbox' },
+    { name: 'inbox-sort', path: '/inbox?sort=1' },
     { name: 'search', path: '/search?q=tcp' },
     { name: 'settings', path: '/settings/appearance' },
     { name: 'trash', path: '/settings/trash' },
@@ -379,7 +380,7 @@ function screens(ids) {
       name: 'event-dialog',
       path: `/scheduler/month/${today}`,
       open: async (page) => {
-        await page.getByRole('button', { name: 'New', exact: true }).click();
+        await page.getByRole('button', { name: 'Add to calendar' }).click();
         await page.getByRole('dialog').waitFor();
       },
     },
@@ -543,7 +544,7 @@ async function settle(page, wait) {
 async function landingShots(browser, acc, ids) {
   const shots = [
     { file: 'knowledge-light.webp', mode: 'light', path: `/knowledge/${ids.week3}`, wait: '.ProseMirror' },
-    { file: 'focus-dark.webp', mode: 'dark', path: '/actionable' },
+    { file: 'today-dark.webp', mode: 'dark', path: '/today' },
   ];
   for (const shot of shots) {
     const ctx = await browser.newContext({
