@@ -150,11 +150,17 @@ components:
           $ref: "#/components/schemas/ColorModePreference"
         holidays:
           $ref: "#/components/schemas/HolidayPreference"
+        layout:
+          $ref: "#/components/schemas/LayoutPreference"
+        background:
+          $ref: "#/components/schemas/BackgroundPreference"
       required:
         - theme
         - font
         - mode
         - holidays
+        - layout
+        - background
       description: Appearance and calendar choices that follow the account
     ColorModePreference:
       type: string
@@ -182,6 +188,75 @@ components:
         - country
         - region
         - observances
+    LayoutPreference:
+      type: object
+      properties:
+        preset:
+          type: string
+          enum:
+            - scrapbook
+            - classic
+            - compact
+        density:
+          type:
+            - string
+            - "null"
+          enum:
+            - comfortable
+            - cozy
+            - compact
+            - null
+          description: null = the preset's own density
+        sidebar:
+          type:
+            - string
+            - "null"
+          enum:
+            - labels
+            - icons
+            - null
+          description: null = the preset's own sidebar
+        stickers:
+          type:
+            - boolean
+            - "null"
+          description: Sticker titles and buttons; null = the preset's own
+        chosen:
+          type: boolean
+          description: The user picked a layout (or kept the new default) on purpose
+      required:
+        - preset
+        - density
+        - sidebar
+        - stickers
+        - chosen
+    BackgroundPreference:
+      type: object
+      properties:
+        pattern:
+          type: string
+          enum:
+            - none
+            - dots
+            - gingham
+            - grid
+            - lined
+            - stripes
+            - clover
+            - flowers
+            - grain
+        strength:
+          type: string
+          enum:
+            - soft
+            - normal
+        washes:
+          type: boolean
+          description: Soft colour washes in two corners
+      required:
+        - pattern
+        - strength
+        - washes
     RegisterInput:
       type: object
       properties:
@@ -290,6 +365,65 @@ components:
             observances:
               type: boolean
           description: Country/region are checked against the server holiday list
+        layout:
+          type: object
+          properties:
+            preset:
+              type: string
+              enum:
+                - scrapbook
+                - classic
+                - compact
+            density:
+              type:
+                - string
+                - "null"
+              enum:
+                - comfortable
+                - cozy
+                - compact
+                - null
+              description: null = the preset's own density
+            sidebar:
+              type:
+                - string
+                - "null"
+              enum:
+                - labels
+                - icons
+                - null
+              description: null = the preset's own sidebar
+            stickers:
+              type:
+                - boolean
+                - "null"
+              description: Sticker titles and buttons; null = the preset's own
+            chosen:
+              type: boolean
+              description: The user picked a layout (or kept the new default) on purpose
+        background:
+          type: object
+          properties:
+            pattern:
+              type: string
+              enum:
+                - none
+                - dots
+                - gingham
+                - grid
+                - lined
+                - stripes
+                - clover
+                - flowers
+                - grain
+            strength:
+              type: string
+              enum:
+                - soft
+                - normal
+            washes:
+              type: boolean
+              description: Soft colour washes in two corners
     ChangePasswordInput:
       type: object
       properties:

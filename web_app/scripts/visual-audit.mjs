@@ -13,6 +13,7 @@
  *   … -- --only=focus,inbox --widths=390,360 --modes=light --no-shots
  *   … -- --mock --landing-shots                         # retake public/screens/*.webp for the landing page
  *   … -- --theme=lavender --font=inter                  # signed-in screens in another theme/font (V10.P5)
+ *   … -- --layout=classic --pattern=gingham             # another layout preset / page pattern (B-03 C1/C2/C5)
  *
  * Exits 1 when the check finds overlapping or spilling text, so it can gate a milestone (V7 exit criteria).
  */
@@ -47,6 +48,9 @@ const MOCK = Boolean(args.mock);
 const PREFS = {
   ...(typeof args.theme === 'string' && { theme: args.theme }),
   ...(typeof args.font === 'string' && { font: args.font }),
+  // Layout preset and page pattern (B-03). Audit accounts have made their choice, so no "new look" card.
+  layout: { preset: typeof args.layout === 'string' ? args.layout : 'scrapbook', chosen: true },
+  ...(typeof args.pattern === 'string' && { background: { pattern: args.pattern } }),
   // Public holidays (B-01 B8); in --mock mode only PH has data.
   ...(typeof args.country === 'string' && {
     holidays: { country: args.country, region: null, observances: false },
@@ -58,6 +62,8 @@ const OUT = join(
   '.visual-audit',
   new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) +
     (args.theme ? `-${args.theme}` : '') +
+    (args.layout ? `-${args.layout}` : '') +
+    (args.pattern ? `-${args.pattern}` : '') +
     (args.font ? `-${args.font}` : ''),
 );
 // A fixed zone with no DST keeps times stable between runs.

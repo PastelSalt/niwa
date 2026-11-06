@@ -101,37 +101,43 @@ literal colours outside `@niwa/tokens`.
 **Goal:** the app reads like the owner's dashboards, while staying calm enough for daily use.
 
 ### C1.P1 — Tokens
-- [ ] `@niwa/tokens`: a `layouts` record (`scrapbook`, `classic`, `compact`) describing shape, not colour:
+- [x] `@niwa/tokens`: a `layouts` record (`scrapbook`, `classic`, `compact`) describing shape, not colour:
       surface radius (card/panel), surface style (`paper` with tinted shadow vs `flat` with hairline), sidebar
       kind (`floating` labelled card vs `rail`), title style (`sticker` vs `plain`), density (row height, gaps),
       button style (`sticker` vs `plain`).
-- [ ] Per-theme **tinted shadows** (paper, lift, sticker) and an **outline** ink colour, light and dark, so the
+- [x] Per-theme **tinted shadows** (paper, lift, sticker) and an **outline** ink colour, light and dark, so the
       sticker look works in all five themes; contrast tests for the outline (3:1) and sticker fills.
 - [ ] A "pop" easing next to the V1 motion tokens; off with reduced motion.
 
 ### C1.P2 — Shell
-- [ ] Floating **labelled sidebar** (≥ 1280 px; icons-only floating rail 720–1280 px; bottom nav on phones):
+- [x] Floating **labelled sidebar** (≥ 1280 px; icons-only floating rail 720–1280 px; bottom nav on phones):
       Today, Garden, Calendar, Inbox; a "Spaces" group listing top-level folders with their icons (C3); Settings
       and the profile avatar at the foot. Current item = sticker pill.
-- [ ] Sticky top bar on paper: brand, command box, Capture, profile avatar menu (C4).
-- [ ] Page background from C2 (default dots) behind everything; the tree pane and the Details panel become
+- [x] Sticky top bar on paper: brand, command box, Capture, profile avatar menu (C4).
+- [x] Page background from C2 (default dots) behind everything; the tree pane and the Details panel become
       floating paper cards in Scrapbook.
-- [ ] `theme.niwa.layout` drives all of the above; Classic reproduces today's shell exactly (no regressions).
+- [x] `theme.niwa.layout` drives all of the above; Classic reproduces today's shell exactly (no regressions).
 
 ### C1.P3 — Surfaces and content
-- [ ] One `Surface` component (paper or flat) used by cards, panels, lists, dialogs.
-- [ ] `StickerTitle` for section headings (Today's sections, Settings sections, Calendar title), tilted −2°
+- [x] One `Surface` component (paper or flat) used by cards, panels, lists, dialogs.
+- [x] `StickerTitle` for section headings (Today's sections, Settings sections, Calendar title), tilted −2°
       only in Scrapbook and never on lists or data.
-- [ ] `stitch` style for featured cards (Getting started, empty states, upload drop zones, the B-01 "new look"
+- [x] `stitch` style for featured cards (Getting started, empty states, upload drop zones, the B-01 "new look"
       card).
-- [ ] Primary buttons: pastel fill + outline + sticker shadow in Scrapbook; plain in Classic.
+- [x] Primary buttons: pastel fill + outline + sticker shadow in Scrapbook; plain in Classic.
 - [ ] Today and Garden get a dashboard-style grid on wide screens (two columns: calendar + Next up; Inbox,
       review and spaces as small cards), single column on phones.
 
+> **Done 2026-11-06 (C1.P1–P3):** `layouts`/`densities`/`patterns`/`pageTint` tokens (page tint AA-tested);
+> `theme.niwa.layout` + `palette.surface`; `Surface.tsx` helpers (floating card, list surface, stitch, sticker,
+> sticker title) rather than one component; floating `Sidebar` with a Spaces group (labels ≥ 1280 px, icons
+> below; phones keep the bottom nav); floating top bar, tree, main and Details. **Not yet:** the "pop" easing,
+> outline/sticker contrast tests, the two-column Today/Garden grid, the avatar (C4).
+
 ### C1.P4 — Rollout
-- [ ] New accounts: Scrapbook. Existing accounts: Scrapbook with the one-time "New look" card on Today
+- [x] New accounts: Scrapbook. Existing accounts: Scrapbook with the one-time "New look" card on Today
       (Keep it · Switch back to Classic), saved on the account.
-- [ ] Landing page and public pages follow the new default look (hero, cards, buttons); screenshots retaken.
+- [x] Landing page and public pages follow the new default look (hero, cards, buttons); screenshots retaken.
 
 **Exit criteria:** Scrapbook and Classic both clean in the visual audit (all screens, four widths, light/dark,
 five themes); e2e green; owner sign-off on the look.
@@ -141,12 +147,16 @@ five themes); e2e green; owner sign-off on the look.
 ## C2 — Backgrounds
 
 ### C2.P1 — Patterns (built in)
-- [ ] Patterns drawn with CSS gradients / tiny inline SVG, coloured from the theme (so they recolour with the
+- [x] Patterns drawn with CSS gradients / tiny inline SVG, coloured from the theme (so they recolour with the
       theme and with dark mode): **None · Dots** (default) **· Gingham · Grid paper · Lined paper · Stripes ·
       Clover · Flowers · Paper grain**.
-- [ ] Each pattern has a strength (Soft · Normal) and stays behind paper surfaces, so text contrast never
+- [x] Each pattern has a strength (Soft · Normal) and stays behind paper surfaces, so text contrast never
       depends on it; checked by the audit at both strengths in every theme × mode.
-- [ ] Optional corner **washes** (soft colour blobs like the Moeko Works dashboard), on by default in Scrapbook.
+- [x] Optional corner **washes** (soft colour blobs like the Moeko Works dashboard), on by default in Scrapbook.
+
+> **Done 2026-11-06 (C2.P1, C2.P3 without image):** `PageBackground` draws all nine patterns from the theme
+> (white ink in light, text ink at 7 % in dark), Soft/Normal, corner washes; fixed layer behind the shell.
+> The contract has `pattern`, `strength`, `washes` (no `kind`/`image` yet — added with C2.P2).
 
 ### C2.P2 — Your own image
 - [ ] Upload one background image (Cloudinary, signed upload like note images; WebP; max 4 MB; resized to
@@ -155,9 +165,9 @@ five themes); e2e green; owner sign-off on the look.
 - [ ] Remove/replace; counted against the image quota; deleted with the account (Privacy Policy update, C7).
 
 ### C2.P3 — Saving
-- [ ] Contract: `preferences.background { kind: 'pattern' | 'image' | 'none', pattern, strength, washes,
+- [x] Contract: `preferences.background { kind: 'pattern' | 'image' | 'none', pattern, strength, washes,
       image: { attachmentId, fit, dimLight, dimDark, blur } | null }` → OpenAPI → backend → api-client.
-- [ ] Settings › Appearance › Background: pattern swatches (live preview), upload, options; instant apply.
+- [x] Settings › Appearance › Background: pattern swatches (live preview), upload, options; instant apply.
 
 **Exit criteria:** every pattern and an uploaded image readable in all themes and modes; nothing scrolls jankily
 (background fixed, no repaint storms); uploads respect quotas.
@@ -203,12 +213,16 @@ them.
 
 ## C5 — Layout customisation
 
-- [ ] Contract: `preferences.layout { preset: 'scrapbook' | 'classic' | 'compact', density?: 'comfortable' |
+- [x] Contract: `preferences.layout { preset: 'scrapbook' | 'classic' | 'compact', density?: 'comfortable' |
       'cozy' | 'compact', sidebar?: 'labels' | 'icons', stickers?: boolean }` (presets set the defaults; options
       override); unknown values fall back to Scrapbook.
-- [ ] Settings › Appearance › Layout: three preset cards with live mini-previews (like the theme swatches), then
+- [x] Settings › Appearance › Layout: three preset cards with live mini-previews (like the theme swatches), then
       the options; **Reset to default** returns to Scrapbook + Dots + Garden + Fredoka.
-- [ ] The landing playground's "Make it yours" panel gains Layout and Background (preview only).
+- [x] The landing playground's "Make it yours" panel gains Layout and Background (preview only).
+> **Done 2026-11-06:** presets + density/sidebar/stickers options; a preset change clears the overrides; the
+> "New look" card (accounts created before 2026-11-06 with `layout.chosen = false`). Visual audit gained
+> `--layout` and `--pattern` flags.
+
 - [ ] Today's widgets: show/hide and order (calendar, Next up, Inbox, review, spaces) — saved with the layout.
 
 **Exit criteria:** every preset × option combination works at the four widths; switching is instant and follows
@@ -237,7 +251,7 @@ the account.
 
 ## C7 — Quality
 
-- [ ] Visual audit gains `--layout` and `--background` flags; run all screens × four widths × light/dark for
+- [x] Visual audit gains `--layout` and `--pattern` flags; run all screens × four widths × light/dark for
       every layout, every pattern (one theme) and every theme (default pattern).
 - [ ] Axe audit for the Scrapbook shell, icon picker, profile page, crop dialog and background settings.
 - [ ] Performance: patterns cost no network requests; an uploaded background is lazy and sized per screen;

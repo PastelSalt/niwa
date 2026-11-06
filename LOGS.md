@@ -1022,3 +1022,28 @@
   import — later); C7 quality. Five open questions.
 - **Not copied on purpose:** the fan site's artwork, character art, logos, long loader and showpiece motion.
 - **Verified:** docs only; nothing built.
+
+### 2026-11-06 — B-03 C1/C2/C5: Scrapbook look, page patterns, layout presets
+- **Owner:** "do the Background customisation — patterns, like the Kotoha fan site. and Layout customisation —
+  with a default; update the current app so the default looks like the Kotoha fan site / Moeko Works dashboard."
+- **Contract:** `preferences.layout { preset, density, sidebar, stickers, chosen }` and
+  `preferences.background { pattern, strength, washes }`, partial in `PreferencesInput`; OpenAPI regenerated;
+  backend model/serializer/`setPreferences` merge them field by field.
+- **Tokens:** `layouts` (Scrapbook · Classic · Compact), `densities`, `patterns`, `mixHex`, `pageTint` (page
+  colour; AA contrast test for text and links on it in every theme × mode).
+- **Web shell (Scrapbook, the default):** patterned page (`PageBackground`: dots, gingham, grid, lined, stripes,
+  clover, flowers, grain — CSS gradients / inline SVG in the theme's colours, Soft/Normal, corner washes);
+  floating paper cards for the sidebar, top bar, tree, main and Details (`Surface.tsx`); new `Sidebar` with a
+  "Spaces" group on wide screens; sticker buttons, sticker section titles (−2°), stitched Getting started card,
+  paper list cards, density-driven row heights. Classic/Compact keep the flat shell and the icon rail.
+- **Settings › Appearance:** Layout (preset cards with mini previews; Spacing, Sidebar, Sticker options) and
+  Background (pattern swatches, strength, washes); Reset to defaults covers both.
+- **Rollout:** accounts created before 2026-11-06 see "NIWA has a new look" on Today once (Keep it · Switch back
+  to Classic). Public and sign-in pages show the patterned page. The playground panel gained Layout and Background.
+- **Tooling:** visual audit `--layout=` and `--pattern=` flags.
+- **Verified here:** web unit tests 86 → 91 (new `layout.test.tsx`), tokens tests, typecheck, lint, format;
+  visual audit of Today/Garden/Settings/landing/login at 1440 and 390, light and dark, in Scrapbook and Classic:
+  0 findings.
+- **Not done yet:** uploaded background image (C2.P2), two-column Today grid, "pop" easing, sticker/outline
+  contrast tests, Today widget order, full audit across all five themes; backend endpoint tests and e2e not run
+  here (no MongoDB download) — CI.

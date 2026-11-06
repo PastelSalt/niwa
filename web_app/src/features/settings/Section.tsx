@@ -1,6 +1,7 @@
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
+import { titleStickerSx } from '../../components/Surface.tsx';
 
 /** A titled card in Settings. */
 export function Section({
@@ -14,11 +15,11 @@ export function Section({
 }) {
   return (
     <Paper variant="outlined" sx={{ p: 3 }}>
-      <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 600 }}>
+      <Typography variant="subtitle1" component="h2" sx={[{ fontWeight: 600 }, titleStickerSx]}>
         {title}
       </Typography>
       {description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, mt: 0.5 }}>
           {description}
         </Typography>
       )}

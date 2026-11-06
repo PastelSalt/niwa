@@ -18,6 +18,10 @@ import { TopBar } from './TopBar.tsx';
 import { TreePane } from './TreePane.tsx';
 import { useGlobalShortcuts } from './useGlobalShortcuts.ts';
 import { useShellLayout } from './useLayout.ts';
+import { Sidebar } from './Sidebar.tsx';
+import { useTheme } from '@mui/material/styles';
+import { PageBackground } from '../components/PageBackground.tsx';
+import { floatingCardSx } from '../components/Surface.tsx';
 
 /**
  * Rail | Tree pane | Main | Detail panel — CONCEPT.md §1.1, responsive per §1.2 and B-02 V7:
@@ -61,10 +65,40 @@ function ShellLayout() {
   const showTreePane = !isPhone && !!lens;
   const phoneTree = isPhone && !!lens && !selectedId;
 
+  // Scrapbook (B-03 C1): every piece is a floating paper card over the patterned page; Classic keeps the flat
+  // edge-to-edge shell.
+  const theme = useTheme();
+  const { floating, sidebar } = theme.niwa.layout;
+  const gap = floating ? (isPhone ? 1 : 1.75) : 0;
+
   return (
-    <Box sx={{ display: 'flex', height: '100dvh', overflow: 'hidden', bgcolor: 'background.default' }}>
-      {!isPhone && <NavRail />}
-      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <Box
+      sx={{
+        position: 'relative',
+        display: 'flex',
+        height: '100dvh',
+        overflow: 'hidden',
+        bgcolor: 'background.default',
+        // Its own stacking context: the pattern layer sits under every card, above this background.
+        isolation: 'isolate',
+        gap,
+        p: gap,
+        pb: floating && isPhone ? 0 : gap,
+      }}
+    >
+      {floating && <PageBackground />}
+      {!isPhone && (floating ? <Sidebar labels={sidebar === 'labels' && isWide} /> : <NavRail />)}
+      <Box
+        sx={{
+          position: 'relative',
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+          gap,
+        }}
+      >
         <TopBar
           title={destination?.label ?? 'niwa'}
           titleHidden={destination?.namedOnScreen}
@@ -73,9 +107,22 @@ function ShellLayout() {
           detailOpen={detailOpen}
           onToggleDetail={() => setDetailOpen((v) => !v)}
         />
-        <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+        <Box sx={{ flex: 1, display: 'flex', minHeight: 0, gap }}>
           {showTreePane && lens && <TreePane lens={lens} />}
-          <Box component="main" sx={{ flex: 1, minWidth: 0, overflow: 'auto', pb: isPhone ? 9 : 0 }}>
+          <Box
+            component="main"
+            sx={(t) => ({
+              flex: 1,
+              minWidth: 0,
+              overflow: 'auto',
+              pb: isPhone ? 9 : 0,
+              ...(floating && floatingCardSx(t)),
+              ...(floating && {
+                overflow: 'auto',
+                ...(isPhone && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }),
+              }),
+            })}
+          >
             <Suspense fallback={<LinearProgress aria-label="Loading" sx={{ height: 2 }} />}>
               {phoneTree && lens ? <PhoneLensHome lens={lens} /> : <Outlet />}
             </Suspense>

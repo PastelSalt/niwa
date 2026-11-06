@@ -521,6 +521,103 @@ export const themes: Record<ThemeId, ThemeToken> = {
   },
 };
 
+// ---------------------------------------------------------------------------------------------------------
+// Layouts and backgrounds (NIWA-PLAN-B-03 C1, C2, C5). Layout = shape; theme = colour; background = pattern.
+// ---------------------------------------------------------------------------------------------------------
+
+export type LayoutId = 'scrapbook' | 'classic' | 'compact';
+export type DensityId = 'comfortable' | 'cozy' | 'compact';
+
+export interface LayoutToken {
+  label: string;
+  description: string;
+  /** `paper`: cards with tinted soft shadows (Scrapbook) · `flat`: hairline borders (Classic). */
+  surface: 'paper' | 'flat';
+  /** Shell pieces float as rounded cards over the patterned page. */
+  floating: boolean;
+  /** `labels`: a labelled sidebar · `icons`: the slim icon rail. */
+  sidebar: 'labels' | 'icons';
+  /** Sticker titles, sticker primary buttons and stitched featured cards. */
+  stickers: boolean;
+  density: DensityId;
+  /** Corner radii in px. */
+  radius: { card: number; panel: number; control: number };
+}
+
+/**
+ * Scrapbook is the default: the look of the owner's Kotoha fan site and Moeko Works dashboards — a patterned
+ * pastel page, floating paper cards with tinted shadows, sticker titles and buttons, stitched featured cards.
+ */
+export const layouts: Record<LayoutId, LayoutToken> = {
+  scrapbook: {
+    label: 'Scrapbook',
+    description: 'Paper cards on a patterned page, sticker titles. The default.',
+    surface: 'paper',
+    floating: true,
+    sidebar: 'labels',
+    stickers: true,
+    density: 'comfortable',
+    radius: { card: 22, panel: 28, control: 999 },
+  },
+  classic: {
+    label: 'Classic',
+    description: 'Flat panels and a slim icon rail.',
+    surface: 'flat',
+    floating: false,
+    sidebar: 'icons',
+    stickers: false,
+    density: 'comfortable',
+    radius: { card: 10, panel: 10, control: 10 },
+  },
+  compact: {
+    label: 'Compact',
+    description: 'Classic, with tighter rows for big gardens.',
+    surface: 'flat',
+    floating: false,
+    sidebar: 'icons',
+    stickers: false,
+    density: 'compact',
+    radius: { card: 8, panel: 8, control: 8 },
+  },
+};
+
+/** Row heights in px per density (item rows, tree rows). */
+export const densities: Record<DensityId, { row: number; tree: number; label: string }> = {
+  comfortable: { row: 56, tree: 36, label: 'Comfortable' },
+  cozy: { row: 48, tree: 32, label: 'Cozy' },
+  compact: { row: 40, tree: 28, label: 'Compact' },
+};
+
+export type PatternId =
+  'none' | 'dots' | 'gingham' | 'grid' | 'lined' | 'stripes' | 'clover' | 'flowers' | 'grain';
+
+export const patterns: Record<PatternId, { label: string }> = {
+  none: { label: 'Plain' },
+  dots: { label: 'Dots' },
+  gingham: { label: 'Gingham' },
+  grid: { label: 'Grid paper' },
+  lined: { label: 'Lined paper' },
+  stripes: { label: 'Stripes' },
+  clover: { label: 'Clover' },
+  flowers: { label: 'Flowers' },
+  grain: { label: 'Paper grain' },
+};
+
+/** sRGB mix of two `#rrggbb` colours (`t` = share of `a`). */
+export function mixHex(a: string, b: string, t: number): string {
+  const ch = (h: string, i: number) => parseInt(h.slice(i, i + 2), 16);
+  const out = [1, 3, 5].map((i) => Math.round(ch(a, i) * t + ch(b, i) * (1 - t)));
+  return `#${out.map((v) => v.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+}
+
+/**
+ * The Scrapbook page colour (B-03 C2): a soft tint of the theme's pastel accent — pink for Garden, like the
+ * fan site — over the page background. Dark mode keeps the deep background. Text on it is contrast-tested.
+ */
+export function pageTint(p: ThemePalette, mode: ColorMode): string {
+  return mode === 'light' ? mixHex(p.secondary, p.background, 0.33) : mixHex(p.secondary, p.background, 0.07);
+}
+
 export const DEFAULT_THEME: ThemeId = 'garden';
 export const DEFAULT_FONT: FontId = 'fredoka';
 

@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
+import { titleStickerSx } from './Surface.tsx';
 
 /** Header for a section inside a screen: title, a quiet count and an optional action (B-02 V4). */
 export function SectionHeader({
@@ -17,7 +18,9 @@ export function SectionHeader({
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36, mb: 1 }}>
       <Typography id={id} variant="subtitle2" component="h2" sx={{ flex: 1 }}>
-        {title}
+        <Box component="span" sx={titleStickerSx}>
+          {title}
+        </Box>
         {count !== undefined && (
           <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.75 }}>
             {count}

@@ -66,13 +66,24 @@ function PlaygroundApp({ api, children }: { api: ApiClient; children: React.Reac
   );
 }
 
-/** Takes theme/font/mode from the landing page's customise panel and applies them like Settings would. */
+/** Takes theme/font/mode/layout/pattern from the landing page's customise panel and applies them like Settings would. */
 function Bridge({ api }: { api: ApiClient }) {
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (!isToPlayground(e)) return;
-      const { theme, font, mode } = e.data;
-      void api.account.setPreferences({ theme, font, mode }).catch(() => {});
+      const { theme, font, mode, layout, pattern } = e.data;
+      void api.account
+        .setPreferences({
+          theme,
+          font,
+          mode,
+          // Older landing pages may not send these; leave the layout as it is then.
+          ...(layout && {
+            layout: { preset: layout, density: null, sidebar: null, stickers: null, chosen: true },
+          }),
+          ...(pattern && { background: { pattern } }),
+        })
+        .catch(() => {});
     };
     window.addEventListener('message', onMessage);
     const ready: FromPlayground = { source: 'niwa-playground', type: 'ready' };

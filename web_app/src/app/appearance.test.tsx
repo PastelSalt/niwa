@@ -6,6 +6,7 @@ import { useState, type ReactNode } from 'react';
 import { AuthProvider } from '../auth/AuthProvider.tsx';
 import {
   AppearanceProvider,
+  DEFAULT_APPEARANCE,
   readCachedAppearance,
   toAppearance,
   useAppearance,
@@ -58,14 +59,22 @@ describe('theme plumbing (B-02 V1.P4)', () => {
   });
 
   it('falls back to the defaults for unknown or broken cached ids', () => {
-    expect(toAppearance({ theme: 'lavender', font: 'atkinson' })).toEqual({
+    expect(toAppearance({ theme: 'lavender', font: 'atkinson' })).toMatchObject({
       theme: 'lavender',
       font: 'atkinson',
     });
+    // Layout and background default to Scrapbook + dots; unknown values fall back (B-03).
+    expect(toAppearance({ layout: { preset: 'classic' }, background: { pattern: 'gingham' } })).toMatchObject(
+      {
+        layout: { preset: 'classic' },
+        background: { pattern: 'gingham', strength: 'normal', washes: true },
+      },
+    );
+    expect(toAppearance({ layout: { preset: 'zigzag' } }).layout.preset).toBe('scrapbook');
     localStorage.setItem('niwa.appearance', JSON.stringify({ theme: 'neon', font: 'comic' }));
-    expect(readCachedAppearance()).toEqual({ theme: 'garden', font: 'fredoka' });
+    expect(readCachedAppearance()).toMatchObject({ theme: 'garden', font: 'fredoka' });
     localStorage.setItem('niwa.appearance', '{not json');
-    expect(readCachedAppearance()).toEqual({ theme: 'garden', font: 'fredoka' });
+    expect(readCachedAppearance()).toMatchObject({ theme: 'garden', font: 'fredoka' });
   });
 
   it("signed-in screens show the user's font; leaving them returns to the defaults", () => {
@@ -74,7 +83,7 @@ describe('theme plumbing (B-02 V1.P4)', () => {
       return <p>{`${active.theme}/${active.font}`}</p>;
     }
     function SignedIn() {
-      useUserAppearance({ theme: 'garden', font: 'inter' });
+      useUserAppearance({ ...DEFAULT_APPEARANCE, font: 'inter' });
       return null;
     }
     function Harness() {
@@ -95,7 +104,7 @@ describe('theme plumbing (B-02 V1.P4)', () => {
       </AppearanceProvider>,
     );
     expect(screen.getByText('garden/inter')).toBeInTheDocument();
-    expect(readCachedAppearance()).toEqual({ theme: 'garden', font: 'inter' });
+    expect(readCachedAppearance()).toMatchObject({ theme: 'garden', font: 'inter' });
     fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(screen.getByText('garden/fredoka')).toBeInTheDocument();
   });

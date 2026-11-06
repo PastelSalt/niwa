@@ -29,6 +29,7 @@ import {
 } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router';
 import { messageOf } from '../api/client.ts';
+import { floatingCardSx } from '../components/Surface.tsx';
 import { preloadNoteEditorWhenIdle } from '../features/knowledge/editor/preload.ts';
 import { ItemTypeIcon, LENS_PATH, newItemType, STATUS_LABEL } from '../features/items/itemMeta.tsx';
 import { GARDEN_FILTERS, type GardenFilter } from './destinations.tsx';
@@ -64,7 +65,7 @@ const ROOT_ICON: Record<(typeof ROOT_CONTAINERS)[number], typeof AutoStoriesOutl
   Personal: SpaOutlined,
 };
 /** Every top-level item is a folder (B-01 B14); the classic names and My garden keep their own icons. */
-function folderIcon(item: ItemSummary): ReactNode {
+export function folderIcon(item: ItemSummary): ReactNode {
   if (item.parentId !== null) return null;
   const Icon =
     item.title === 'My garden'
@@ -106,7 +107,7 @@ export function TreePane({ lens, fullWidth = false }: { lens: GardenFilter; full
       component="aside"
       aria-label="Garden tree"
       data-tour="tree"
-      sx={{
+      sx={(t) => ({
         width: fullWidth ? '100%' : TREE_WIDTH.base,
         [WIDE_SCREEN]: { width: fullWidth ? '100%' : TREE_WIDTH.wide },
         flexShrink: 0,
@@ -116,7 +117,9 @@ export function TreePane({ lens, fullWidth = false }: { lens: GardenFilter; full
         display: 'flex',
         flexDirection: 'column',
         minHeight: fullWidth ? '100%' : 0,
-      }}
+        // Scrapbook (B-03): a floating paper card beside the sidebar.
+        ...(t.niwa.layout.floating && !fullWidth && floatingCardSx(t)),
+      })}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', px: 2, pt: 1, pb: 0.5, gap: 0.5 }}>
         <ToggleButtonGroup
@@ -182,15 +185,18 @@ export function TreePane({ lens, fullWidth = false }: { lens: GardenFilter; full
             }}
             expansionTrigger="iconContainer"
             itemChildrenIndentation={12}
-            sx={{
+            sx={(t) => ({
               // Indentation guides: a hairline down each open group, under the parent's chevron.
               '& .MuiTreeItem-groupTransition': {
                 ml: '13px',
                 borderLeft: 1,
                 borderColor: 'divider',
               },
-              '& .MuiTreeItem-content': { borderRadius: 1, minHeight: 36 },
-            }}
+              '& .MuiTreeItem-content': {
+                borderRadius: t.niwa.layout.surface === 'paper' ? '10px' : 1,
+                minHeight: t.niwa.layout.rows.tree,
+              },
+            })}
           >
             <TreeNodes
               parentId={null}

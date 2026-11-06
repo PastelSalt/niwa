@@ -1,3 +1,4 @@
+import { DEFAULT_PREFERENCES } from '@niwa/contracts';
 import type {
   FocusResponse,
   Item,
@@ -85,7 +86,10 @@ const PH_HOLIDAYS: [date: string, name: string, localName: string][] = [
 export interface MemoryWorkspaceOptions {
   email?: string;
   onboarded?: boolean;
-  preferences?: Partial<Preferences>;
+  preferences?: Omit<Partial<Preferences>, 'layout' | 'background'> & {
+    layout?: Partial<Preferences['layout']>;
+    background?: Partial<Preferences['background']>;
+  };
 }
 
 export class MemoryWorkspace {
@@ -109,11 +113,10 @@ export class MemoryWorkspace {
       createdAt: t,
       onboarding: onboarded ? { status: 'skipped', version: 1, at: t } : null,
       preferences: {
-        theme: 'garden',
-        font: 'fredoka',
-        mode: 'system',
-        holidays: { country: null, region: null, observances: false },
+        ...DEFAULT_PREFERENCES,
         ...preferences,
+        layout: { ...DEFAULT_PREFERENCES.layout, ...preferences.layout },
+        background: { ...DEFAULT_PREFERENCES.background, ...preferences.background },
       },
     };
     for (const title of ['Knowledge', 'Projects', 'College', 'Personal'])
@@ -240,6 +243,8 @@ export class MemoryWorkspace {
           ...this.user.preferences,
           ...(body as Partial<Preferences>),
           holidays: { ...this.user.preferences.holidays, ...(body as Partial<Preferences>).holidays },
+          layout: { ...this.user.preferences.layout, ...(body as Partial<Preferences>).layout },
+          background: { ...this.user.preferences.background, ...(body as Partial<Preferences>).background },
         },
       };
       return json(200, { user: this.user });

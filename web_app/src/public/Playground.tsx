@@ -9,7 +9,17 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useColorScheme } from '@mui/material/styles';
-import { fonts, themes, type FontId, type ThemeId } from '@niwa/tokens';
+import {
+  fonts,
+  layouts,
+  patterns,
+  themes,
+  type FontId,
+  type LayoutId,
+  type PatternId,
+  type ThemeId,
+} from '@niwa/tokens';
+import { pageStyle } from '../components/PageBackground.tsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router';
 import {
@@ -34,6 +44,8 @@ export function Playground() {
     theme: 'garden',
     font: 'fredoka',
     mode: colorScheme === 'dark' ? 'dark' : 'light',
+    layout: 'scrapbook',
+    pattern: 'dots',
   }));
 
   const [touchedMode, setTouchedMode] = useState(false);
@@ -190,6 +202,75 @@ export function Playground() {
           <ToggleButton value="light">Light</ToggleButton>
           <ToggleButton value="dark">Dark</ToggleButton>
         </ToggleButtonGroup>
+
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          component="p"
+          id="pg-layout"
+          sx={{ mb: 0.75, mt: 2 }}
+        >
+          Layout
+        </Typography>
+        <ToggleButtonGroup
+          exclusive
+          fullWidth
+          size="small"
+          value={look.layout}
+          onChange={(_, v: LayoutId | null) => v && set({ layout: v })}
+          aria-labelledby="pg-layout"
+        >
+          {(Object.keys(layouts) as LayoutId[]).map((id) => (
+            <ToggleButton key={id} value={id}>
+              {layouts[id].label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+
+        {look.layout === 'scrapbook' && (
+          <>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              component="p"
+              id="pg-pattern"
+              sx={{ mb: 0.75, mt: 2 }}
+            >
+              Background
+            </Typography>
+            <Box
+              role="radiogroup"
+              aria-labelledby="pg-pattern"
+              sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}
+            >
+              {(Object.keys(patterns) as PatternId[]).map((id) => {
+                const selected = look.pattern === id;
+                return (
+                  <Tooltip key={id} title={patterns[id].label}>
+                    <ButtonBase
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={patterns[id].label}
+                      onClick={() => set({ pattern: id })}
+                      style={pageStyle(look.theme, look.mode, {
+                        pattern: id,
+                        strength: 'normal',
+                        washes: false,
+                      })}
+                      sx={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: '50%',
+                        border: selected ? 3 : 1,
+                        borderColor: selected ? 'primary.main' : 'divider',
+                      }}
+                    />
+                  </Tooltip>
+                );
+              })}
+            </Box>
+          </>
+        )}
 
         {registrationOpen && (
           <Stack sx={{ mt: 3 }}>

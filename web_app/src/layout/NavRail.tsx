@@ -128,7 +128,7 @@ export function BottomNav() {
 }
 
 /** Destination icon; Inbox shows how many captures await filing. */
-function DestIcon({ d }: { d: Destination }) {
+export function DestIcon({ d }: { d: Destination }) {
   const { data: inbox } = useInbox();
   if (d.key !== 'inbox') return <>{d.icon}</>;
   const count = inbox?.length ?? 0;

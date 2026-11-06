@@ -56,12 +56,57 @@ export const HolidayPreference = z
   .meta({ id: 'HolidayPreference' });
 export type HolidayPreference = z.infer<typeof HolidayPreference>;
 
+// ---- Layout and background (NIWA-PLAN-B-03 C1, C2, C5) ----
+
+/** Shell shape: Scrapbook (default, like the Kotoha / Moeko Works dashboards), Classic (B-02), Compact. */
+export const LAYOUT_IDS = ['scrapbook', 'classic', 'compact'] as const;
+export const DENSITY_IDS = ['comfortable', 'cozy', 'compact'] as const;
+/** Built-in background patterns, drawn in the theme's colours (no image files). */
+export const PATTERN_IDS = [
+  'none',
+  'dots',
+  'gingham',
+  'grid',
+  'lined',
+  'stripes',
+  'clover',
+  'flowers',
+  'grain',
+] as const;
+
+export const LayoutPreference = z
+  .object({
+    preset: z.enum(LAYOUT_IDS),
+    density: z.enum(DENSITY_IDS).nullable().meta({ description: "null = the preset's own density" }),
+    sidebar: z.enum(['labels', 'icons']).nullable().meta({ description: "null = the preset's own sidebar" }),
+    stickers: z
+      .boolean()
+      .nullable()
+      .meta({ description: "Sticker titles and buttons; null = the preset's own" }),
+    chosen: z
+      .boolean()
+      .meta({ description: 'The user picked a layout (or kept the new default) on purpose' }),
+  })
+  .meta({ id: 'LayoutPreference' });
+export type LayoutPreference = z.infer<typeof LayoutPreference>;
+
+export const BackgroundPreference = z
+  .object({
+    pattern: z.enum(PATTERN_IDS),
+    strength: z.enum(['soft', 'normal']),
+    washes: z.boolean().meta({ description: 'Soft colour washes in two corners' }),
+  })
+  .meta({ id: 'BackgroundPreference' });
+export type BackgroundPreference = z.infer<typeof BackgroundPreference>;
+
 export const Preferences = z
   .object({
     theme: z.string().meta({ description: `One of ${THEME_IDS.join(', ')}; clients fall back to garden` }),
     font: z.string().meta({ description: `One of ${FONT_IDS.join(', ')}; clients fall back to fredoka` }),
     mode: ColorModePreference,
     holidays: HolidayPreference,
+    layout: LayoutPreference,
+    background: BackgroundPreference,
   })
   .meta({ id: 'Preferences', description: 'Appearance and calendar choices that follow the account' });
 export type Preferences = z.infer<typeof Preferences>;
@@ -71,6 +116,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   font: 'fredoka',
   mode: 'system',
   holidays: { country: null, region: null, observances: false },
+  layout: { preset: 'scrapbook', density: null, sidebar: null, stickers: null, chosen: false },
+  background: { pattern: 'dots', strength: 'normal', washes: true },
 };
 
 /** Partial update; only known ids are accepted. */
@@ -91,6 +138,8 @@ export const PreferencesInput = z
       })
       .optional()
       .meta({ description: 'Country/region are checked against the server holiday list' }),
+    layout: LayoutPreference.partial().optional(),
+    background: BackgroundPreference.partial().optional(),
   })
   .meta({ id: 'PreferencesInput' });
 export type PreferencesInput = z.infer<typeof PreferencesInput>;

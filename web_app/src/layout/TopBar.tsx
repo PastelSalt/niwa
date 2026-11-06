@@ -20,6 +20,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { visuallyHidden } from '../lib/a11y.ts';
 import { useAuth } from '../auth/AuthProvider.tsx';
+import { floatingCardSx } from '../components/Surface.tsx';
 import { Wordmark } from '../components/Wordmark.tsx';
 import { useQuickCapture } from '../features/inbox/CaptureProvider.tsx';
 import { useOnboarding } from '../features/onboarding/OnboardingProvider.tsx';
@@ -52,7 +53,15 @@ export function TopBar({
   const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
   return (
-    <AppBar position="sticky" sx={{ bgcolor: 'background.default', borderBottom: 1, borderColor: 'divider' }}>
+    <AppBar
+      position="sticky"
+      sx={(t) =>
+        // Scrapbook (B-03): a floating paper bar; Classic: the flat bar.
+        t.niwa.layout.floating
+          ? { ...floatingCardSx(t), position: 'relative' }
+          : { bgcolor: 'background.default', borderBottom: 1, borderColor: 'divider' }
+      }
+    >
       <Toolbar variant="dense" sx={{ gap: { xs: 1, md: 1.5 }, minHeight: 56, px: { xs: 1.5, sm: 2 } }}>
         {compact && <Wordmark size="small" />}
         {/* One visible name per screen: phones have the bottom nav, and some screens name themselves.

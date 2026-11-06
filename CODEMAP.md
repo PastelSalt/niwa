@@ -259,14 +259,15 @@ web_app/
    │  ├─ CookiesPage.tsx · LicensesPage.tsx · LegalPage.tsx ✅ policy pages (B3)
    │  ├─ useRegistrationOpen.ts ✅ `GET /auth/config` → hide sign-up when closed
    │  └─ public.test.tsx     ✅
-   ├─ features/today/        ✅ B-01 B9/B15: TodayPage (calendar, Next up, Inbox/review cards), GettingStarted
+   ├─ features/today/        ✅ B-01 B9/B15: TodayPage (calendar, Next up, Inbox/review cards), GettingStarted · B-03: NewLookCard
    ├─ playground/            ✅ B-02 V11 — the real app on an in-memory example garden
    │  ├─ memoryApi.ts        ✅ MemoryWorkspace: in-browser stand-in for /api/v1 (also the audit's --mock)
    │  ├─ exampleWorkspace.ts ✅ invented example content, dated relative to today
    │  ├─ PlaygroundApp.tsx   ✅ boot: in-memory storage, memory router, message bridge
    │  └─ protocol.ts         ✅ landing ⇄ iframe messages (same origin)
    ├─ layout/
-   │  ├─ AppShell.tsx        ✅ `noindex` meta; Notifier + ItemDialogs providers; rail | tree | main | detail; phone: tree as lens home
+   │  ├─ AppShell.tsx        ✅ `noindex` meta; Notifier + ItemDialogs providers; rail | tree | main | detail; phone: tree as lens home · B-03: floating cards on PageBackground in Scrapbook
+   │  ├─ Sidebar.tsx         ✅ B-03 C1: floating labelled sidebar (places + Spaces group; icons-only below 1280 px)
    │  ├─ destinations.tsx    ✅ B-01 B9: Today · Garden · Calendar · Inbox (+ Search, Settings); Garden filters
    │  ├─ CommandBox.tsx      ✅ B-01 B9: Ctrl+K / `/` command box (places, items, create, search)
    │  ├─ useLayout.ts        ✅ useShellLayout(): single (< 720) · panes (720–1280, details overlay) · docked (≥ 1280)
@@ -331,7 +332,7 @@ web_app/
    │  │  └─ queries.ts          ✅ inbox, capture, file
    │  ├─ search/SearchPage.tsx  ✅ URL-synced search, filters, Highlight
    │  └─ ai (M8) · graph (M11)   🔜
-   ├─ components/            ✅ Wordmark, EmptyState, FullPageLoader ("waking up" after 4 s), NotFoundPage, Notifier (snackbar + Undo), RouteError (stale chunk → reload) · B-02: Page (centred token-width column), SectionHeader, DateField (pure-MUI date input + calendar, + test)
+   ├─ components/            ✅ Wordmark, EmptyState, FullPageLoader ("waking up" after 4 s), NotFoundPage, Notifier (snackbar + Undo), RouteError (stale chunk → reload) · B-02: Page (centred token-width column), SectionHeader, DateField (pure-MUI date input + calendar, + test) · B-03: PageBackground (patterns + washes), Surface (floating card, list surface, stitch, sticker, sticker title)
    ├─ lib/dates.ts           ✅ local grid math, all-day UTC date keys, input/format helpers
    ├─ lib/forms.ts           ✅ muiField(): RHF register → TextField inputRef
    ├─ lib/a11y.ts            ✅ visuallyHidden, contrastRatio, readableOn (text colour for a fill)

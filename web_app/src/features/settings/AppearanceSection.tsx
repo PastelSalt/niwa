@@ -17,10 +17,12 @@ import { messageOf } from '../../api/client.ts';
 import { DEFAULT_APPEARANCE, useAppearance, useSavePreferences } from '../../app/appearance.tsx';
 import { ensureFontLoaded } from '../../app/fonts.ts';
 import { useNotify } from '../../components/Notifier.tsx';
+import { BackgroundSection, LayoutSection } from './LayoutSections.tsx';
 import { Section } from './Section.tsx';
 
 /**
- * Settings › Appearance (NIWA-PLAN-B-02 V10.P3): colour theme, font and light/dark. Every change applies at
+ * Settings › Appearance (NIWA-PLAN-B-02 V10.P3, B-03 C2/C5): colour theme, font, light/dark, layout and
+ * background. Every change applies at
  * once and is saved on the account, so it follows you to other browsers.
  */
 export function AppearanceSection() {
@@ -39,6 +41,8 @@ export function AppearanceSection() {
   const isDefault =
     active.theme === DEFAULT_APPEARANCE.theme &&
     active.font === DEFAULT_APPEARANCE.font &&
+    JSON.stringify(active.layout) === JSON.stringify(DEFAULT_APPEARANCE.layout) &&
+    JSON.stringify(active.background) === JSON.stringify(DEFAULT_APPEARANCE.background) &&
     (mode ?? 'system') === 'system';
 
   return (
@@ -100,14 +104,25 @@ export function AppearanceSection() {
         </ToggleButtonGroup>
       </Section>
 
+      <LayoutSection save={(input) => void run(save(input))} />
+      <BackgroundSection save={(input) => void run(save(input))} />
+
       <Box>
         <Button
           disabled={isDefault}
           onClick={() =>
-            void run(save({ theme: DEFAULT_APPEARANCE.theme, font: DEFAULT_APPEARANCE.font, mode: 'system' }))
+            void run(
+              save({
+                theme: DEFAULT_APPEARANCE.theme,
+                font: DEFAULT_APPEARANCE.font,
+                mode: 'system',
+                layout: { ...DEFAULT_APPEARANCE.layout, chosen: true },
+                background: DEFAULT_APPEARANCE.background,
+              }),
+            )
           }
         >
-          Reset to defaults (Garden, Fredoka, System)
+          Reset to defaults (Garden, Fredoka, System, Scrapbook, Dots)
         </Button>
       </Box>
     </Stack>

@@ -16,6 +16,7 @@ import { useTheme } from '@mui/material/styles';
 import type { ItemSummary } from '@niwa/contracts';
 import { useId, useState, type ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
+import { listSurfaceSx } from '../../components/Surface.tsx';
 import { ItemTypeIcon, LENS_PATH } from './itemMeta.tsx';
 
 /**
@@ -146,16 +147,16 @@ export function ItemRow({
     <Box
       component="li"
       aria-labelledby={titleId}
-      sx={{
+      sx={(t) => ({
         display: 'flex',
         alignItems: 'center',
-        minHeight: 56,
+        minHeight: t.niwa.layout.rows.row,
         pl: 0.5,
         borderBottom: 1,
         borderColor: 'divider',
         '&:last-of-type': { borderBottom: 0 },
         listStyle: 'none',
-      }}
+      })}
     >
       {selection && (
         <Checkbox
@@ -240,14 +241,10 @@ function RowActions({ actions, compact, title }: { actions: RowAction[]; compact
   );
 }
 
-/** The list around rows: an outlined surface with no bullets. */
+/** The list around rows: a paper card (Scrapbook) or an outlined surface (Classic), no bullets. */
 export function ItemRowList({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Box
-      component="ul"
-      aria-label={label}
-      sx={{ m: 0, p: 0, border: 1, borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper' }}
-    >
+    <Box component="ul" aria-label={label} sx={[{ m: 0, p: 0, overflow: 'hidden' }, listSurfaceSx]}>
       {children}
     </Box>
   );

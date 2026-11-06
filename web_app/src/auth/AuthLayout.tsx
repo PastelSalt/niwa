@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Wordmark } from '../components/Wordmark.tsx';
+import { PageBackground } from '../components/PageBackground.tsx';
 
 export function AuthLayout({
   title,
@@ -22,11 +23,13 @@ export function AuthLayout({
         minHeight: '100dvh',
         display: 'grid',
         placeItems: 'center',
-        bgcolor: 'background.default',
+        position: 'relative',
+        isolation: 'isolate',
         px: 2,
         py: 6,
       }}
     >
+      <PageBackground />
       <Box sx={{ width: '100%', maxWidth: (t) => t.niwa.width.narrow }}>
         <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Link

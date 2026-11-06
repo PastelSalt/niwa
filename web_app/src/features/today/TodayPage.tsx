@@ -27,6 +27,7 @@ import { entryBlockSx, useEntryLook } from '../scheduler/entryDisplay.ts';
 import { HolidayLabel } from '../scheduler/HolidayLabel.tsx';
 import { holidaysByDay, useHolidays, useScheduleRange } from '../scheduler/queries.ts';
 import { GettingStarted } from './GettingStarted.tsx';
+import { NewLookCard } from './NewLookCard.tsx';
 
 const NEXT_UP = 5;
 
@@ -53,6 +54,7 @@ export function TodayPage() {
       </Typography>
 
       <Stack spacing={4}>
+        <NewLookCard />
         <GettingStarted />
         <TodaysCalendar today={today} />
         <NextUp today={today} />

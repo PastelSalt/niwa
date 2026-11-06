@@ -23,7 +23,12 @@ describe('landing page', () => {
     expect(frame).toHaveAttribute('loading', 'lazy');
     expect(frame.title).toMatch(/example garden/);
     const panel = screen.getByRole('region', { name: 'Make it yours' });
-    expect(within(panel).getAllByRole('radio')).toHaveLength(5);
+    // Five colour themes and nine page patterns (B-03 C2).
+    expect(
+      within(panel).getByRole('radiogroup', { name: 'Colour theme' }).querySelectorAll('[role=radio]'),
+    ).toHaveLength(5);
+    expect(within(panel).getAllByRole('radio', { name: /Dots|Gingham|Plain/ })).toHaveLength(3);
+    expect(within(panel).getByRole('button', { name: 'Scrapbook' })).toHaveAttribute('aria-pressed', 'true');
     expect(within(panel).getByText(/saved to your account after you sign up/)).toBeInTheDocument();
   });
 

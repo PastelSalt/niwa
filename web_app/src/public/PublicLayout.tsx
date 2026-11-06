@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import { Suspense, type ReactNode } from 'react';
 import { Outlet, Link as RouterLink } from 'react-router';
 import { useAuth } from '../auth/AuthProvider.tsx';
+import { PageBackground } from '../components/PageBackground.tsx';
 import { Wordmark } from '../components/Wordmark.tsx';
 import { site } from './site.ts';
 import { useRegistrationOpen } from './useRegistrationOpen.ts';
@@ -15,8 +16,16 @@ import { useRegistrationOpen } from './useRegistrationOpen.ts';
 export function PublicLayout({ children }: { children?: ReactNode }) {
   return (
     <Box
-      sx={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}
+      // The default Scrapbook page behind public pages (B-03 C1); sections sit on their own paper.
+      sx={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        isolation: 'isolate',
+      }}
     >
+      <PageBackground />
       <PublicHeader />
       <Box component="main" id="main" sx={{ flex: 1 }}>
         {children ?? (

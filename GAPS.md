@@ -119,6 +119,9 @@ Product side is in `NIWA-PLAN-B-01.md`.
 - [ ] **Offline editing** — edits are refused offline (only capture queues); a full outbox needs conflict UX (A-02 "later").
 
 ### Web
+- [ ] **B-03 leftovers (2026-11-06)** — uploaded background image (C2.P2), two-column Today/Garden grid, "pop"
+      easing, contrast tests for sticker outline/fills, Today widget order (C5), a full audit of every pattern ×
+      five themes × both strengths; backend preference tests for `layout`/`background` written for CI only.
 - [ ] **Landing LCP on phones** — 3.3 s with 4× CPU / ~4G throttling (desktop 0.8 s; CLS 0.000). Visitors still
       download the shared MUI/app chunks; splitting them further would bring it under 2.5 s.
 - [ ] **Accessibility leftovers (B-01 B6/B7)** — axe not yet run on the 404 page or the welcome dialog;

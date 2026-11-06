@@ -19,6 +19,11 @@ export interface UserDoc {
     mode?: 'system' | 'light' | 'dark';
     /** Public holidays in the Calendar (B-01 B8). */
     holidays?: { country?: string | null; region?: string | null; observances?: boolean };
+    /** Shell layout and page background (B-03 C1, C2, C5); validated by the contract. */
+    layout?: Partial<
+      Record<'preset' | 'density' | 'sidebar', string | null> & { stickers: boolean | null; chosen: boolean }
+    >;
+    background?: Partial<{ pattern: string; strength: string; washes: boolean }>;
   } | null;
   /** Set by the operator (scripts/admin.ts) to block sign-in; never shown to other users. */
   disabledAt: Date | null;
@@ -53,6 +58,8 @@ const userSchema = new Schema<UserDoc>(
           theme: { type: String },
           font: { type: String },
           mode: { type: String, enum: ['system', 'light', 'dark'] },
+          layout: { type: Schema.Types.Mixed },
+          background: { type: Schema.Types.Mixed },
           holidays: {
             type: new Schema(
               {

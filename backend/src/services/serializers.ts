@@ -32,6 +32,14 @@ export function toPublicUser(user: UserDoc): PublicUser {
       font: user.preferences?.font ?? DEFAULT_PREFERENCES.font,
       mode: user.preferences?.mode ?? DEFAULT_PREFERENCES.mode,
       holidays: { ...DEFAULT_PREFERENCES.holidays, ...user.preferences?.holidays },
+      layout: {
+        ...DEFAULT_PREFERENCES.layout,
+        ...user.preferences?.layout,
+      } as PublicUser['preferences']['layout'],
+      background: {
+        ...DEFAULT_PREFERENCES.background,
+        ...user.preferences?.background,
+      } as PublicUser['preferences']['background'],
     },
   };
 }

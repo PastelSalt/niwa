@@ -1,5 +1,10 @@
 import { ThemeProvider, useColorScheme } from '@mui/material/styles';
-import type { PreferencesInput } from '@niwa/contracts';
+import {
+  BackgroundPreference,
+  DEFAULT_PREFERENCES,
+  LayoutPreference,
+  type PreferencesInput,
+} from '@niwa/contracts';
 import { DEFAULT_FONT, DEFAULT_THEME, isFontId, isThemeId, type FontId, type ThemeId } from '@niwa/tokens';
 import {
   createContext,
@@ -13,19 +18,39 @@ import {
 } from 'react';
 import { useAuth } from '../auth/AuthProvider.tsx';
 import { ensureFontLoaded } from './fonts.ts';
-import { createNiwaTheme } from './theme.ts';
+import { createNiwaTheme, resolveLayout } from './theme.ts';
 
 /**
  * Theme + font choice (NIWA-PLAN-B-02 V1.P4, V10). The app starts on the defaults (Garden + Fredoka);
  * signed-in screens apply the account's choice with `useUserAppearance`, and public pages — which never call
  * it — keep the defaults. Light/dark is MUI's colour scheme, saved on the account too.
  */
+export type LayoutChoice = Omit<LayoutPreference, 'chosen'>;
+
 export interface Appearance {
   theme: ThemeId;
   font: FontId;
+  /** Shell shape (B-03 C1/C5). */
+  layout: LayoutChoice;
+  /** Page pattern (B-03 C2). */
+  background: BackgroundPreference;
 }
 
-export const DEFAULT_APPEARANCE: Appearance = { theme: DEFAULT_THEME, font: DEFAULT_FONT };
+const DEFAULT_LAYOUT_CHOICE: LayoutChoice = {
+  preset: DEFAULT_PREFERENCES.layout.preset,
+  density: null,
+  sidebar: null,
+  stickers: null,
+};
+
+export const DEFAULT_APPEARANCE: Appearance = {
+  theme: DEFAULT_THEME,
+  font: DEFAULT_FONT,
+  layout: DEFAULT_LAYOUT_CHOICE,
+  background: DEFAULT_PREFERENCES.background,
+};
+
+const same = (a: Appearance, b: Appearance) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Last choice of this browser, so a signed-in visit paints in the right theme before the API answers. */
 const CACHE_KEY = 'niwa.appearance';
@@ -33,10 +58,22 @@ const CACHE_KEY = 'niwa.appearance';
 const MODE_MIGRATED_KEY = 'niwa.mode.onAccount';
 
 /** Unknown or missing ids fall back to the defaults (another client may know newer themes). */
-export function toAppearance(raw: { theme?: unknown; font?: unknown } | null | undefined): Appearance {
+export function toAppearance(
+  raw: { theme?: unknown; font?: unknown; layout?: unknown; background?: unknown } | null | undefined,
+): Appearance {
+  const layout = LayoutPreference.partial().safeParse(raw?.layout ?? {});
+  const background = BackgroundPreference.partial().safeParse(raw?.background ?? {});
+  const l = layout.success ? layout.data : {};
   return {
     theme: isThemeId(raw?.theme) ? raw.theme : DEFAULT_THEME,
     font: isFontId(raw?.font) ? raw.font : DEFAULT_FONT,
+    layout: {
+      preset: l.preset ?? DEFAULT_LAYOUT_CHOICE.preset,
+      density: l.density ?? null,
+      sidebar: l.sidebar ?? null,
+      stickers: l.stickers ?? null,
+    },
+    background: { ...DEFAULT_PREFERENCES.background, ...(background.success ? background.data : {}) },
   };
 }
 
@@ -84,7 +121,16 @@ export function AppearanceProvider({
   const [active, setActive] = useState<Appearance>(() =>
     isAppPath(window.location.pathname) ? readCachedAppearance() : DEFAULT_APPEARANCE,
   );
-  const theme = useMemo(() => createNiwaTheme(active.theme, active.font), [active.theme, active.font]);
+  const theme = useMemo(
+    () =>
+      createNiwaTheme(
+        active.theme,
+        active.font,
+        resolveLayout(active.layout.preset, active.layout),
+        active.background,
+      ),
+    [active],
+  );
   // The latest request wins when fonts finish loading out of order.
   const latest = useRef<Appearance>(active);
   // Stable, so effects that call it don't re-run when the theme changes.
@@ -93,7 +139,7 @@ export function AppearanceProvider({
     latest.current = next;
     const commit = () => {
       if (latest.current !== next) return;
-      setActive((prev) => (prev.theme === next.theme && prev.font === next.font ? prev : next));
+      setActive((prev) => (same(prev, next) ? prev : next));
     };
     // Wait until the font is loaded so text doesn't flash (instant when it already is, or for System).
     if (typeof FontFace === 'undefined') return commit();
@@ -128,14 +174,16 @@ export function useUserAppearance(choice?: Appearance) {
   const { mode: localMode, setMode } = useColorScheme();
   const { api, user } = useAuth();
   const prefs = user?.preferences;
-  const { theme, font } = choice ?? (prefs ? toAppearance(prefs) : readCachedAppearance());
+  const wanted = choice ?? (prefs ? toAppearance(prefs) : readCachedAppearance());
+  const key = JSON.stringify(wanted);
   const mode = prefs?.mode;
 
   useEffect(() => {
-    cacheAppearance({ theme, font });
-    apply({ theme, font });
+    const a = JSON.parse(key) as Appearance;
+    cacheAppearance(a);
+    apply(a);
     return () => apply(null);
-  }, [apply, theme, font]);
+  }, [apply, key]);
 
   // The account's light/dark follows it to other browsers. The first time an account signs in here, a
   // light/dark picked in this browser before it was saved on accounts is kept and saved, not overridden.
@@ -165,8 +213,13 @@ export function useSavePreferences() {
   const { setMode } = useColorScheme();
   return useCallback(
     async (input: PreferencesInput) => {
-      const next = toAppearance({ ...active, ...input });
-      if (input.theme || input.font) {
+      const next = toAppearance({
+        ...active,
+        ...input,
+        layout: { ...active.layout, ...input.layout },
+        background: { ...active.background, ...input.background },
+      });
+      if (input.theme || input.font || input.layout || input.background) {
         cacheAppearance(next);
         apply(next);
       }

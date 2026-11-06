@@ -23,6 +23,8 @@ export const testUser = {
     font: 'fredoka',
     mode: 'light',
     holidays: { country: null, region: null, observances: false },
+    layout: { preset: 'scrapbook', density: null, sidebar: null, stickers: null, chosen: true },
+    background: { pattern: 'dots', strength: 'normal', washes: true },
   },
 };
 

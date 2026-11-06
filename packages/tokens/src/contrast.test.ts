@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  pageTint,
   palettes,
   priorityColors,
   statusColors,
@@ -82,6 +83,14 @@ describe.each(Object.entries(themes))('theme %s', (_id, theme) => {
       // primary is the deep ink used for links, icons and focus rings
       expect(contrast(p.primary, bg)).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it.each(modes)('text and links on the Scrapbook page tint stay AA (%s)', (mode) => {
+    const p = theme.palettes[mode];
+    const page = pageTint(p, mode);
+    expect(contrast(p.textPrimary, page)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(p.textSecondary, page)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(p.primary, page)).toBeGreaterThanOrEqual(4.5);
   });
 
   it.each(modes)('pastel fills carry deep text at AA (%s)', (mode) => {

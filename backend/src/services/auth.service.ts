@@ -159,7 +159,10 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
     async setPreferences(userId: string, input: PreferencesInput) {
       const current = await userRepo.findById(userId);
       if (!current) throw unauthorized();
-      const { holidays: holidayInput, ...rest } = input;
+      const { holidays: holidayInput, layout: layoutInput, background: backgroundInput, ...rest } = input;
+      // Nested choices merge field by field (B-03): a partial update keeps the other fields.
+      const layout = layoutInput && { ...current.preferences?.layout, ...layoutInput };
+      const background = backgroundInput && { ...current.preferences?.background, ...backgroundInput };
       const holidays = holidayInput && { ...current.preferences?.holidays, ...holidayInput };
       if (holidays) {
         // A new country clears a region that belonged to the old one.
@@ -167,7 +170,13 @@ export function createAuthService(config: AppConfig, tokens: TokenService) {
         holidayService.validate({ country: holidays.country ?? null, region: holidays.region ?? null });
       }
       const user = await userRepo.update(userId, {
-        preferences: { ...current.preferences, ...rest, ...(holidays && { holidays }) },
+        preferences: {
+          ...current.preferences,
+          ...rest,
+          ...(holidays && { holidays }),
+          ...(layout && { layout }),
+          ...(background && { background }),
+        },
       });
       if (!user) throw unauthorized();
       return toPublicUser(user);

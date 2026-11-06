@@ -5,6 +5,7 @@ import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
+import { floatingCardSx } from '../components/Surface.tsx';
 import { EmptyState } from '../components/EmptyState.tsx';
 import { ItemFields } from '../features/items/ItemFields.tsx';
 import { useItem } from '../features/items/queries.ts';
@@ -62,13 +63,14 @@ export function DetailPanel({
       <Box
         component="aside"
         aria-label="Details"
-        sx={{
+        sx={(t) => ({
           borderLeft: 1,
           borderColor: 'divider',
           bgcolor: 'background.paper',
           flexShrink: 0,
           display: 'flex',
-        }}
+          ...(t.niwa.layout.floating && floatingCardSx(t)),
+        })}
       >
         {content}
       </Box>

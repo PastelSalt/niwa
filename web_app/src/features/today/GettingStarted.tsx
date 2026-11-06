@@ -14,6 +14,7 @@ import { usePersistentState } from '../../lib/usePersistentState.ts';
 import { useQuickCapture } from '../inbox/CaptureProvider.tsx';
 import { useInbox } from '../inbox/queries.ts';
 import { useTree } from '../items/queries.ts';
+import { stitchSx } from '../../components/Surface.tsx';
 
 interface Step {
   key: string;
@@ -83,7 +84,12 @@ export function GettingStarted() {
   if (doneCount === steps.length) return null;
 
   return (
-    <Paper component="section" aria-labelledby="getting-started" variant="outlined" sx={{ p: 2 }}>
+    <Paper
+      component="section"
+      aria-labelledby="getting-started"
+      variant="outlined"
+      sx={[{ p: 2.5 }, stitchSx]}
+    >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography id="getting-started" variant="subtitle1" component="h3" sx={{ flex: 1 }}>
           Getting started

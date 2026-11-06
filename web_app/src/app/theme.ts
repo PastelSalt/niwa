@@ -26,7 +26,15 @@ import {
   type ThemeId,
   type ThemePalette,
   type TypeStep,
+  densities,
+  layouts,
+  mixHex,
+  pageTint,
+  type DensityId,
+  type LayoutId,
+  type LayoutToken,
 } from '@niwa/tokens';
+import { DEFAULT_PREFERENCES, type BackgroundPreference } from '@niwa/contracts';
 import { fontFacesFor } from './fonts.ts';
 
 /**
@@ -38,9 +46,37 @@ import { fontFacesFor } from './fonts.ts';
 type ItemTypeColors = (typeof themes)['garden']['typeColors']['light'];
 
 /** Design vocabulary screens read through `theme.niwa` (widths, gaps, icon sizes, motion). */
+/** A layout with the user's options applied (B-03 C5). */
+export interface ResolvedLayout extends LayoutToken {
+  id: LayoutId;
+  /** Row heights for the chosen density. */
+  rows: { row: number; tree: number };
+}
+
+export function resolveLayout(
+  id: LayoutId = 'scrapbook',
+  opts: { density?: DensityId | null; sidebar?: 'labels' | 'icons' | null; stickers?: boolean | null } = {},
+): ResolvedLayout {
+  const base = layouts[id] ?? layouts.scrapbook;
+  const density = opts.density ?? base.density;
+  return {
+    ...base,
+    id: layouts[id] ? id : 'scrapbook',
+    density,
+    sidebar: opts.sidebar ?? base.sidebar,
+    stickers: opts.stickers ?? base.stickers,
+    rows: { row: densities[density].row, tree: densities[density].tree },
+  };
+}
+
+export const DEFAULT_LAYOUT = resolveLayout();
+
 export interface NiwaThemeExtras {
   themeId: ThemeId;
   fontId: FontId;
+  layout: ResolvedLayout;
+  /** Page pattern (B-03 C2). */
+  background: BackgroundPreference;
   width: typeof contentWidth;
   gaps: typeof gaps;
   iconSize: typeof iconSize;
@@ -51,6 +87,8 @@ export interface NiwaThemeExtras {
 declare module '@mui/material/styles' {
   interface Palette {
     itemType: ItemTypeColors;
+    /** Scrapbook surfaces (B-03 C1): tinted shadows, sticker outline/shadow, the page tint. */
+    surface: SurfaceColors;
     /** Pastel fill + deep text for contained buttons and selections (V10). */
     primaryContainer: { main: string; contrastText: string };
     status: Record<StatusRole, string>;
@@ -58,6 +96,7 @@ declare module '@mui/material/styles' {
   }
   interface PaletteOptions {
     itemType?: ItemTypeColors;
+    surface?: SurfaceColors;
     primaryContainer?: { main: string; contrastText: string };
     status?: Record<StatusRole, string>;
     priority?: Record<PriorityRole, string>;
@@ -97,10 +136,45 @@ declare module '@mui/material/SvgIcon' {
   }
 }
 
-function colorScheme(p: ThemePalette, types: ItemTypeColors): ColorSystemOptions {
+interface SurfaceColors {
+  shadow: string;
+  lift: string;
+  outline: string;
+  sticker: string;
+  page: string;
+  edge: string;
+}
+
+const rgba = (hex: string, a: number) =>
+  `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(' ')} / ${a})`;
+
+/** Tinted, never grey-black shadows (like the fan site's paper), a sticker outline and the page tint. */
+function surfaceColors(p: ThemePalette, mode: ColorMode): SurfaceColors {
+  const tint = mixHex(p.primary, p.textPrimary, 0.5);
+  return mode === 'light'
+    ? {
+        shadow: `inset 0 1px 0 rgb(255 255 255 / 0.85), 0 12px 26px -16px ${rgba(tint, 0.4)}, 0 2px 6px -2px ${rgba(tint, 0.16)}`,
+        lift: `0 22px 42px -20px ${rgba(tint, 0.45)}, 0 6px 14px -6px ${rgba(tint, 0.22)}`,
+        outline: p.textPrimary,
+        sticker: p.secondary,
+        page: pageTint(p, mode),
+        edge: 'rgb(255 255 255 / 0.75)',
+      }
+    : {
+        shadow: '0 12px 26px -14px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.35)',
+        lift: '0 22px 42px -18px rgb(0 0 0 / 0.65), 0 6px 14px -6px rgb(0 0 0 / 0.4)',
+        outline: p.textSecondary,
+        sticker: mixHex(p.secondary, p.background, 0.55),
+        page: pageTint(p, mode),
+        edge: p.divider,
+      };
+}
+
+function colorScheme(p: ThemePalette, types: ItemTypeColors, mode: ColorMode): ColorSystemOptions {
   return {
     palette: {
       itemType: types,
+      surface: surfaceColors(p, mode),
       primaryContainer: { main: p.primaryContainer, contrastText: p.onPrimaryContainer },
       status: statusColors(p),
       priority: priorityColors(p),
@@ -141,16 +215,33 @@ const layered = (layer: 'popover' | 'dialog') => (theme: Theme) => ({
   ...theme.applyStyles('dark', { boxShadow: elevation.dark[layer] }),
 });
 
-export function createNiwaTheme(themeId: ThemeId = DEFAULT_THEME, fontId: FontId = DEFAULT_FONT): Theme {
+export function createNiwaTheme(
+  themeId: ThemeId = DEFAULT_THEME,
+  fontId: FontId = DEFAULT_FONT,
+  layout: ResolvedLayout = DEFAULT_LAYOUT,
+  background: BackgroundPreference = DEFAULT_PREFERENCES.background,
+): Theme {
   const t = themes[themeId];
   const s = typeScaleFor(fontId);
   const modes: ColorMode[] = ['light', 'dark'];
-  const schemes = Object.fromEntries(modes.map((m) => [m, colorScheme(t.palettes[m], t.typeColors[m])]));
+  const schemes = Object.fromEntries(modes.map((m) => [m, colorScheme(t.palettes[m], t.typeColors[m], m)]));
+  const paper = layout.surface === 'paper';
+  const surf = (theme: Theme) => (theme.vars ?? theme).palette.surface;
 
   return createTheme({
     cssVariables: { colorSchemeSelector: 'data' },
     colorSchemes: schemes as { light: ColorSystemOptions; dark: ColorSystemOptions },
-    niwa: { themeId, fontId, width: contentWidth, gaps, iconSize, motion, monoFamily: monoStack },
+    niwa: {
+      themeId,
+      fontId,
+      layout,
+      background,
+      width: contentWidth,
+      gaps,
+      iconSize,
+      motion,
+      monoFamily: monoStack,
+    },
     typography: {
       fontFamily: fonts[fontId].stack,
       // 14 keeps MUI's internal pxToRem at 1:1; every variant below sets its own size from the scale.
@@ -213,8 +304,27 @@ a:focus-visible {
       },
       MuiButton: {
         defaultProps: { disableElevation: true },
+        // Scrapbook (B-03): pill buttons.
+        styleOverrides: paper ? { root: { borderRadius: layout.radius.control } } : {},
         // Pastel rules (V10): primary buttons are a pastel fill with deep text, not a dark fill with white.
         variants: [
+          // Sticker buttons (B-03, like the Moeko Works dashboard): outlined, with an offset pastel shadow.
+          ...(layout.stickers
+            ? [
+                {
+                  props: { variant: 'contained' as const, color: 'primary' as const },
+                  style: ({ theme }: { theme: Theme }) => ({
+                    boxShadow: `inset 0 0 0 2px ${surf(theme).outline}, 3px 4px 0 ${surf(theme).sticker}`,
+                    '&:hover': {
+                      boxShadow: `inset 0 0 0 2px ${surf(theme).outline}, 4px 5px 0 ${surf(theme).sticker}`,
+                    },
+                    '&:active': {
+                      boxShadow: `inset 0 0 0 2px ${surf(theme).outline}, 1px 2px 0 ${surf(theme).sticker}`,
+                    },
+                  }),
+                },
+              ]
+            : []),
           {
             props: { variant: 'contained', color: 'primary' },
             style: ({ theme }) => {
@@ -234,11 +344,34 @@ a:focus-visible {
       MuiIconButton: {
         styleOverrides: { root: { '@media (pointer: coarse)': { minWidth: 44, minHeight: 44 } } },
       },
-      MuiPaper: { defaultProps: { elevation: 0 } },
+      MuiPaper: {
+        defaultProps: { elevation: 0 },
+        // Scrapbook (B-03): outlined papers become paper cards with a tinted shadow and a white edge.
+        variants: paper
+          ? [
+              {
+                props: { variant: 'outlined' as const },
+                style: ({ theme }: { theme: Theme }) => ({
+                  borderColor: surf(theme).edge,
+                  borderRadius: layout.radius.card,
+                  boxShadow: surf(theme).shadow,
+                }),
+              },
+            ]
+          : [],
+      },
+      MuiOutlinedInput: paper ? { styleOverrides: { root: { borderRadius: 14 } } } : {},
       MuiPopover: { styleOverrides: { paper: ({ theme }) => layered('popover')(theme) } },
       MuiMenu: { styleOverrides: { paper: ({ theme }) => layered('popover')(theme) } },
       MuiAutocomplete: { styleOverrides: { paper: ({ theme }) => layered('popover')(theme) } },
-      MuiDialog: { styleOverrides: { paper: ({ theme }) => layered('dialog')(theme) } },
+      MuiDialog: {
+        styleOverrides: {
+          paper: ({ theme }) => ({
+            ...layered('dialog')(theme),
+            ...(paper && { borderRadius: layout.radius.panel }),
+          }),
+        },
+      },
       MuiAppBar: { defaultProps: { elevation: 0, color: 'inherit' } },
       MuiTextField: { defaultProps: { fullWidth: true } },
       MuiTooltip: { defaultProps: { arrow: true } },

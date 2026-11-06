@@ -72,10 +72,13 @@ describe('PUT /account/preferences', () => {
   it('starts on the defaults, merges partial updates and rejects unknown ids', async () => {
     const app = buildApp();
     const { token, user } = await signUp(app);
-    expect((user as unknown as { preferences: unknown }).preferences).toEqual({
+    expect((user as unknown as { preferences: unknown }).preferences).toMatchObject({
       theme: 'garden',
       font: 'fredoka',
       mode: 'system',
+      // B-03: new accounts get the Scrapbook layout on a dotted page.
+      layout: { preset: 'scrapbook', density: null, sidebar: null, stickers: null, chosen: false },
+      background: { pattern: 'dots', strength: 'normal', washes: true },
     });
 
     const auth = { Authorization: `Bearer ${token}` };
@@ -85,13 +88,43 @@ describe('PUT /account/preferences', () => {
       .set(auth)
       .send({ theme: 'lavender', mode: 'dark' })
       .expect(200);
-    expect(res.body.user.preferences).toEqual({ theme: 'lavender', font: 'inter', mode: 'dark' });
+    expect(res.body.user.preferences).toMatchObject({ theme: 'lavender', font: 'inter', mode: 'dark' });
 
     const me = await request(app).get('/api/v1/auth/me').set(auth).expect(200);
     expect(me.body.user.preferences.font).toBe('inter');
 
     await request(app).put('/api/v1/account/preferences').set(auth).send({ theme: 'neon' }).expect(400);
     await request(app).put('/api/v1/account/preferences').send({ font: 'inter' }).expect(401);
+  });
+});
+
+describe('layout and background preferences (B-03 C2/C5)', () => {
+  it('merges partial layout/background updates and rejects unknown values', async () => {
+    const app = buildApp();
+    const { token } = await signUp(app);
+    const auth = { Authorization: `Bearer ${token}` };
+    const put = (body: object) => request(app).put('/api/v1/account/preferences').set(auth).send(body);
+
+    await put({ layout: { preset: 'classic', chosen: true } }).expect(200);
+    await put({ layout: { density: 'compact' }, background: { pattern: 'gingham' } }).expect(200);
+    const res = await put({ background: { washes: false } }).expect(200);
+    expect(res.body.user.preferences.layout).toEqual({
+      preset: 'classic',
+      density: 'compact',
+      sidebar: null,
+      stickers: null,
+      chosen: true,
+    });
+    expect(res.body.user.preferences.background).toEqual({
+      pattern: 'gingham',
+      strength: 'normal',
+      washes: false,
+    });
+
+    await put({ layout: { preset: 'zigzag' } }).expect(400);
+    await put({ background: { pattern: 'plaid' } }).expect(400);
+    // Theme and font are untouched by layout changes.
+    expect(res.body.user.preferences).toMatchObject({ theme: 'garden', font: 'fredoka' });
   });
 });
 

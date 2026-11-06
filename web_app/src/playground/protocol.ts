@@ -1,4 +1,4 @@
-import type { FontId, ThemeId } from '@niwa/tokens';
+import type { FontId, LayoutId, PatternId, ThemeId } from '@niwa/tokens';
 
 /**
  * Messages between the landing page and its playground iframe (NIWA-PLAN-B-02 V11). Same origin only; both
@@ -10,6 +10,9 @@ export interface PlaygroundAppearance {
   theme: ThemeId;
   font: FontId;
   mode: 'light' | 'dark';
+  /** B-03 C1/C2: the layout preset and page pattern. */
+  layout: LayoutId;
+  pattern: PatternId;
 }
 
 export type ToPlayground = { source: 'niwa-landing'; type: 'appearance' } & PlaygroundAppearance;
