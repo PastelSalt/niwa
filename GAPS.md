@@ -56,6 +56,10 @@ devices; images (Cloudinary) confirmed working 2026-11-04. Next: nightly backup 
 - Plan my day: drag from the panel is mouse-only; keyboard users press + (next free hour).
 - Mobile (A-02) doesn't have Today, the command box, holidays or triage yet.
 
+**B-03 — make it yours (planned 2026-11-06, nothing built)** · `NIWA-PLAN-B-03.md`
+- C0 owner check first: the Scrapbook look (from the Kotoha fan site / Moeko Works dashboards) as the new
+  default, then backgrounds, item icons, profile page, layout presets; Google integration later (C6).
+
 **Decisions only the owner can make**
 - Email provider for password reset/verification (skipped for now).
 - When to build and run the mobile app on a device; when to do iOS.

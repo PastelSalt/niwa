@@ -1007,3 +1007,18 @@
 - **Verified here:** web unit tests 82 → 86, backend holiday service tests (4), typecheck, lint, format,
   OpenAPI check, build; visual audit **29 screens × 4 widths × 2 modes: 0 findings**; playground e2e passes.
 - **Not run here:** backend endpoint tests and the other e2e specs (updated for the new UI) — CI.
+
+### 2026-11-06 — Plan B-03 (make it yours) drafted
+- **Owner:** icon customisation, Google integration (soon), background patterns like the Kotoha fan site, layout
+  customisation with a default that looks like the Kotoha fan site / Moeko Works dashboard, and a profile page —
+  "plan first, no coding yet".
+- **Research:** read the owner's `PastelSalt/kotoha-fansite` (admin CSS, v2 tokens/patterns) and
+  `PastelSalt/moekoworks_official` (admin dashboard CSS, tokens) and wrote down their shared recipe: dotted pastel
+  page with washes, floating sidebar card, paper cards with tinted shadows, sticker titles and buttons, stitched
+  featured cards.
+- **`NIWA-PLAN-B-03.md`:** C0 owner check; C1 Scrapbook layout as the new default; C2 backgrounds (built-in
+  patterns + one uploaded image); C3 item icons (curated MUI set + palette colours); C4 profile page and picture;
+  C5 layout presets (Scrapbook · Classic · Compact) and options; C6 Google (sign-in, then read-only Calendar
+  import — later); C7 quality. Five open questions.
+- **Not copied on purpose:** the fan site's artwork, character art, logos, long loader and showpiece motion.
+- **Verified:** docs only; nothing built.

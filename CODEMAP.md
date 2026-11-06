@@ -16,6 +16,7 @@ niwa/   (local folder may still be named niwa-site)
 ├─ NIWA-PLAN-A-02.md         🟨 mobile (Flutter) — MA0–MA9 done; MA10 (quality + web parity), MA11 (release) next
 ├─ NIWA-PLAN-B-01.md         🟨 public site — B0–B3, B5 done; B4/B6/B7 have small leftovers
 ├─ NIWA-PLAN-B-02.md         🟨 web UI/UX refinement, pastel themes + font picker (default Fredoka), interactive landing — V0–V11 built; owner approval of theme colours + manual phone pass open
+├─ NIWA-PLAN-B-03.md         ⬜ make it yours: Scrapbook default layout, backgrounds, item icons, profile page, layout presets; Google later — plan only
 ├─ LICENSE                   ✅ MIT, © 2026 Moeko Works
 ├─ GAPS.md                   ✅ deferred / unverified items (add when skipping, tick when closed)
 ├─ CODEMAP.md                ✅ this file
